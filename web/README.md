@@ -76,3 +76,5 @@ O pipeline local:
 cd pipeline
 python3 -m placar serve --dir out --port 8787
 ```
+
+Licença MIT. Copyright 2026 danilosilvadev. Veja `LICENSE` na raiz. Os JSON em `demo/` são fictícios. O `placar.json` público pertence aos seus donos.
