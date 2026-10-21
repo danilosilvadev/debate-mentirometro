@@ -2,7 +2,9 @@
 
 Site estático do debate, em português, sem framework e sem build. É a mesma conta do aplicativo: Mentirômetro, propostas versus ataques, linha do tempo de 5 minutos, fatos checados, propostas explicadas, Como ler e Como funciona.
 
-O visual segue o app (fundo claro, cartões, vereditos nas cores verde, laranja e vermelho). O YouTube só entra quando alguém toca em “Ver a live”.
+O palco é escuro, em tela cheia. A barra de vidro no topo traz os dois candidatos, o placar e o cabo de guerra do Mentirômetro. As checagens de cada lado flutuam sobre o vídeo, sem caixa, e a fala mais recente fica na legenda de baixo. No celular a barra gruda no topo e o feed vira um chat, A à esquerda e B à direita. O nome e a cor de cada candidato vêm do JSON.
+
+O YouTube entra sozinho quando `video.id` (ou `PLACAR_VIDEO` no `config.js`) é um id válido. Sem id, o palco fica no desenho escuro. “Ocultar” tira as checagens e a legenda de cima dos controles do player. ⌘K (ou o botão no canto) abre a linha do tempo, Como ler, Como funciona, as propostas e os debates passados.
 
 ## Rodar aqui
 
@@ -23,16 +25,16 @@ Um debate passado:
 
 Na simulação, o arquivo local é `demo/placar-2026-10-18.json` (`?demo=1&d=2026-10-18`). No ar, `?d=` pede `placar-2026-10-18.json` no mesmo host do `config.js`.
 
-O endereço padrão está em `config.js` (`PLACAR_BASE`). A página busca esse JSON a cada 5 segundos, para quando a aba fica escondida e só redesenha se `atualizado` mudou. Se o feed não responde, entra a simulação com uma faixa amarela.
+O endereço padrão está em `config.js` (`PLACAR_BASE`). `PLACAR_VIDEO` troca o id do YouTube sem esperar o JSON. A página busca o placar a cada 5 segundos, para quando a aba fica escondida e só redesenha se `atualizado` mudou. O iframe, quando existe, não é recriado nesse redesenho. Se o feed não responde, entra a simulação, com o aviso no canto.
 
-Peso medido nesta máquina, somando os arquivos que a página pede (o `og.jpg` não entra; o YouTube só entra depois do toque):
+Peso medido nesta máquina, somando o que a página pede. O iframe do YouTube não entra. A Inter latina está em `fonts/inter-latin.woff2` (47 KB, não comprime).
 
 | | sem gzip | gzip (o que viaja) |
 |---|---:|---:|
-| Casca: HTML, CSS, JS, config, ícone | 56 KB | 17 KB |
-| Simulação, com `demo/placar.json` | 64 KB | 19 KB |
+| Casca: HTML, CSS, JS, config, ícone, Inter | 99 KB | 63 KB |
+| Simulação, com `demo/placar.json` | 108 KB | 65 KB |
 
-Os dois ficam abaixo de 100 KB. O cartão de compartilhamento `og.jpg` tem 36 KB e só é buscado pelo WhatsApp ou pelo X.
+O cartão de compartilhamento `og.jpg` tem 35 KB e só é buscado pelo WhatsApp ou pelo X.
 
 Testes:
 

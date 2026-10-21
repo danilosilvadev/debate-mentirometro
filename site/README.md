@@ -1,8 +1,8 @@
-# Site do placar (pele provisória)
+# Site do placar (rascunho anterior)
 
-O site que vai ao ar é `web/`. Esta pasta ficou como a camada de dados anterior, com a pele clara de rascunho.
+O site que vai ao ar é `web/`, com a pele escura do palco. Esta pasta ficou como a camada de dados anterior, com a pele clara de rascunho.
 
-Camada de dados do placar na web, em JavaScript sem framework. O visual definitivo ainda não foi escolhido: esta página só mostra que a conta, o polling, a linha do tempo, as propostas e os fatos funcionam.
+Camada de dados do placar na web, em JavaScript sem framework. A página daqui só mostra que a conta, o polling, a linha do tempo, as propostas e os fatos funcionam.
 
 Quando a opção visual chegar, a pele troca. Os ganchos já estão em `js/render.mjs` (`onSnapshot`, `onScore`, `onFeed`). A direção combinada para essa pele, quando for a hora:
 

@@ -349,448 +349,446 @@ export function sharePlacar(snapshot, mode, pageUrl) {
   return `Mentirômetro do debate${estado}: ${left.nome} ${pct(left)} x ${right.nome} ${pct(right)} de erro\n${left.nome}: ${left.propostas} propostas x ${left.ataques} ataques. ${right.nome}: ${right.propostas} propostas x ${right.ataques} ataques${aviso}\n${pageUrl}`
 }
 
+
+const COLORS = ['#7AA2F7', '#E0AF68']
+const VERDICT_COLOR = {
+  verdadeiro: '#4CC38A',
+  impreciso: '#D9B44A',
+  falso: '#EB6F6F',
+  sem_dados: '#8B8D98',
+  em_revisao: '#A594F9',
+}
+
 function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[char]))
 }
 
-function badge(verdict) {
-  return `<span class="badge ${esc(verdict)}">${esc(VERDICT_LABEL[verdict] || verdict)}</span>`
+export function candidateColor(candidate, index) {
+  const raw = candidate?.cor || candidate?.color
+  if (typeof raw === 'string' && /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(raw)) return raw
+  return COLORS[index % COLORS.length]
 }
 
-function chip(label, pressed, act, arg, extra = '') {
-  return `<button type="button" class="chip${pressed ? ' on' : ''}" aria-pressed="${pressed ? 'true' : 'false'}" data-act="${act}" data-arg="${esc(arg)}">${extra}${esc(label)}</button>`
+export function falsasCount(candidate = {}) {
+  return (candidate.falso || 0) + (candidate.impreciso || 0)
 }
 
-function gaugeSvg(angle) {
-  const cx = 150
-  const cy = 138
-  const r = 112
-  const seg = (start, color) => {
-    const sweep = Math.PI / 3
-    const point = (rad) => [cx + r * Math.cos(rad), cy + r * Math.sin(rad)]
-    const [x1, y1] = point(start)
-    const [x2, y2] = point(start + sweep)
-    return `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${color}" fill="none" stroke-width="22" stroke-linecap="butt"/>`
-  }
-  const pi = Math.PI
-  return `<svg class="gauge" viewBox="0 0 300 168" aria-hidden="true">
-    ${seg(pi, '#C62828')}${seg(pi + pi / 3, '#B9BDB8')}${seg(pi + 2 * pi / 3, '#C62828')}
-    <g class="needle" style="--ang: ${Number(angle) || 0}deg">
-      <line x1="150" y1="138" x2="150" y2="36" stroke="#1B1D1C" stroke-width="4" stroke-linecap="round"/>
-      <circle cx="150" cy="138" r="7" fill="#1B1D1C"/>
-    </g>
-  </svg>`
+/** Largura do cabo de guerra: o índice de erro de cada lado, a mesma conta do ponteiro. */
+export function tugOfWar(left, right) {
+  const a = errorIndex(left)
+  const b = errorIndex(right)
+  const sum = a.erro + b.erro
+  const leftPct = sum === 0 ? 50 : Math.round((a.erro / sum) * 100)
+  return { leftPct, rightPct: 100 - leftPct, leftFalsas: falsasCount(left), rightFalsas: falsasCount(right) }
 }
 
-function splitBar(index, reversed) {
-  const parts = [
-    ['v', index.verdadeiroPct],
-    ['i', index.imprecisoPct],
-    ['f', index.falsoPct],
-  ].filter(([, pct]) => pct > 0)
-  const ordered = reversed ? parts.reverse() : parts
-  if (!ordered.length) return '<div class="bar"></div>'
-  return `<div class="bar" role="img" aria-label="${index.verdadeiroPct}% verdadeiro, ${index.imprecisoPct}% impreciso, ${index.falsoPct}% falso">${ordered.map(([cls, pct]) => `<i class="${cls}" style="width:${pct}%"></i>`).join('')}</div>`
-}
-
-function meter(candidate, index, side) {
-  const shown = index.total === 0 ? '–' : String(index.erroPct)
-  return `<div class="${side}">
-    <h3>${esc(candidate.nome)}</h3>
-    <div class="erro">${esc(shown)}${index.total ? '<small>% de erro</small>' : ''}</div>
-    ${splitBar(index, side === 'right')}
-    <p class="muted small">${candidate.verdadeiro} verdadeiro · ${candidate.impreciso} impreciso · ${candidate.falso} falso</p>
-    <p class="muted small">${candidate.sem_dados || 0} sem dados</p>
-  </div>`
-}
-
-function stageHtml(state) {
-  const snapshot = state.snapshot
-  const ended = snapshot.encerrado
-  const videoId = youtubeId(snapshot.video?.id)
-  const demo = state.mode === 'demo' || snapshot.simulado
-  if (state.embed && videoId) {
-    const src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`
-    return `<section class="card stage" aria-label="Transmissão">
-      <iframe class="frame" title="Transmissão do debate no YouTube" src="${src}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-      <button type="button" class="ghost" data-act="close-embed">Fechar o vídeo</button>
-    </section>`
-  }
-  const status = statusCopy(snapshot, state.now, state.mode)
-  const pos = positionLabel(snapshot, state.now, state.mode)
-  let body
-  if (ended) {
-    const when = Date.parse(ended.proximo || '')
-    const videoDate = snapshot.video?.data ? Date.parse(snapshot.video.data) : NaN
-    const day = Number.isNaN(videoDate) ? dataCurta(snapshot.atualizado) : dataCurta(videoDate)
-    const count = Number.isNaN(when) ? '' : faltaPara(when, state.now)
-    body = `<p class="muted">Debate de ${esc(day)} encerrado · o placar final está logo abaixo</p>
-      <p class="muted small">Próximo debate</p>
-      <h2>${esc(ended.texto || '')}</h2>
-      <p class="dur" data-clock="count">${esc(count)}</p>
-      <p class="muted small">Estamos aprimorando os métodos de checagem para o próximo debate.</p>`
-  } else {
-    const title = demo ? 'Debate simulado' : (snapshot.aviso || 'Transmissão')
-    const note = demo
-      ? 'Sem sinal de vídeo nesta simulação. Os números ao lado são ilustrativos.'
-      : 'A live abre no YouTube quando o placar publica um vídeo.'
-    body = `<h2>${esc(title)}</h2>
-      <p class="dur" data-clock="pos">${esc(pos)}</p>
-      <p class="muted small">${esc(videoId ? 'O vídeo só carrega quando você pede.' : note)}</p>
-      ${videoId ? '<button type="button" class="btn" data-act="embed">▶ Ver a live</button>' : ''}`
-  }
-  return `<section class="card stage" aria-label="Transmissão">${body}</section>`
-}
-
-function visorHtml(snapshot) {
-  const candidates = candidatesOf(snapshot)
-  if (candidates.length < 2) {
-    return `<section class="card visor"><h2>Mentirômetro</h2><p class="muted">Aguardando os dois candidatos.</p></section>`
-  }
-  const [left, right] = candidates
+export function pendeLabel(left, right, leftColor, rightColor) {
   const reading = mentiromentro(left.nome, right.nome, left, right)
-  const label = `Mentirômetro: ${left.nome} ${reading.left.erroPct}% de erro, ${right.nome} ${reading.right.erroPct}%`
-  return `<section class="card visor" role="img" aria-label="${esc(label)}">
-    <h2>Mentirômetro</h2>
-    ${gaugeSvg(reading.angle)}
-    <div class="names"><span>${esc(left.nome)}</span><span>${esc(right.nome)}</span></div>
-    <p class="headline">${esc(reading.headline)}</p>
-    <p class="muted small">${esc(reading.detail)}</p>
-    <p class="muted small">${esc(reading.basis)}</p>
-    <div class="meters">${meter(left, reading.left, 'left')}${meter(right, reading.right, 'right')}</div>
-  </section>`
+  if (reading.call === 'waiting') return { text: 'aguardando fatos', name: '', color: '', reading }
+  if (reading.call === 'tie') return { text: 'empate', name: '', color: '', reading }
+  if (reading.call === 'left') return { text: 'pende para', name: left.nome, color: leftColor, reading }
+  return { text: 'pende para', name: right.nome, color: rightColor, reading }
 }
 
-function toneHtml(snapshot) {
-  const cards = candidatesOf(snapshot).map((candidate) => {
-    const shares = speakingShares(candidate.tempo)
-    const attacks = (snapshot.ataques || []).filter((attack) => attack.quem === candidate.id).slice(0, 3)
-    const bar = shares.filter((share) => share.seconds > 0).map((share) => `<i class="${share.cls}" style="flex:${Math.max(1, Math.round(share.seconds * 10))}"></i>`).join('')
-    return `<div>
-      <h3>${esc(candidate.nome)}</h3>
-      <div class="counts">
-        <div><div class="count p">${candidate.propostas || 0}</div><div class="muted small">propostas</div></div>
-        <div><div class="count a">${candidate.ataques || 0}</div><div class="muted small">ataques</div></div>
-      </div>
-      <div class="tonebar">${bar}</div>
-      <div class="legend">${shares.map((share) => `<span><i class="swatch ${share.cls}"></i>${share.percent}% ${esc(share.label)}</span>`).join('')}</div>
-      ${attacks.map((attack) => `<p class="muted small">${esc(attack.resumo)}</p>`).join('')}
-    </div>`
-  }).join('')
-  return `<section class="card">
-    <h2>Propostas ou ataques?</h2>
-    <p class="muted">Quantas vezes cada um apresentou uma proposta concreta e quantas vezes atacou o adversário. A barra mostra como cada um usou o tempo de fala.</p>
-    <div class="pair">${cards}</div>
-    <button type="button" class="linkish" data-act="proposals">Ver as propostas explicadas</button>
-  </section>`
-}
-
-function timelineHtml(snapshot, filter) {
-  const timeline = timelineOf(snapshot)
-  let chart = '<p class="muted">A linha do tempo começa no primeiro ataque ou proposta.</p>'
-  if (timeline.rows.length) {
-    const columns = timeline.rows[0].columns
-    const names = timeline.rows.map((row) => `<div class="who">${esc(row.name)}</div>`).join('')
-    const bars = timeline.rows.map((row) => {
-      const cols = row.columns.map((column) => {
-        const active = filter.windowStartMs === column.startMs
-        const inner = 70 - (column.attacks && column.proposals ? 2 : 0)
-        const attackH = column.attacks ? Math.max(2, (column.attacks / timeline.maxStack) * inner) : 0
-        const proposalH = column.proposals ? Math.max(2, (column.proposals / timeline.maxStack) * inner) : 0
-        const label = `${row.name}, ${hhmm(column.startMs)}–${hhmm(column.endMs)}: ${column.attacks} ataques, ${column.proposals} propostas. Toque para ver os fatos desses minutos`
-        return `<button type="button" class="col${active ? ' on' : ''}" data-act="window" data-arg="${column.startMs}:${column.endMs}" aria-pressed="${active ? 'true' : 'false'}" aria-label="${esc(label)}">${column.attacks ? `<i class="a" style="height:${attackH.toFixed(1)}px"></i>` : ''}${column.proposals ? `<i class="p" style="height:${proposalH.toFixed(1)}px"></i>` : ''}</button>`
-      }).join('')
-      return `<div class="cols">${cols}</div>`
-    }).join('')
-    const hours = columns.map((column, index) => `<span>${index % timeline.labelStep === 0 ? hhmm(column.startMs) : ''}</span>`).join('')
-    chart = `<div class="chart"><div>${names}</div><div class="scroll">${bars}<div class="hours">${hours}</div></div></div>`
-  }
-  return `<section class="card">
-    <h2>Linha do tempo</h2>
-    <p class="muted">Quando cada um atacou e quando apresentou propostas, a cada 5 minutos de debate. Toque numa coluna para ver os fatos checados daqueles minutos.</p>
-    <p class="legend"><span><i class="swatch a"></i>Ataques</span><span><i class="swatch p"></i>Propostas</span></p>
-    ${chart}
-  </section>`
-}
-
-function factCard(snapshot, claim, state) {
-  const nome = candidatesOf(snapshot).find((candidate) => candidate.id === claim.quem)?.nome || ''
-  const key = claimKey(claim)
-  const open = state.open?.has(key)
-  const fresh = state.fresh?.has(key) ? ' fresh' : ''
-  const fonte = claim.fonte
-  const href = fonte ? safeHttpUrl(fonte.url) : ''
-  const fonteHtml = !fonte
-    ? '<p class="muted small">Nenhuma fonte encontrada.</p>'
-    : `<p class="small">Fonte: ${href ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(fonte.titulo)} (${esc(new URL(href).host.replace(/^www\./, ''))})</a>` : esc(fonte.titulo)}</p>`
-  const corrigido = claim.corrigido
-    ? `<p class="muted small">✎ Revisado após o debate · ao vivo era ${esc(VERDICT_LABEL[claim.corrigido.antes] || claim.corrigido.antes)}</p>`
-    : ''
-  return `<article class="fact ${esc(claim.veredito)}${fresh}" id="fato-${esc(key)}">
-    <div class="meta">${badge(claim.veredito)}<strong>${esc(nome)}</strong><span class="muted small">${hhmm(claim.t)} · ${esc(claim.tema)}</span></div>
-    <p>${esc(claim.afirmacao)}</p>
-    <details ${open ? 'open' : ''} data-key="${esc(key)}">
-      <summary>${open ? 'Ocultar dados e fonte' : 'Ver dados e fonte'}</summary>
-      ${claim.literal ? `<p class="quote muted">Frase dita: “${esc(claim.literal)}”</p>` : ''}
-      ${claim.contexto ? `<p class="muted small">${esc(claim.contexto)}</p>` : ''}
-      ${claim.motivo ? `<p><strong>Os dados: </strong>${esc(claim.motivo)}</p>` : ''}
-      ${corrigido}
-      ${fonteHtml}
-    </details>
-    <button type="button" class="ghost" data-act="share-fact" data-arg="${esc(key)}">↗ Compartilhar</button>
-  </article>`
-}
-
-function factsHtml(state) {
-  const snapshot = state.snapshot
-  const claims = claimsOf(snapshot)
-  const filter = state.filter || {}
-  const order = effectiveOrder(snapshot, filter.order)
-  const visible = sortClaims(filterClaims(claims, filter), order)
-  const byPerson = filterClaims(claims, filter, 'quem')
-  const byVerdict = filterClaims(claims, filter, 'vered')
-  const count = (verdict) => byVerdict.filter((claim) => claim.veredito === verdict).length
-  const corrected = byVerdict.filter((claim) => claim.corrigido).length
-  const showCorrected = claims.some((claim) => claim.corrigido)
-  const totalLabel = visible.length === claims.length ? `(${claims.length})` : `(${visible.length} de ${claims.length})`
-  const people = [chip(`Todos ${byPerson.length}`, !filter.quem, 'quem', '')]
-  for (const candidate of candidatesOf(snapshot)) {
-    const n = byPerson.filter((claim) => claim.quem === candidate.id).length
-    people.push(chip(`${candidate.nome} ${n}`, filter.quem === candidate.id, 'quem', candidate.id))
-  }
-  const verdicts = ['verdadeiro', 'impreciso', 'falso', 'sem_dados', 'em_revisao']
-    .filter((verdict) => verdict !== 'em_revisao' || count(verdict) > 0)
-    .map((verdict) => {
-      const pressed = filter.verdict === verdict && !filter.onlyCorrected
-      const dot = verdict === 'sem_dados'
-        ? '<i class="box"></i>'
-        : verdict === 'em_revisao'
-          ? ''
-          : `<i class="dotv ${verdict}"></i>`
-      return chip(`${VERDICT_LABEL[verdict]} ${count(verdict)}`, pressed, 'verdict', verdict, dot)
+export function feedItems(snapshot) {
+  const items = []
+  for (const claim of claimsOf(snapshot)) {
+    items.push({
+      kind: 'claim',
+      t: claim.t,
+      quem: claim.quem,
+      text: claim.afirmacao,
+      claim,
+      key: claimKey(claim),
     })
-  if (showCorrected) verdicts.push(chip(`✎ Corrigidos ${corrected}`, Boolean(filter.onlyCorrected), 'corrected', ''))
-  const windowChip = filter.windowStartMs != null
-    ? chip(`${hhmm(filter.windowStartMs)}–${hhmm(filter.windowEndMs)} ✕`, true, 'window', 'clear')
-    : ''
-  const orderLabel = order === 'recentes' ? '↓ Mais recentes primeiro' : '↓ Na ordem do debate'
-  const cards = visible.length
-    ? `<div class="facts">${visible.map((claim) => factCard(snapshot, claim, state)).join('')}</div>`
-    : `<div class="card"><p class="muted">${claims.length ? 'Nenhum fato com esses filtros.' : 'Os fatos aparecem aqui quando um candidato citar um dado que dá para checar.'}</p></div>`
-  return `<section id="fatos">
-    <h2>Fatos checados <span class="muted small">${totalLabel}</span></h2>
-    <div class="chips">${people.join('')}</div>
-    <div class="chips">${verdicts.join('')}</div>
-    <div class="chips">${windowChip}${chip(orderLabel, false, 'order', order)}</div>
-    ${cards}
-  </section>`
-}
-
-function highlightsHtml(snapshot) {
-  const claims = sortClaims(claimsOf(snapshot).filter((claim) => claim.veredito === 'falso' || claim.veredito === 'impreciso'), 'recentes').slice(0, 6)
-  if (!claims.length) return ''
-  const cards = claims.map((claim) => {
-    const nome = candidatesOf(snapshot).find((candidate) => candidate.id === claim.quem)?.nome || ''
-    return `<button type="button" class="${esc(claim.veredito)}" data-act="jump" data-arg="${esc(claimKey(claim))}">${badge(claim.veredito)}<p><strong>${esc(nome)}</strong> ${esc(claim.afirmacao)}</p></button>`
-  }).join('')
-  return `<section><h3>Destaques: últimos falsos e imprecisos</h3><div class="hl">${cards}</div></section>`
-}
-
-function revisionHtml(snapshot) {
-  const revision = snapshot.revisao
-  if (!revision?.por || !revision?.resumo) return ''
-  const changes = revision.mudancas || []
-  const changed = changes.filter((change) => change.depois && change.depois !== change.antes).length
-  const removed = changes.filter((change) => !change.depois).length
-  const candidates = candidatesOf(snapshot)
-  const erro = (bag, id) => {
-    const counts = bag?.[id]
-    if (!counts) return '–'
-    const index = errorIndex(counts)
-    return index.total ? `${index.erroPct}%` : '–'
   }
-  const compare = candidates.slice(0, 2).map((candidate) => `${esc(candidate.nome)} ${erro(revision.antes, candidate.id)} → ${erro(revision.depois, candidate.id)}`).join(' · ')
-  return `<section class="card rev"><p><strong>✎ Dados revisados e corrigidos pelo ${esc(revision.por)} após o debate. </strong>${changed} vereditos corrigidos · ${removed} checagens removidas · erro ao vivo → revisado: ${compare}</p><p>${esc(revision.resumo)}</p></section>`
+  for (const proposal of snapshot?.propostas || []) {
+    items.push({
+      kind: 'proposta',
+      t: proposal.t,
+      quem: proposal.quem,
+      text: proposal.titulo,
+      proposal,
+      key: `p|${proposal.t}|${proposal.quem}|${proposal.titulo}`,
+    })
+  }
+  for (const attack of snapshot?.ataques || []) {
+    items.push({
+      kind: 'ataque',
+      t: attack.t,
+      quem: attack.quem,
+      text: attack.resumo,
+      attack,
+      key: `a|${attack.t}|${attack.quem}|${attack.resumo}`,
+    })
+  }
+  items.sort((a, b) => a.t - b.t)
+  return items
 }
 
-function infoHtml(state) {
-  const page = state.pageUrl || ''
-  const text = sharePlacar(state.snapshot, state.mode, page)
-  const fonte = state.mode === 'demo' || state.snapshot.simulado
-    ? 'Você está na simulação local. O texto acima descreve o placar publicado.'
-    : `Fonte dos dados: ${esc(state.sourceLabel || '')}`
-  return `<div class="info">
-    <section class="card how">
-      <h3>Como ler</h3>
-      <div class="rowline">${badge('verdadeiro')}<span>os dados confirmam</span></div>
-      <div class="rowline">${badge('impreciso')}<span>exagerado ou fora de contexto</span></div>
-      <div class="rowline">${badge('falso')}<span>os dados contradizem</span></div>
-      <div class="rowline">${badge('sem_dados')}<span>não deu para verificar</span></div>
-      <div class="rowline">${badge('em_revisao')}<span>o áudio não confirmou a frase; fica fora do placar até a conferência</span></div>
-      <p>O Mentirômetro pende para quem teve mais afirmações falsas ou imprecisas (imprecisa conta meio ponto). "Sem dados" fica de fora.</p>
-    </section>
-    <section class="card how">
-      <h3>Como funciona</h3>
+export function resolveVideoId(snapshot, override = '') {
+  return youtubeId(override || snapshot?.video?.id || '')
+}
+
+function tag(label, color) {
+  if (!color) return `<span class="tag t2">${esc(label)}</span>`
+  return `<span class="tag"><i style="background:${esc(color)}"></i>${esc(label)}</span>`
+}
+
+function itemTag(item) {
+  if (item.kind === 'proposta') return tag('Proposta')
+  if (item.kind === 'ataque') return tag('Ataque')
+  const verdict = item.claim?.veredito
+  return tag(VERDICT_LABEL[verdict] || verdict, VERDICT_COLOR[verdict])
+}
+
+function passes(item, filter) {
+  if (filter?.quem && item.quem !== filter.quem) return false
+  if (filter?.verdict) {
+    if (item.kind !== 'claim' || item.claim.veredito !== filter.verdict) return false
+  }
+  if (filter?.windowStartMs != null && filter?.windowEndMs != null) {
+    if (item.t < filter.windowStartMs || item.t >= filter.windowEndMs) return false
+  }
+  return true
+}
+
+function sideItems(items, id, fresh, align) {
+  return items.filter((item) => item.quem === id).slice(-5).map((item) => itemButton(item, fresh, `it ${align}`)).join('')
+}
+
+function itemButton(item, fresh, cls) {
+  const freshCls = fresh?.has(item.key) ? ' fresh' : ''
+  return `<button type="button" class="${cls}${freshCls}" data-act="item" data-arg="${esc(item.key)}">
+    <span class="meta"><span>${hhmm(item.t)}</span>${itemTag(item)}</span>
+    <span class="q">${esc(item.text)}</span>
+  </button>`
+}
+
+function stageSvg(colorA, colorB) {
+  return `<svg class="stage" data-vid="" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <radialGradient id="g1" cx=".5" cy=".35" r=".7"><stop offset="0" stop-color="#1a1d26"/><stop offset=".6" stop-color="#0c0d12"/><stop offset="1" stop-color="#050506"/></radialGradient>
+      <radialGradient id="sp" cx=".5" cy="0" r="1"><stop offset="0" stop-color="#fff" stop-opacity=".09"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+      <linearGradient id="fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14161d"/><stop offset="1" stop-color="#08090b"/></linearGradient>
+    </defs>
+    <rect width="1600" height="900" fill="url(#g1)"/>
+    <rect y="620" width="1600" height="280" fill="url(#fl)"/>
+    <path d="M0 620H1600" stroke="#ffffff10"/>
+    <path d="M540 0L440 700H760L670 0Z" fill="url(#sp)"/>
+    <path d="M930 0L840 700H1160L1060 0Z" fill="url(#sp)"/>
+    <g fill="#262a36" stroke="#ffffff1f">
+      <circle cx="600" cy="430" r="34"/><path d="M540 520q60-60 120 0v40h-120z"/>
+      <path d="M510 540h180l-15 160h-150z" fill="#12141b" stroke="${esc(colorA)}" stroke-opacity=".5"/>
+      <circle cx="1000" cy="430" r="34"/><path d="M940 520q60-60 120 0v40h-120z"/>
+      <path d="M910 540h180l-15 160h-150z" fill="#12141b" stroke="${esc(colorB)}" stroke-opacity=".5"/>
+    </g>
+    <rect x="770" y="360" width="60" height="120" rx="4" fill="#0f1117" stroke="#ffffff0d"/>
+  </svg><span class="play" aria-hidden="true">▶</span>`
+}
+
+function videoHtml(state, colorA, colorB) {
+  const id = resolveVideoId(state.snapshot, state.videoOverride || '')
+  const demo = state.mode === 'demo' || state.snapshot.simulado
+  const status = statusCopy(state.snapshot, state.now, state.mode)
+  let pill = 'PLACAR'
+  if (state.snapshot.encerrado) pill = 'ENCERRADO'
+  else if (demo) pill = 'SIMULAÇÃO'
+  else if (status.vivo) pill = 'AO VIVO'
+  const live = status.vivo && !demo && !state.snapshot.encerrado
+  const media = id
+    ? `<iframe class="stage" data-vid="${esc(id)}" title="Transmissão do debate no YouTube" src="https://www.youtube-nocookie.com/embed/${esc(id)}?rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`
+    : stageSvg(colorA, colorB)
+  return `<div class="video">${media}<span class="live${live ? ' on' : ''}">${live ? '<i></i>' : ''}${pill}</span>
+    <button type="button" class="eye" data-act="overlays" aria-pressed="${state.quiet ? 'true' : 'false'}">${state.quiet ? 'Mostrar' : 'Ocultar'}</button></div>`
+}
+
+function scoreHtml(snapshot) {
+  const people = candidatesOf(snapshot)
+  if (people.length < 2) {
+    return `<header class="top"><div class="logo">Placar da Verdade</div><p class="muted">Aguardando os dois candidatos.</p></header>`
+  }
+  const [left, right] = people
+  const colorA = candidateColor(left, 0)
+  const colorB = candidateColor(right, 1)
+  const tug = tugOfWar(left, right)
+  const pende = pendeLabel(left, right, colorA, colorB)
+  const score = (candidate) => {
+    const index = errorIndex(candidate)
+    return index.total ? String(index.erroPct) : '–'
+  }
+  const who = pende.name
+    ? `${esc(pende.text)} <b style="color:${esc(pende.color)}">${esc(pende.name)}</b>`
+    : esc(pende.text)
+  const label = `Mentirômetro: ${left.nome} ${score(left)}% de erro, ${right.nome} ${score(right)}%. ${pende.reading.headline}. ${pende.reading.detail}`
+  return `<header class="top">
+    <div class="logo">Placar da Verdade</div>
+    <div class="cand"><span class="dot" style="background:${esc(colorA)}"></span>
+      <div><div class="nm">${esc(left.nome)}</div><div class="sub">${left.propostas || 0} propostas · ${left.ataques || 0} ataques</div></div>
+      <div class="sc">${score(left)}</div></div>
+    <div class="meter" role="img" aria-label="${esc(label)}">
+      <div class="lbl">Mentirômetro <span>${who}</span></div>
+      <div class="bar"><div style="width:${tug.leftPct}%;background:${esc(colorA)}"></div><div style="flex:1;background:${esc(colorB)}"></div></div>
+      <div class="lbl2"><span>${tug.leftFalsas} falsas/imprecisas</span><span>${tug.rightFalsas}</span></div>
+    </div>
+    <div class="cand r"><div class="sc">${score(right)}</div>
+      <div style="text-align:right"><div class="nm">${esc(right.nome)}</div><div class="sub">${right.propostas || 0} propostas · ${right.ataques || 0} ataques</div></div>
+      <span class="dot" style="background:${esc(colorB)}"></span></div>
+    <nav class="menu" aria-label="Seções">
+      <button type="button" class="word" data-act="panel" data-arg="linha">Linha do tempo</button>
+      <button type="button" class="word" data-act="panel" data-arg="ler">Como ler</button>
+      <button type="button" class="word" data-act="panel" data-arg="funciona">Como funciona</button>
+      <button type="button" class="k" data-act="panel" data-arg="cmd" aria-label="Abrir comandos"><kbd>⌘K</kbd></button>
+    </nav>
+  </header>`
+}
+
+function listsHtml(items, people, fresh) {
+  if (people.length < 2) return ''
+  const [left, right] = people
+  const colorA = candidateColor(left, 0)
+  const colorB = candidateColor(right, 1)
+  const leftHtml = sideItems(items, left.id, fresh, 'l')
+  const rightHtml = sideItems(items, right.id, fresh, 'r')
+  return `<div class="lst a fade"><div class="lh"><span class="dot" style="background:${esc(colorA)}"></span>${esc(left.nome)}</div>${leftHtml}</div>
+    <div class="lst b fade"><div class="lh end">${esc(right.nome)}<span class="dot" style="background:${esc(colorB)}"></span></div>${rightHtml}</div>`
+}
+
+function latestClaim(items) {
+  const claims = items.filter((item) => item.kind === 'claim')
+  return claims.length ? claims[claims.length - 1] : null
+}
+
+function captionHtml(item, people, vivo) {
+  if (!item) {
+    return `<div class="capw"><div class="cap" style="--c:#62666D"><div class="capq">Aguardando a primeira checagem.</div><div class="cape">Falso e impreciso só entram no placar quando o segundo modelo confirma.</div></div></div>`
+  }
+  const person = people.find((candidate) => candidate.id === item.quem)
+  const index = Math.max(0, people.findIndex((candidate) => candidate.id === item.quem))
+  const color = candidateColor(person || {}, index)
+  const href = item.claim?.fonte ? safeHttpUrl(item.claim.fonte.url) : ''
+  const fonte = href ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">Fonte ↗</a>` : ''
+  const motivo = item.claim?.motivo ? esc(item.claim.motivo) : 'Ainda sem motivo publicado.'
+  const stamp = vivo ? `${hhmm(item.t)} · agora` : hhmm(item.t)
+  return `<div class="capw"><div class="cap" style="--c:${esc(color)}">
+    <div class="capm"><span style="color:${esc(color)}">${esc(person?.nome || '')}</span><span class="muted">${stamp}</span>${itemTag(item)}</div>
+    <div class="capq">“${esc(item.text)}”</div>
+    <div class="cape">${motivo} ${fonte}</div>
+  </div></div>`
+}
+
+function mobileFeed(items, people, filter, fresh, encerrado) {
+  const rows = items.slice().reverse().slice(0, 40)
+  const on = filter?.verdict === 'em_revisao'
+  const chips = rows.map((item) => {
+    const person = people.find((candidate) => candidate.id === item.quem)
+    const index = Math.max(0, people.findIndex((candidate) => candidate.id === item.quem))
+    const color = candidateColor(person || {}, index)
+    const right = index === 1
+    const freshCls = fresh?.has(item.key) ? ' fresh' : ''
+    return `<button type="button" class="fi${right ? ' r' : ''}${freshCls}" data-act="item" data-arg="${esc(item.key)}">
+      <span class="who" style="color:${esc(color)}">${esc(person?.nome || '')} · ${hhmm(item.t)}</span>
+      <span class="meta">${itemTag(item)}</span>
+      <span class="q">${esc(item.text)}</span>
+    </button>`
+  }).join('')
+  const heading = encerrado ? 'Placar final · mais recentes' : 'Ao vivo · mais recentes'
+  return `<div class="mfeed">
+    <div class="lh between"><span>${heading}</span>
+      <button type="button" class="tag${on ? '' : ' t2'}" data-act="verdict" data-arg="em_revisao"><i style="background:#A594F9"></i>Em revisão</button>
+    </div>${chips || '<p class="muted">Nenhum item com esse filtro.</p>'}</div>`
+}
+
+function sheet(title, body) {
+  return `<div class="back" data-act="close"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <div class="sheet-h"><h2>${esc(title)}</h2><button type="button" class="x" data-act="close" aria-label="Fechar">✕</button></div>
+    ${body}
+  </div></div>`
+}
+
+function panelHtml(state, items) {
+  const panel = state.panel
+  if (!panel) return ''
+  const snapshot = state.snapshot
+  if (panel === 'cmd') {
+    const buttons = [
+      ['linha', 'Linha do tempo'],
+      ['ler', 'Como ler'],
+      ['funciona', 'Como funciona'],
+      ['propostas', 'Propostas'],
+      ['arquivo', 'Debates passados'],
+    ].map(([id, label]) => `<button type="button" data-act="panel" data-arg="${id}">${label}</button>`).join('')
+    return sheet('Comandos', `<div class="cmd">${buttons}</div>`)
+  }
+  if (panel === 'ler') {
+    return sheet('Como ler', `<div class="prose">
+      <p>${tag('Verdadeiro', VERDICT_COLOR.verdadeiro)} os dados confirmam</p>
+      <p>${tag('Impreciso', VERDICT_COLOR.impreciso)} exagerado ou fora de contexto</p>
+      <p>${tag('Falso', VERDICT_COLOR.falso)} os dados contradizem</p>
+      <p>${tag('Sem dados', VERDICT_COLOR.sem_dados)} não deu para verificar</p>
+      <p>${tag('Em revisão', VERDICT_COLOR.em_revisao)} o áudio não confirmou a frase; fica fora do placar até a conferência</p>
+      <p>O número grande é o índice de erro: falso vale 1, impreciso vale meio, verdadeiro vale 0. Sem dados e em revisão ficam de fora. A barra pende para quem tem o índice mais alto, e só depois de 3 fatos checáveis de cada lado.</p>
+    </div>`)
+  }
+  if (panel === 'funciona') {
+    const demo = state.mode === 'demo' || snapshot.simulado
+    return sheet('Como funciona', `<div class="prose">
       <p>O áudio do debate é transcrito a cada 10 segundos e a voz identifica quem está falando. Uma IA lê cada fala e separa as afirmações que valem checagem (números, dados, atos de governo), as propostas concretas e os ataques ao adversário. Retórica e opinião não viram checagem.</p>
       <p>Cada afirmação é buscada na web (agências de checagem, imprensa e dados oficiais) e julgada com as mesmas regras para os dois candidatos.</p>
       <p>Antes de publicar um "falso" ou "impreciso", o trecho é ouvido de novo por outros modelos para confirmar a frase exata. Se o áudio não confirmar, o fato fica "em revisão" e não conta no placar.</p>
-      <p><strong>É uma checagem automática e pode errar. </strong>Confira a fonte antes de compartilhar.</p>
-      <p class="muted small">${fonte}</p>
-    </section>
-    <section class="card">
-      <h3>Mostre o placar</h3>
-      <div class="actions">
-        <a class="btn" href="${esc(xUrl(text))}" target="_blank" rel="noopener noreferrer">Postar no X</a>
-        <a class="btn" href="${esc(whatsAppUrl(text))}" target="_blank" rel="noopener noreferrer">Enviar no WhatsApp</a>
-      </div>
-    </section>
-  </div>`
-}
-
-function proposalsHtml(snapshot) {
-  const columns = candidatesOf(snapshot).map((candidate) => {
-    const mine = (snapshot.propostas || [])
-      .filter((proposal) => proposal.quem === candidate.id)
-      .slice()
-      .sort((a, b) => (b.vezes - a.vezes) || (b.t - a.t))
-    const cards = mine.length
-      ? mine.map((proposal) => `<article class="card prop"><h3>${esc(proposal.titulo)}</h3><p>${esc(proposal.explicacao)}</p>${proposal.vezes > 1 ? `<p class="muted small">Citada ${proposal.vezes} vezes</p>` : ''}</article>`).join('')
-      : '<div class="card"><p class="muted">Nenhuma proposta concreta até agora.</p></div>'
-    return `<div><h3>${esc(candidate.nome)}</h3>${cards}</div>`
-  }).join('')
-  return `<section>
-    <button type="button" class="back" data-act="placar">← Voltar ao placar</button>
-    <h2>Propostas explicadas</h2>
-    <p class="muted">O que cada candidato propôs de concreto, da proposta mais repetida para a mais recente.</p>
-    <div class="pair">${columns}</div>
-  </section>`
-}
-
-function xUrl(text) {
-  return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`
-}
-
-function whatsAppUrl(text) {
-  return `https://wa.me/?text=${encodeURIComponent(text)}`
+      <p><strong>É uma checagem automática e pode errar.</strong> Confira a fonte antes de compartilhar.</p>
+      <p class="muted">${demo ? 'Você está na simulação. Os fatos são fictícios.' : `Fonte dos dados: ${esc(state.sourceLabel || '')}`}</p>
+    </div>`)
+  }
+  if (panel === 'propostas') {
+    const blocks = candidatesOf(snapshot).map((candidate, index) => {
+      const mine = (snapshot.propostas || []).filter((proposal) => proposal.quem === candidate.id)
+        .slice().sort((a, b) => (b.vezes - a.vezes) || (b.t - a.t))
+      const cards = mine.length
+        ? mine.map((proposal) => `<article class="prop"><h3>${esc(proposal.titulo)}</h3><p>${esc(proposal.explicacao || '')}</p>${proposal.vezes > 1 ? `<p class="muted">Citada ${proposal.vezes} vezes</p>` : ''}</article>`).join('')
+        : '<p class="muted">Nenhuma proposta concreta até agora.</p>'
+      return `<section><h3 style="color:${candidateColor(candidate, index)}">${esc(candidate.nome)}</h3>${cards}</section>`
+    }).join('')
+    return sheet('Propostas', `<p class="muted">O que cada candidato propôs de concreto, da mais repetida para a mais recente.</p><div class="pair">${blocks}</div>`)
+  }
+  if (panel === 'linha') {
+    const timeline = timelineOf(snapshot)
+    const filter = state.filter || {}
+    if (!timeline.rows.length) return sheet('Linha do tempo', '<p class="muted">A linha do tempo começa no primeiro ataque ou proposta.</p>')
+    const columns = timeline.rows[0].columns
+    const rows = timeline.rows.map((row) => {
+      const cols = row.columns.map((column) => {
+        const active = filter.windowStartMs === column.startMs
+        const stack = Math.max(1, timeline.maxStack)
+        const attackH = column.attacks ? Math.max(3, (column.attacks / stack) * 48) : 0
+        const proposalH = column.proposals ? Math.max(3, (column.proposals / stack) * 48) : 0
+        return `<button type="button" class="col${active ? ' on' : ''}" data-act="window" data-arg="${column.startMs}:${column.endMs}" aria-pressed="${active ? 'true' : 'false'}" aria-label="${esc(row.name)} ${hhmm(column.startMs)}">${column.attacks ? `<i class="atk" style="height:${attackH.toFixed(0)}px"></i>` : ''}${column.proposals ? `<i class="pro" style="height:${proposalH.toFixed(0)}px"></i>` : ''}</button>`
+      }).join('')
+      return `<div class="trow"><span>${esc(row.name)}</span><div class="cols">${cols}</div></div>`
+    }).join('')
+    const hours = columns.map((column, index) => `<span>${index % timeline.labelStep === 0 ? hhmm(column.startMs) : ''}</span>`).join('')
+    const clear = filter.windowStartMs != null ? `<button type="button" class="tag" data-act="window" data-arg="clear">${hhmm(filter.windowStartMs)}–${hhmm(filter.windowEndMs)} ✕</button>` : ''
+    return sheet('Linha do tempo', `<p class="muted">A cada 5 minutos. Toque numa coluna para ver os itens daquele trecho.</p><p class="legend"><i class="atk"></i> Ataques <i class="pro"></i> Propostas ${clear}</p><div class="tchart">${rows}<div class="hours">${hours}</div></div>`)
+  }
+  if (panel === 'arquivo') {
+    const current = state.archive || ''
+    return sheet('Debates passados', `<form class="archive" data-act="archive">
+      <label>Data do debate <input name="d" inputmode="numeric" placeholder="2026-10-18" value="${esc(current)}" autocomplete="off"></label>
+      <button type="submit" class="go">Abrir</button>
+    </form><p class="muted">O arquivo é <span class="mono">placar-AAAA-MM-DD.json</span> no mesmo host do placar. Na simulação, 18/10 está salvo localmente.</p>
+    <button type="button" class="word link" data-act="hoje">Voltar ao debate de agora</button>`)
+  }
+  if (panel === 'detalhe') {
+    const item = items.find((entry) => entry.key === state.detailKey) || feedItems(snapshot).find((entry) => entry.key === state.detailKey)
+    if (!item) return ''
+    const person = candidatesOf(snapshot).find((candidate) => candidate.id === item.quem)
+    const index = Math.max(0, candidatesOf(snapshot).findIndex((candidate) => candidate.id === item.quem))
+    const color = candidateColor(person || {}, index)
+    let extra = ''
+    if (item.kind === 'claim') {
+      const href = item.claim.fonte ? safeHttpUrl(item.claim.fonte.url) : ''
+      extra = `${item.claim.literal ? `<p class="quote">“${esc(item.claim.literal)}”</p>` : ''}
+        <p>${esc(item.claim.motivo || 'Ainda sem motivo publicado.')}</p>
+        ${href ? `<p><a href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(item.claim.fonte.titulo)} ↗</a></p>` : '<p class="muted">Nenhuma fonte encontrada.</p>'}
+        ${item.claim.corrigido ? `<p class="muted">Revisado após o debate · ao vivo era ${esc(VERDICT_LABEL[item.claim.corrigido.antes] || '')}</p>` : ''}`
+    } else if (item.kind === 'proposta') {
+      extra = `<p>${esc(item.proposal.explicacao || '')}</p>${item.proposal.vezes > 1 ? `<p class="muted">Citada ${item.proposal.vezes} vezes</p>` : ''}`
+    }
+    return sheet(person?.nome || 'Detalhe', `<div class="cap flat" style="--c:${esc(color)}">
+      <div class="capm"><span style="color:${esc(color)}">${esc(person?.nome || '')}</span><span class="muted">${hhmm(item.t)}</span>${itemTag(item)}</div>
+      <div class="capq">“${esc(item.text)}”</div>
+      <div class="cape">${extra}</div>
+    </div>`)
+  }
+  return ''
 }
 
 export function renderBoard(state) {
-  if (state.view === 'propostas') return proposalsHtml(state.snapshot)
-  const audience = state.snapshot.audiencia
-  const visits = state.snapshot.visitas
-  const crowd = audience == null ? '' : `<p class="muted small">${formatPt(audience)} ${audience === 1 ? 'pessoa assistindo' : 'pessoas assistindo'} agora${visits == null ? '' : ` · ${formatPt(visits)} visitas`}</p>`
-  return `<div class="stack">${crowd}
-    <div class="top">${stageHtml(state)}${visorHtml(state.snapshot)}</div>
-    ${revisionHtml(state.snapshot)}
-    ${highlightsHtml(state.snapshot)}
-    ${toneHtml(state.snapshot)}
-    ${timelineHtml(state.snapshot, state.filter || {})}
-    ${factsHtml(state)}
-    ${infoHtml(state)}</div>`
-}
-
-export function modeSwitch(mode) {
-  return `<div class="modes" role="group" aria-label="Fonte do placar">
-    <button type="button" data-act="demo" aria-pressed="${mode === 'demo' ? 'true' : 'false'}">Simulação</button>
-    <button type="button" data-act="live" aria-pressed="${mode === 'live' ? 'true' : 'false'}">Ao vivo</button>
-  </div>`
-}
-
-export function statusLine(snapshot, now, mode) {
-  const status = statusCopy(snapshot, now, mode)
-  return `<span class="dot${status.vivo ? ' on' : ''}"></span><span>${esc(status.texto)}</span>`
+  const snapshot = state.snapshot
+  const people = candidatesOf(snapshot)
+  const colorA = candidateColor(people[0] || {}, 0)
+  const colorB = candidateColor(people[1] || {}, 1)
+  const items = feedItems(snapshot).filter((item) => passes(item, state.filter))
+  const demo = state.mode === 'demo' || snapshot.simulado
+  const status = statusCopy(snapshot, state.now || Date.now(), state.mode)
+  const note = state.banner || snapshot.aviso || (demo ? 'Simulação com fatos fictícios. Não é a checagem do debate.' : '')
+  return `${videoHtml(state, colorA, colorB)}
+    <div class="edge"></div>
+    ${scoreHtml(snapshot)}
+    ${note ? `<p class="simline" role="status">${esc(note)}</p>` : ''}
+    ${listsHtml(items, people, state.fresh)}
+    ${captionHtml(latestClaim(items), people, status.vivo && !snapshot.encerrado)}
+    ${mobileFeed(items, people, state.filter, state.fresh, snapshot.encerrado)}
+    ${panelHtml(state, items)}`
 }
 
 function boot() {
   const app = document.getElementById('app')
   if (!app) return
-  const modes = document.getElementById('modes')
-  const status = document.getElementById('status')
-  const banner = document.getElementById('banner')
-  const bootNote = document.getElementById('boot')
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const baseDefault = window.PLACAR_BASE || ''
   const state = {
     mode: 'demo',
     snapshot: null,
     filter: {},
-    view: location.hash === '#propostas' ? 'propostas' : 'placar',
-    open: new Set(),
+    panel: null,
+    detailKey: '',
+    quiet: false,
     fresh: new Set(),
-    pending: 0,
-    embed: false,
+    seen: new Set(),
+    primed: false,
     now: Date.now(),
     pageUrl: location.href.split('#')[0],
     sourceLabel: '',
     banner: '',
     fallbackNote: '',
-    seen: new Set(),
-    primed: false,
-    lastAngle: 0,
+    archive: '',
+    videoOverride: window.PLACAR_VIDEO || '',
   }
   let feed = null
-  let plan = resolveFeed(location.search, baseDefault, Date.now())
 
   function paint() {
     if (!state.snapshot) return
     state.now = Date.now()
     state.pageUrl = location.href.split('#')[0]
-    modes.innerHTML = modeSwitch(state.mode)
-    status.className = `status${statusCopy(state.snapshot, state.now, state.mode).vivo ? ' vivo' : ''}`
-    status.innerHTML = statusLine(state.snapshot, state.now, state.mode)
-    banner.hidden = !state.banner
-    banner.textContent = state.banner || ''
-    const reading = candidatesOf(state.snapshot)
-    const angle = reading.length > 1 ? mentiromentro(reading[0].nome, reading[1].nome, reading[0], reading[1]).angle : 0
-    app.innerHTML = renderBoard(state) + (state.pending > 0 ? `<button type="button" class="novo" data-act="jump-facts">↑ ${state.pending} ${state.pending === 1 ? 'fato novo' : 'fatos novos'}</button>` : '')
-    const needle = app.querySelector('.needle')
-    if (needle && !reduce) {
-      needle.style.setProperty('--ang', `${state.lastAngle}deg`)
-      requestAnimationFrame(() => needle.style.setProperty('--ang', `${angle}deg`))
+    const previous = app.querySelector('.stage')
+    const nextId = resolveVideoId(state.snapshot, state.videoOverride || '')
+    const sameStage = previous && (previous.getAttribute('data-vid') || '') === nextId
+    app.className = `app${state.quiet ? ' quiet' : ''}`
+    app.innerHTML = renderBoard(state)
+    if (sameStage) {
+      const slot = app.querySelector('.stage')
+      if (slot) slot.replaceWith(previous)
     }
-    state.lastAngle = angle
-    bootNote.hidden = true
-    if (!state.didHash && location.hash === '#fatos') {
-      state.didHash = true
-      document.getElementById('fatos')?.scrollIntoView()
+    if (!reduce) {
+      app.querySelectorAll('.fresh').forEach((node) => node.classList.add('run'))
     }
-  }
-
-  function noteFresh(snapshot) {
-    const ids = new Set(claimsOf(snapshot).map(claimKey))
-    if (!state.primed) {
-      state.seen = ids
-      state.primed = true
-      return
-    }
-    const fresh = [...ids].filter((id) => !state.seen.has(id))
-    state.seen = ids
-    if (!fresh.length) return
-    state.fresh = new Set(fresh)
-    const fatos = document.getElementById('fatos')
-    if (fatos && fatos.getBoundingClientRect().top < 0 && effectiveOrder(snapshot, state.filter.order) === 'recentes' && !snapshot.encerrado) {
-      state.pending += fresh.length
-    }
-    setTimeout(() => {
-      state.fresh = new Set()
-      document.querySelectorAll('.fact.fresh').forEach((node) => node.classList.remove('fresh'))
-    }, 2000)
   }
 
   function show(snapshot, mode) {
-    noteFresh(snapshot)
+    const keys = new Set(feedItems(snapshot).map((item) => item.key))
+    const fresh = new Set()
+    if (state.primed) {
+      for (const key of keys) if (!state.seen.has(key)) fresh.add(key)
+    } else {
+      const newest = [...feedItems(snapshot)].sort((a, b) => b.t - a.t)[0]
+      if (newest) fresh.add(newest.key)
+      state.primed = true
+    }
+    state.seen = keys
+    state.fresh = fresh
     state.snapshot = snapshot
     state.mode = mode
     paint()
   }
 
-  async function load(next, { fallback = false } = {}) {
-    plan = next
+  function load(next, { fallback = false } = {}) {
     feed?.stop()
+    state.archive = next.archive || ''
     state.sourceLabel = next.url.replace(/[?&]t=\d+$/, '')
-    const started = createFeed({
+    feed = createFeed({
       urlFor: (now) => (next.mode === 'demo'
         ? feedUrl({ demo: true, archive: next.archive, now })
         : feedUrl({ base: next.base, archive: next.archive, now })),
@@ -802,8 +800,7 @@ function boot() {
       isHidden: () => document.hidden,
       onData: (data) => {
         if (next.mode === 'demo') {
-          state.banner = state.fallbackNote
-            || 'Simulação com fatos fictícios. Não é a checagem do debate. Toque em Ao vivo para o placar publicado.'
+          state.banner = state.fallbackNote || ''
         } else {
           state.fallbackNote = ''
           state.banner = ''
@@ -819,17 +816,13 @@ function boot() {
             return
           }
           state.banner = 'Sem conexão com o placar. Tentando de novo…'
-          banner.hidden = false
-          banner.textContent = state.banner
-          bootNote.hidden = true
+          if (state.snapshot) paint()
           return
         }
         state.banner = 'Sem conexão com o placar. Tentando de novo…'
-        banner.hidden = false
-        banner.textContent = state.banner
+        paint()
       },
     })
-    feed = started
     feed.start()
   }
 
@@ -843,58 +836,30 @@ function boot() {
     if (!node || !state.snapshot) return
     const act = node.dataset.act
     const arg = node.dataset.arg || ''
-    if (act === 'demo') {
-      state.fallbackNote = ''
-      state.primed = false
-      state.filter = {}
-      state.embed = false
-      const archive = new URLSearchParams(location.search).get('d') || ''
-      load(resolveFeed(archive ? `?demo=1&d=${encodeURIComponent(archive)}` : '?demo=1', '', Date.now()))
-      return
-    }
-    if (act === 'live') {
-      state.primed = false
-      state.filter = {}
-      state.embed = false
-      state.banner = ''
-      state.fallbackNote = ''
-      const kept = new URLSearchParams(location.search)
-      kept.delete('demo')
-      const search = kept.toString()
-      load(resolveFeed(search ? `?${search}` : '', baseDefault, Date.now()), { fallback: false })
-      return
-    }
-    if (act === 'proposals') {
-      state.view = 'propostas'
-      history.replaceState(null, '', '#propostas')
+    if (act === 'close' && event.target.closest('.sheet') && !event.target.closest('.x')) return
+    if (act === 'close') {
+      state.panel = null
       paint()
       return
     }
-    if (act === 'placar') {
-      state.view = 'placar'
-      history.replaceState(null, '', location.pathname + location.search)
+    if (act === 'panel') {
+      state.panel = arg
       paint()
       return
     }
-    if (act === 'quem') {
-      state.filter = { ...state.filter, quem: arg || undefined }
-      if (!arg) delete state.filter.quem
+    if (act === 'overlays') {
+      state.quiet = !state.quiet
+      paint()
+      return
+    }
+    if (act === 'item') {
+      state.detailKey = arg
+      state.panel = 'detalhe'
       paint()
       return
     }
     if (act === 'verdict') {
-      const same = state.filter.verdict === arg && !state.filter.onlyCorrected
-      state.filter = { ...state.filter, verdict: same ? undefined : arg, onlyCorrected: false }
-      paint()
-      return
-    }
-    if (act === 'corrected') {
-      state.filter = { ...state.filter, onlyCorrected: !state.filter.onlyCorrected, verdict: undefined }
-      paint()
-      return
-    }
-    if (act === 'order') {
-      state.filter = { ...state.filter, order: arg === 'recentes' ? 'debate' : 'recentes' }
+      state.filter = { ...state.filter, verdict: state.filter.verdict === arg ? undefined : arg }
       paint()
       return
     }
@@ -904,98 +869,50 @@ function boot() {
         delete state.filter.windowEndMs
       } else {
         const [start, end] = arg.split(':').map(Number)
-        const same = state.filter.windowStartMs === start
-        if (same) {
+        if (state.filter.windowStartMs === start) {
           delete state.filter.windowStartMs
           delete state.filter.windowEndMs
         } else {
           state.filter.windowStartMs = start
           state.filter.windowEndMs = end
-          state.view = 'placar'
         }
       }
       paint()
-      if (arg !== 'clear') document.getElementById('fatos')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
       return
     }
-    if (act === 'jump' || act === 'jump-facts') {
-      state.pending = 0
-      state.view = 'placar'
-      if (act === 'jump') state.open.add(arg)
-      paint()
-      const target = act === 'jump' ? document.getElementById(`fato-${CSS.escape(arg)}`) : document.getElementById('fatos')
-      target?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
-      return
-    }
-    if (act === 'embed') {
-      state.embed = true
-      paint()
-      return
-    }
-    if (act === 'close-embed') {
-      state.embed = false
-      paint()
-      return
-    }
-    if (act === 'share-fact') {
-      const claim = claimsOf(state.snapshot).find((item) => claimKey(item) === arg)
-      if (!claim) return
-      const nome = candidatesOf(state.snapshot).find((candidate) => candidate.id === claim.quem)?.nome || ''
-      const text = `${nome} disse: "${claim.afirmacao}" → ${VERDICT_LABEL[claim.veredito] || claim.veredito}. ${claim.motivo || ''}\n${state.pageUrl}`
-      node.parentElement?.querySelector('.sharebox')?.remove()
-      const share = document.createElement('div')
-      share.className = 'card sharebox'
-      share.innerHTML = `<h3>Compartilhar este fato</h3><p>${esc(claim.afirmacao)}</p><div class="actions"><a class="btn" href="${esc(whatsAppUrl(text))}">WhatsApp</a><a class="btn" href="${esc(xUrl(text))}">Postar no X</a><button type="button" class="ghost" data-act="copy">Copiar texto</button></div>`
-      share.querySelector('[data-act="copy"]').addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(text)
-          state.banner = 'Texto copiado'
-        } catch {
-          state.banner = 'Não foi possível copiar'
-        }
-        banner.hidden = false
-        banner.textContent = state.banner
-      })
-      node.after(share)
+    if (act === 'hoje') {
+      const kept = new URLSearchParams(location.search)
+      kept.delete('d')
+      const search = kept.toString()
+      location.search = search ? `?${search}` : ''
     }
   })
 
-  document.addEventListener('toggle', (event) => {
-    const details = event.target
-    if (!(details instanceof HTMLDetailsElement)) return
-    const key = details.dataset.key
-    if (!key) return
-    if (details.open) state.open.add(key)
-    else state.open.delete(key)
-    const summary = details.querySelector('summary')
-    if (summary) summary.textContent = details.open ? 'Ocultar dados e fonte' : 'Ver dados e fonte'
-  }, true)
+  document.addEventListener('submit', (event) => {
+    const form = event.target
+    if (!(form instanceof HTMLFormElement) || form.dataset.act !== 'archive') return
+    event.preventDefault()
+    const value = new FormData(form).get('d')
+    const date = String(value || '').trim()
+    if (!/^[\w-]{1,40}$/.test(date)) return
+    const kept = new URLSearchParams(location.search)
+    kept.set('d', date)
+    location.search = `?${kept.toString()}`
+  })
 
-  window.addEventListener('scroll', () => {
-    const fatos = document.getElementById('fatos')
-    if (state.pending > 0 && fatos && fatos.getBoundingClientRect().top >= 0) {
-      state.pending = 0
-      document.querySelector('.novo')?.remove()
+  document.addEventListener('keydown', (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault()
+      if (!state.snapshot) return
+      state.panel = state.panel === 'cmd' ? null : 'cmd'
+      paint()
+    } else if (event.key === 'Escape' && state.panel) {
+      state.panel = null
+      paint()
     }
-  }, { passive: true })
+  })
 
-  setInterval(() => {
-    if (!state.snapshot || document.hidden) return
-    state.now = Date.now()
-    const line = status.querySelector('span:last-child')
-    const copy = statusCopy(state.snapshot, state.now, state.mode)
-    if (line) line.textContent = copy.texto
-    status.className = `status${copy.vivo ? ' vivo' : ''}`
-    const pos = document.querySelector('[data-clock="pos"]')
-    if (pos) pos.textContent = positionLabel(state.snapshot, state.now, state.mode)
-    const count = document.querySelector('[data-clock="count"]')
-    if (count && state.snapshot.encerrado?.proximo) {
-      const when = Date.parse(state.snapshot.encerrado.proximo)
-      if (!Number.isNaN(when)) count.textContent = faltaPara(when, state.now)
-    }
-  }, 1000)
-
-  load(plan, { fallback: plan.mode === 'live' })
+  load(resolveFeed(location.search, baseDefault, Date.now()), { fallback: true })
 }
 
 if (typeof document !== 'undefined' && document.getElementById?.('app')) boot()

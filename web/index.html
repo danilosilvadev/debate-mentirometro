@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Placar da Verdade — debate ao vivo</title>
   <meta name="description" content="Os fatos citados no debate, checados em tempo real, com a fonte ao lado. Mentirômetro, propostas, ataques e a linha do tempo.">
-  <meta name="theme-color" content="#e4e6e3">
+  <meta name="theme-color" content="#08090A">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/placar.css">
   <!-- Ao publicar em outro domínio, troque og:url e og:image pelo endereço absoluto do site. -->
   <meta property="og:title" content="Placar da Verdade — debate ao vivo">
@@ -24,20 +25,8 @@
   <meta name="twitter:image" content="https://placar.zenithonacademy.com.br/og.jpg">
 </head>
 <body>
-  <a class="skip" href="#fatos">Ir para os fatos</a>
-  <header class="topbar">
-    <div class="wrap topbar-row">
-      <h1>Placar da Verdade</h1>
-      <div id="modes"></div>
-    </div>
-    <div class="wrap">
-      <p id="status" class="status"></p>
-    </div>
-  </header>
-  <div id="banner" class="banner" hidden></div>
-  <main id="app" class="wrap"></main>
-  <p id="boot" class="boot">Conectando…</p>
-  <noscript><p class="boot">Este placar precisa de JavaScript para buscar os fatos checados.</p></noscript>
+  <div id="app" class="app"></div>
+  <noscript>Este placar precisa de JavaScript para buscar os fatos checados.</noscript>
   <script src="config.js"></script>
   <script type="module" src="js/placar.mjs"></script>
 </body>

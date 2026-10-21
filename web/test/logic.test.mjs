@@ -2,14 +2,20 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import {
+  candidateColor,
   changedStamp,
+  claimKey,
+  claimsOf,
   createFeed,
   errorIndex,
   feedUrl,
   mentiromentro,
+  pendeLabel,
   renderBoard,
   resolveFeed,
+  resolveVideoId,
   timelineOf,
+  tugOfWar,
 } from '../js/placar.mjs'
 
 test('meio ponto e 45 graus iguais ao app', () => {
@@ -104,27 +110,53 @@ test('o polling não busca com a aba escondida', async () => {
   assert.equal(fetches, 2)
 })
 
+test('a barra pende para o índice de erro, com a cor vinda do dado', () => {
+  const left = { nome: 'Ana', verdadeiro: 3 }
+  const right = { nome: 'Bia', verdadeiro: 2, falso: 2 }
+  const tug = tugOfWar(left, right)
+  assert.equal(tug.leftPct, 0)
+  assert.equal(tug.rightPct, 100)
+  assert.equal(tug.rightFalsas, 2)
+  const pende = pendeLabel(left, right, '#7AA2F7', '#E0AF68')
+  assert.equal(pende.text, 'pende para')
+  assert.equal(pende.name, 'Bia')
+  assert.equal(pende.color, '#E0AF68')
+  assert.equal(candidateColor({ cor: '#abc' }, 0), '#abc')
+  assert.equal(candidateColor({ color: 'azul' }, 1), '#E0AF68')
+  assert.equal(candidateColor({}, 0), '#7AA2F7')
+  assert.equal(resolveVideoId({ video: { id: 'dQw4w9WgXcQ' } }, 'abcdefghijk'), 'abcdefghijk')
+  assert.equal(resolveVideoId({ video: { id: 'curto' } }), '')
+})
+
 test('a simulação desenha o placar e esconde script', async () => {
   const snapshot = JSON.parse(await readFile(new URL('../demo/placar.json', import.meta.url), 'utf8'))
-  const html = renderBoard({
+  const base = {
     mode: 'demo',
     snapshot,
     filter: {},
-    view: 'placar',
-    open: new Set(),
     fresh: new Set(),
     now: snapshot.atualizado,
     pageUrl: 'http://127.0.0.1/',
     sourceLabel: 'demo/placar.json',
-  })
+  }
+  const html = renderBoard(base)
   assert.match(html, /Mentirômetro/)
-  assert.match(html, /Flávio Bolsonaro está errando mais/)
-  assert.match(html, /Fatos checados/)
+  assert.match(html, /pende para/)
+  assert.match(html, /Flávio Bolsonaro/)
+  assert.match(html, /As contas do governo fecharam/)
+  assert.match(html, /Em revisão/)
+  assert.match(html, /SIMULAÇÃO/)
   assert.match(html, /Como funciona/)
-  assert.match(html, /É uma checagem automática e pode errar/)
   assert.doesNotMatch(html, /<script/i)
-  assert.match(html, /exemplo\.com/)
-  const proposals = renderBoard({ mode: 'demo', snapshot, view: 'propostas', now: snapshot.atualizado, pageUrl: 'http://x/' })
+  assert.doesNotMatch(html, /youtube/i)
+  const guide = renderBoard({ ...base, panel: 'funciona' })
+  assert.match(guide, /Como funciona/)
+  assert.match(guide, /pode errar/)
+  const proposals = renderBoard({ ...base, panel: 'propostas' })
   assert.match(proposals, /Ampliar vagas em creche/)
   assert.match(proposals, /Citada 2 vezes/)
+  const claim = claimsOf(snapshot).find((item) => item.fonte?.url?.includes('exemplo.com'))
+  const detail = renderBoard({ ...base, panel: 'detalhe', detailKey: claimKey(claim) })
+  assert.match(detail, /exemplo\.com/)
+  assert.match(detail, new RegExp(claim.literal))
 })
