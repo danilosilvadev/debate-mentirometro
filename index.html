@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <script>
+    // Caminhos relativos funcionam na raiz local e em /debate-mentirometro/.
+    (function () {
+      var path = location.pathname
+      if (!/\/$/.test(path) && !/\.[a-z0-9]+$/i.test(path.split('/').pop() || '')) path += '/'
+      else if (!/\/$/.test(path)) path = path.replace(/[^/]*$/, '')
+      var base = document.createElement('base')
+      base.href = path
+      document.currentScript.after(base)
+    })()
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Placar da Verdade — debate ao vivo</title>
+  <meta name="description" content="Os fatos citados no debate, checados em tempo real, com a fonte ao lado. Mentirômetro, propostas, ataques e a linha do tempo.">
+  <meta name="theme-color" content="#08090A">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/placar.css">
+  <!-- Ao publicar em outro domínio, troque og:url e og:image pelo endereço absoluto do site. -->
+  <meta property="og:title" content="Placar da Verdade — debate ao vivo">
+  <meta property="og:description" content="Os fatos citados no debate, checados em tempo real, com a fonte ao lado.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:url" content="https://danilosilvadev.github.io/debate-mentirometro/">
+  <meta property="og:image" content="https://danilosilvadev.github.io/debate-mentirometro/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Placar da Verdade, o placar ao vivo do debate.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Placar da Verdade — debate ao vivo">
+  <meta name="twitter:description" content="Os fatos citados no debate, checados em tempo real, com a fonte ao lado.">
+  <meta name="twitter:image" content="https://danilosilvadev.github.io/debate-mentirometro/og.jpg">
+</head>
+<body>
+  <div id="app" class="app"></div>
+  <noscript>Este placar precisa de JavaScript para buscar os fatos checados.</noscript>
+  <script src="config.js"></script>
+  <script type="module" src="js/placar.mjs"></script>
+</body>
+</html>

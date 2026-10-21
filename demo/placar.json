@@ -1,0 +1,264 @@
+{
+  "atualizado": 1792457820000,
+  "simulado": true,
+  "pausado": false,
+  "aviso": "Simulação com fatos fictícios. Não é a checagem do debate.",
+  "audiencia": 1840,
+  "visitas": 22100,
+  "video": {
+    "id": "",
+    "ao_vivo": true,
+    "inicio": 0,
+    "t0": 1792454700000,
+    "comeco": 1792454700000,
+    "data": "2026-10-19T21:05:00-03:00"
+  },
+  "candidatos": {
+    "1": {
+      "nome": "Lula",
+      "verdadeiro": 2,
+      "impreciso": 1,
+      "falso": 1,
+      "sem_dados": 1,
+      "propostas": 3,
+      "ataques": 1,
+      "tempo": { "proposta": 480, "ataque": 90, "defesa": 150, "balanco": 70, "outro": 40 }
+    },
+    "2": {
+      "nome": "Flávio Bolsonaro",
+      "verdadeiro": 2,
+      "impreciso": 1,
+      "falso": 2,
+      "sem_dados": 0,
+      "propostas": 1,
+      "ataques": 2,
+      "tempo": { "proposta": 110, "ataque": 360, "defesa": 190, "balanco": 140, "outro": 50 }
+    }
+  },
+  "fatos": [
+    {
+      "tema": "Economia",
+      "atualizado": 1792454960000,
+      "declaracoes": [
+        {
+          "t": 1792454960000,
+          "quem": "1",
+          "afirmacao": "O salário mínimo teve aumento real acima da inflação nos últimos dois anos.",
+          "contexto": "Fala de abertura, comparando o piso ao índice de preços.",
+          "veredito": "verdadeiro",
+          "motivo": "Série ilustrativa: o piso subiu mais que o índice usado nesta simulação.",
+          "literal": "o salário mínimo subiu acima da inflação nesses dois anos",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/salario" }
+        }
+      ]
+    },
+    {
+      "tema": "Educação",
+      "atualizado": 1792455180000,
+      "declaracoes": [
+        {
+          "t": 1792455180000,
+          "quem": "1",
+          "afirmacao": "O país ganhou mais de 200 mil vagas em creche neste mandato.",
+          "contexto": "Resposta sobre primeira infância.",
+          "veredito": "verdadeiro",
+          "motivo": "Série ilustrativa: a conta desta simulação fecha acima de 200 mil.",
+          "literal": "ganhamos mais de 200 mil vagas em creche",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/creche" }
+        }
+      ]
+    },
+    {
+      "tema": "Segurança",
+      "atualizado": 1792455420000,
+      "declaracoes": [
+        {
+          "t": 1792455420000,
+          "quem": "2",
+          "afirmacao": "O preço da gasolina caiu pela metade desde o início do ano.",
+          "contexto": "Comparação com o preço de janeiro, sem dizer o posto.",
+          "veredito": "verdadeiro",
+          "motivo": "Série ilustrativa: nesta ficção o litro de referência caiu pela metade.",
+          "literal": "a gasolina caiu pela metade desde janeiro",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/gasolina" }
+        }
+      ]
+    },
+    {
+      "tema": "Economia",
+      "atualizado": 1792455780000,
+      "declaracoes": [
+        {
+          "t": 1792455780000,
+          "quem": "1",
+          "afirmacao": "O país criou 3 milhões de empregos formais no último ano.",
+          "contexto": "Citou um número redondo, sem a fonte da pesquisa.",
+          "veredito": "impreciso",
+          "motivo": "Série ilustrativa: o saldo desta ficção é positivo, mas bem menor que 3 milhões.",
+          "literal": "criamos 3 milhões de empregos formais",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/emprego" }
+        }
+      ]
+    },
+    {
+      "tema": "Segurança",
+      "atualizado": 1792456020000,
+      "declaracoes": [
+        {
+          "t": 1792456020000,
+          "quem": "2",
+          "afirmacao": "Os homicídios caíram em todos os estados neste ano.",
+          "contexto": "Afirmação nacional, sem recorte.",
+          "veredito": "verdadeiro",
+          "motivo": "Série ilustrativa: o mapa desta ficção mostra queda em todos os estados.",
+          "literal": "caiu homicídio em todos os estados",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/homicidio" }
+        }
+      ]
+    },
+    {
+      "tema": "Economia",
+      "atualizado": 1792456380000,
+      "declaracoes": [
+        {
+          "t": 1792456380000,
+          "quem": "2",
+          "afirmacao": "A inflação de alimentos passou de 20% no último trimestre.",
+          "contexto": "Falou de feira, não do índice cheio.",
+          "veredito": "impreciso",
+          "motivo": "Série ilustrativa: algum item passou disso; o grupo alimentos, não.",
+          "literal": "a comida subiu mais de 20% no trimestre",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/alimentos" },
+          "corrigido": { "antes": "sem_dados" }
+        }
+      ]
+    },
+    {
+      "tema": "Economia",
+      "atualizado": 1792456620000,
+      "declaracoes": [
+        {
+          "t": 1792456620000,
+          "quem": "1",
+          "afirmacao": "A dívida pública caiu pela metade neste governo.",
+          "contexto": "Comparou um número de palanque com o estoque da dívida.",
+          "veredito": "falso",
+          "motivo": "Série ilustrativa: o estoque desta ficção não caiu pela metade.",
+          "literal": "a dívida caiu pela metade",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/divida" }
+        }
+      ]
+    },
+    {
+      "tema": "Economia",
+      "atualizado": 1792456860000,
+      "declaracoes": [
+        {
+          "t": 1792456860000,
+          "quem": "2",
+          "afirmacao": "O governo gastou mais de 350 bilhões de reais para se reeleger.",
+          "contexto": "Somou programas sociais e chamou o total de gasto eleitoral.",
+          "veredito": "falso",
+          "motivo": "Série ilustrativa: o número citado não é gasto direto de campanha.",
+          "literal": "gastaram 350 bilhões para se reeleger",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/gastometro" }
+        }
+      ]
+    },
+    {
+      "tema": "Educação",
+      "atualizado": 1792457100000,
+      "declaracoes": [
+        {
+          "t": 1792457100000,
+          "quem": "1",
+          "afirmacao": "O Brasil voltou ao top 10 mundial de educação básica.",
+          "contexto": "Não disse qual ranking.",
+          "veredito": "sem_dados",
+          "motivo": "Série ilustrativa: não há um ranking único com esse nome para conferir.",
+          "literal": "voltamos ao top 10 da educação"
+        }
+      ]
+    },
+    {
+      "tema": "Economia",
+      "atualizado": 1792457460000,
+      "declaracoes": [
+        {
+          "t": 1792457460000,
+          "quem": "2",
+          "afirmacao": "O desemprego no país chegou a zero no último mês.",
+          "contexto": "Tratou uma pesquisa de uma capital como se fosse o país.",
+          "veredito": "falso",
+          "motivo": "Série ilustrativa: a taxa nacional desta ficção segue acima de zero.",
+          "literal": "o desemprego chegou a zero",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/desemprego" }
+        }
+      ]
+    },
+    {
+      "tema": "Economia",
+      "atualizado": 1792457700000,
+      "declaracoes": [
+        {
+          "t": 1792457700000,
+          "quem": "2",
+          "afirmacao": "As contas do governo fecharam no azul todos os meses deste ano.",
+          "contexto": "A frase ainda está sendo conferida no áudio.",
+          "veredito": "em_revisao",
+          "motivo": "Em revisão: o segundo modelo não confirmou o veredito.",
+          "literal": "fechamos no azul todos os meses"
+        }
+      ]
+    }
+  ],
+  "propostas": [
+    {
+      "quem": "1",
+      "titulo": "Ampliar vagas em creche",
+      "explicacao": "Abrir mais de 200 mil vagas em creche, com prioridade nas capitais.",
+      "vezes": 2,
+      "t": 1792455660000
+    },
+    {
+      "quem": "1",
+      "titulo": "Tarifa zero no ônibus",
+      "explicacao": "Zerar a tarifa do ônibus municipal nas cidades acima de 200 mil habitantes.",
+      "vezes": 1,
+      "t": 1792456140000
+    },
+    {
+      "quem": "2",
+      "titulo": "Isentar a cesta básica",
+      "explicacao": "Tirar o imposto federal dos alimentos da cesta básica.",
+      "vezes": 1,
+      "t": 1792456500000
+    }
+  ],
+  "ataques": [
+    {
+      "quem": "2",
+      "resumo": "Acusou o adversário de mentir sobre a economia.",
+      "t": 1792455960000
+    },
+    {
+      "quem": "1",
+      "resumo": "Disse que o outro só ataca e não apresenta número.",
+      "t": 1792455240000
+    },
+    {
+      "quem": "2",
+      "resumo": "Disse que o adversário não entrega resultado nenhum em segurança.",
+      "t": 1792454880000
+    }
+  ],
+  "linha": {
+    "3": { "a2": 1 },
+    "6": { "p1": 1 },
+    "9": { "a1": 1 },
+    "16": { "p1": 1 },
+    "21": { "a2": 1 },
+    "24": { "p1": 1 },
+    "30": { "p2": 1 }
+  }
+}

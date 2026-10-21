@@ -1,0 +1,11 @@
+# Cloudflare Pages. O config.js muda o endereço do placar sem novo build.
+/config.js
+  Cache-Control: no-cache
+/js/*
+  Cache-Control: public, max-age=3600
+/css/*
+  Cache-Control: public, max-age=3600
+/*.html
+  Cache-Control: public, max-age=60
+/demo/*
+  Cache-Control: public, max-age=60
