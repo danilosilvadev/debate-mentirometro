@@ -1,0 +1,49 @@
+{
+  "debate_id": "sintetico-2026",
+  "origin_ms": 1700000000000,
+  "aviso": "Roteiro sintético do pipeline. Fatos fictícios, não é o placar publicado.",
+  "video": {
+    "id": "",
+    "ao_vivo": true,
+    "inicio": 0,
+    "t0": 1700000000000,
+    "comeco": 1700000000000,
+    "data": "2026-10-21T00:00:00Z"
+  },
+  "candidatos": {
+    "1": {"nome": "Lula"},
+    "2": {"nome": "Flávio Bolsonaro"}
+  },
+  "utterances": [
+    {
+      "t_ms": 1700000000000,
+      "quem": "2",
+      "dur_s": 6,
+      "text": "O governo gastou mais de 350 bilhões de reais para se reeleger."
+    },
+    {
+      "t_ms": 1700000004000,
+      "quem": "1",
+      "dur_s": 5,
+      "text": "Vamos ampliar as vagas em creche em todo o país."
+    },
+    {
+      "t_ms": 1700000008000,
+      "quem": "2",
+      "dur_s": 4,
+      "text": "O adversário mente toda vez que abre a boca."
+    },
+    {
+      "t_ms": 1700000012000,
+      "quem": "1",
+      "dur_s": 5,
+      "text": "A inflação deste ano está em 2 por cento."
+    },
+    {
+      "t_ms": 1700000016000,
+      "quem": "1",
+      "dur_s": 4,
+      "text": "Eu só estou defendendo o que já foi feito no salário mínimo."
+    }
+  ]
+}

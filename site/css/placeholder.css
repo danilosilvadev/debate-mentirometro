@@ -1,0 +1,20 @@
+:root { color-scheme: light; }
+body { margin: 0; font: 16px/1.45 system-ui, sans-serif; background: #f3f3f1; color: #1b1d1c; }
+.banner { margin: 0; padding: 10px 16px; background: #fff6e8; }
+header, nav, section { padding: 12px 16px; }
+h1 { font-size: 1.6rem; margin: 0; }
+.stage { display: grid; gap: 12px; }
+@media (min-width: 900px) { .stage { grid-template-columns: 1.4fr 0.8fr; } }
+.video, aside, article, button { background: #fff; border: 1px solid #ccc; border-radius: 8px; }
+.video, aside, article { padding: 12px; }
+.video iframe { width: 100%; aspect-ratio: 16/9; border: 0; }
+nav { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font: inherit; padding: 8px 12px; cursor: pointer; }
+button[aria-pressed="true"] { background: #1b1d1c; color: #fff; }
+.fact { margin-top: 8px; }
+.fact[data-verdict="falso"] { border-left: 6px solid #c62828; }
+.fact[data-verdict="impreciso"] { border-left: 6px solid #e07b14; }
+.fact[data-verdict="verdadeiro"] { border-left: 6px solid #1d8a4a; }
+.fact[data-verdict="sem_dados"] { border-left: 6px solid #8a8f8b; }
+.fact[data-verdict="em_revisao"] { border-left: 6px dashed #5e625f; }
+.reduce-motion * { transition: none !important; animation: none !important; }

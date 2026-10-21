@@ -56,6 +56,15 @@ Abra `http://127.0.0.1:43123`.
 
 O app abre na **simulação**: um debate fictício que continua sozinho, com um aviso fixo de que os fatos são ilustrativos. Não precisa de rede.
 
+Para ler um `placar.json` servido pelo pipeline nesta máquina:
+
+```bash
+flutter run --dart-define=PLACAR_SOURCE=live \
+  --dart-define=PLACAR_BASE=http://127.0.0.1:8787/
+```
+
+O pipeline e o site provisório estão em `pipeline/` e `site/`.
+
 ## De onde vêm os dados
 
 O site publica o placar em JSON, com polling a cada poucos segundos:

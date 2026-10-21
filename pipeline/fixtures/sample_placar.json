@@ -1,0 +1,105 @@
+{
+  "atualizado": 1700000016000,
+  "video": {
+    "id": "",
+    "ao_vivo": false,
+    "inicio": 0,
+    "t0": 1700000000000,
+    "comeco": 1700000000000,
+    "data": "2026-10-21T00:00:00Z"
+  },
+  "candidatos": {
+    "1": {
+      "nome": "Lula",
+      "verdadeiro": 0,
+      "impreciso": 0,
+      "falso": 0,
+      "sem_dados": 0,
+      "propostas": 1,
+      "ataques": 0,
+      "tempo": {
+        "proposta": 5.0,
+        "ataque": 0.0,
+        "defesa": 4.0,
+        "balanco": 0.0,
+        "outro": 5.0
+      }
+    },
+    "2": {
+      "nome": "Flávio Bolsonaro",
+      "verdadeiro": 0,
+      "impreciso": 0,
+      "falso": 1,
+      "sem_dados": 0,
+      "propostas": 0,
+      "ataques": 1,
+      "tempo": {
+        "proposta": 0.0,
+        "ataque": 4.0,
+        "defesa": 0.0,
+        "balanco": 0.0,
+        "outro": 6.0
+      }
+    }
+  },
+  "fatos": [
+    {
+      "tema": "gastos do governo",
+      "atualizado": 1700000000000,
+      "declaracoes": [
+        {
+          "t": 1700000000000,
+          "quem": "2",
+          "afirmacao": "O governo gastou mais de 350 bilhões de reais para se reeleger.",
+          "contexto": "Fala sobre gastos e reeleição.",
+          "veredito": "falso",
+          "motivo": "Série ilustrativa: o número citado não é gasto direto.",
+          "literal": "O governo gastou mais de 350 bilhões de reais para se reeleger.",
+          "fonte": {
+            "titulo": "Série ilustrativa",
+            "url": "https://exemplo.com/gastometro"
+          }
+        }
+      ]
+    },
+    {
+      "tema": "inflação",
+      "atualizado": 1700000012000,
+      "declaracoes": [
+        {
+          "t": 1700000012000,
+          "quem": "1",
+          "afirmacao": "A inflação deste ano está em 2 por cento.",
+          "contexto": "Comparação com o índice oficial.",
+          "veredito": "em_revisao",
+          "motivo": "Em revisão: o segundo modelo não confirmou o veredito (verdadeiro).",
+          "literal": "A inflação deste ano está em 2 por cento."
+        }
+      ]
+    }
+  ],
+  "propostas": [
+    {
+      "quem": "1",
+      "titulo": "Ampliar vagas em creche",
+      "explicacao": "Ampliar as vagas em creche em todo o país.",
+      "vezes": 1,
+      "t": 1700000004000
+    }
+  ],
+  "ataques": [
+    {
+      "quem": "2",
+      "resumo": "Acusou o adversário de mentir o tempo todo.",
+      "t": 1700000008000
+    }
+  ],
+  "linha": {
+    "0": {
+      "p1": 1,
+      "a2": 1
+    }
+  },
+  "pausado": false,
+  "aviso": "Roteiro sintético do pipeline. Fatos fictícios, não é o placar publicado."
+}
