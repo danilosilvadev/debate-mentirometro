@@ -66,6 +66,12 @@ test('o endereço do placar aceita base, arquivo e ?d=', () => {
   assert.equal(live.url, 'http://127.0.0.1:8787/placar.json?t=0')
   const past = resolveFeed('?d=2026-10-18', 'https://dados.example', 0)
   assert.equal(past.url, 'https://dados.example/placar-2026-10-18.json?t=0')
+  assert.equal(resolveFeed('', 'https://dados.example/', 0, 'demo').mode, 'demo')
+  assert.equal(resolveFeed('?d=2026-10-18', 'https://dados.example/', 0, 'demo').url, 'demo/placar-2026-10-18.json?t=0')
+  const publico = resolveFeed('?live=1', 'https://dados.example/', 0, 'demo')
+  assert.equal(publico.mode, 'live')
+  assert.equal(publico.url, 'https://dados.example/placar.json?t=0')
+  assert.equal(resolveFeed('?src=http://127.0.0.1:8787/placar.json', 'https://dados.example/', 0, 'demo').mode, 'live')
 })
 
 test('só redesenha quando atualizado muda', async () => {
@@ -149,6 +155,8 @@ test('a simulação desenha o placar e esconde script', async () => {
   assert.match(html, /Como funciona/)
   assert.doesNotMatch(html, /<script/i)
   assert.doesNotMatch(html, /youtube/i)
+  const commands = renderBoard({ ...base, panel: 'cmd' })
+  assert.match(commands, /Placar público/)
   const guide = renderBoard({ ...base, panel: 'funciona' })
   assert.match(guide, /Como funciona/)
   assert.match(guide, /pode errar/)

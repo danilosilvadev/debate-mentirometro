@@ -2,6 +2,17 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
+  <script>
+    // Caminhos relativos funcionam na raiz local e em /placar-da-verdade/.
+    (function () {
+      var path = location.pathname
+      if (!/\/$/.test(path) && !/\.[a-z0-9]+$/i.test(path.split('/').pop() || '')) path += '/'
+      else if (!/\/$/.test(path)) path = path.replace(/[^/]*$/, '')
+      var base = document.createElement('base')
+      base.href = path
+      document.currentScript.after(base)
+    })()
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Placar da Verdade — debate ao vivo</title>
   <meta name="description" content="Os fatos citados no debate, checados em tempo real, com a fonte ao lado. Mentirômetro, propostas, ataques e a linha do tempo.">
@@ -14,15 +25,15 @@
   <meta property="og:description" content="Os fatos citados no debate, checados em tempo real, com a fonte ao lado.">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
-  <meta property="og:url" content="https://placar.zenithonacademy.com.br/">
-  <meta property="og:image" content="https://placar.zenithonacademy.com.br/og.jpg">
+  <meta property="og:url" content="https://danilosilvadev.github.io/placar-da-verdade/">
+  <meta property="og:image" content="https://danilosilvadev.github.io/placar-da-verdade/og.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Placar da Verdade, o placar ao vivo do debate.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Placar da Verdade — debate ao vivo">
   <meta name="twitter:description" content="Os fatos citados no debate, checados em tempo real, com a fonte ao lado.">
-  <meta name="twitter:image" content="https://placar.zenithonacademy.com.br/og.jpg">
+  <meta name="twitter:image" content="https://danilosilvadev.github.io/placar-da-verdade/og.jpg">
 </head>
 <body>
   <div id="app" class="app"></div>

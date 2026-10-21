@@ -13,19 +13,25 @@ cd web
 python3 -m http.server 43125 --bind 0.0.0.0
 ```
 
-Abra `http://127.0.0.1:43125/?demo=1` para a simulação, com o aviso de fatos fictícios.
+Abra `http://127.0.0.1:43125/` para a simulação, com a pílula SIMULAÇÃO e o aviso de fatos fictícios. `config.js` deixa `PLACAR_MODE` em `demo`.
 
 Para o `placar.json` do pipeline nesta máquina:
 
 `http://127.0.0.1:43125/?src=http://127.0.0.1:8787/placar.json`
 
-Um debate passado:
+O placar público (o host responde `Access-Control-Allow-Origin: *`, então o navegador consegue ler):
+
+`http://127.0.0.1:43125/?live=1`
+
+O mesmo atalho está no ⌘K, como “Placar público” / “Voltar à simulação”.
+
+Um debate passado da simulação:
 
 `http://127.0.0.1:43125/?d=2026-10-18`
 
-Na simulação, o arquivo local é `demo/placar-2026-10-18.json` (`?demo=1&d=2026-10-18`). No ar, `?d=` pede `placar-2026-10-18.json` no mesmo host do `config.js`.
+O arquivo local é `demo/placar-2026-10-18.json`. Com `?live=1&d=2026-10-18`, a página pede `placar-2026-10-18.json` no `PLACAR_BASE`.
 
-O endereço padrão está em `config.js` (`PLACAR_BASE`). `PLACAR_VIDEO` troca o id do YouTube sem esperar o JSON. A página busca o placar a cada 5 segundos, para quando a aba fica escondida e só redesenha se `atualizado` mudou. O iframe, quando existe, não é recriado nesse redesenho. Se o feed não responde, entra a simulação, com o aviso no canto.
+`PLACAR_VIDEO` troca o id do YouTube sem esperar o JSON. A página busca o placar a cada 5 segundos, para quando a aba fica escondida e só redesenha se `atualizado` mudou. O iframe, quando existe, não é recriado nesse redesenho. Se o feed público não responde, entra a simulação, com o aviso no canto. Os CSS, a fonte e o `demo/` usam caminho relativo, então o site abre tanto na raiz quanto em `/placar-da-verdade/`.
 
 Peso medido nesta máquina, somando o que a página pede. O iframe do YouTube não entra. A Inter latina está em `fonts/inter-latin.woff2` (47 KB, não comprime).
 
@@ -48,17 +54,21 @@ node --test web/test/logic.test.mjs
 
 São arquivos estáticos. A raiz do site é esta pasta (`web/`), não o repositório inteiro.
 
+**GitHub Pages.** O workflow `.github/workflows/pages.yml` publica `web/` em cada push na `main`, com `actions/upload-pages-artifact` e `actions/deploy-pages`. O endereço esperado é [https://danilosilvadev.github.io/placar-da-verdade/](https://danilosilvadev.github.io/placar-da-verdade/). O site abre na simulação. ⌘K → “Placar público” (ou `?live=1`) lê `https://placar-dados.zenithonacademy.com.br/placar.json`.
+
+O workflow tenta ligar o Pages pela API (`build_type: workflow`). O `GITHUB_TOKEN` do Actions às vezes não tem permissão para criar o site na primeira vez. Se o deploy falhar com “Get Pages site failed”, no repositório abra **Settings → Pages → Build and deployment → Source: GitHub Actions** e rode o workflow de novo.
+
 **Cloudflare Pages.** Conecte o repositório, comando de build vazio, diretório de saída `web`. O arquivo `_headers` já evita cache longo do `config.js`.
 
 **Hostinger (ou qualquer Apache).** Envie o *conteúdo* de `web/` para `public_html` (o `index.html` na raiz do domínio). O `.htaccess` liga compressão e o cache curto do `config.js`. No hPanel isso também pode ser um site estático por Git, com a pasta publicada em `web`.
 
-**Qualquer host estático** (Netlify, S3, GitHub Pages, nginx): publique a pasta `web/` como raiz. Não há `npm install` nem etapa de build.
+**Qualquer host estático** (Netlify, S3, nginx): publique a pasta `web/` como raiz. Não há `npm install` nem etapa de build.
 
-Antes de divulgar:
+Antes de divulgar em outro domínio:
 
-1. Edite `config.js` e aponte `PLACAR_BASE` para o host do `placar.json` (com ou sem barra no final).
-2. Se o domínio não for `placar.zenithonacademy.com.br`, troque `og:url` e `og:image` no `index.html` por URLs absolutas. WhatsApp e o X ignoram caminho relativo.
-3. Confira que o host do JSON manda `Access-Control-Allow-Origin` (o servidor do pipeline já manda `*`).
+1. `PLACAR_BASE` já aponta para `https://placar-dados.zenithonacademy.com.br/`. Troque se o JSON mudar de host.
+2. `og:url` e `og:image` no `index.html` estão absolutos no endereço do GitHub Pages. WhatsApp e o X ignoram caminho relativo.
+3. O host do JSON precisa mandar `Access-Control-Allow-Origin`. O placar público já manda `*`.
 
 O pipeline local:
 

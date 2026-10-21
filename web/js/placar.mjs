@@ -270,13 +270,14 @@ export function feedUrl({ base = '', archive = '', now = 0, demo = false } = {})
   return `${root}${file}?t=${bust}`
 }
 
-export function resolveFeed(search, baseDefault, now) {
+export function resolveFeed(search, baseDefault, now, startMode = 'live') {
   const raw = search.startsWith('?') ? search.slice(1) : search
   const query = new URLSearchParams(raw)
   const archive = (query.get('d') || '').trim()
   const src = (query.get('src') || '').trim()
-  const forceDemo = query.get('demo') === '1' || (!src && !baseDefault)
-  if (forceDemo) return { mode: 'demo', base: '', url: feedUrl({ demo: true, archive, now }), archive }
+  const wantLive = query.get('live') === '1' || Boolean(src)
+  const wantDemo = query.get('demo') === '1' || (!wantLive && (startMode === 'demo' || !baseDefault))
+  if (wantDemo) return { mode: 'demo', base: '', url: feedUrl({ demo: true, archive, now }), archive }
   const base = src || baseDefault
   return { mode: 'live', base, url: feedUrl({ base, archive, now }), archive }
 }
@@ -620,7 +621,11 @@ function panelHtml(state, items) {
       ['propostas', 'Propostas'],
       ['arquivo', 'Debates passados'],
     ].map(([id, label]) => `<button type="button" data-act="panel" data-arg="${id}">${label}</button>`).join('')
-    return sheet('Comandos', `<div class="cmd">${buttons}</div>`)
+    const onDemo = state.mode === 'demo'
+    const source = onDemo
+      ? `<button type="button" data-act="source" data-arg="live">Placar público</button>`
+      : `<button type="button" data-act="source" data-arg="demo">Voltar à simulação</button>`
+    return sheet('Comandos', `<div class="cmd">${buttons}${source}</div>`)
   }
   if (panel === 'ler') {
     return sheet('Como ler', `<div class="prose">
@@ -729,6 +734,7 @@ function boot() {
   if (!app) return
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const baseDefault = window.PLACAR_BASE || ''
+  const startMode = window.PLACAR_MODE === 'demo' ? 'demo' : 'live'
   const state = {
     mode: 'demo',
     snapshot: null,
@@ -886,6 +892,14 @@ function boot() {
       const search = kept.toString()
       location.search = search ? `?${search}` : ''
     }
+    if (act === 'source') {
+      const kept = new URLSearchParams(location.search)
+      kept.delete('demo')
+      kept.delete('live')
+      kept.delete('src')
+      kept.set(arg === 'live' ? 'live' : 'demo', '1')
+      location.search = `?${kept.toString()}`
+    }
   })
 
   document.addEventListener('submit', (event) => {
@@ -912,7 +926,7 @@ function boot() {
     }
   })
 
-  load(resolveFeed(location.search, baseDefault, Date.now()), { fallback: true })
+  load(resolveFeed(location.search, baseDefault, Date.now(), startMode), { fallback: true })
 }
 
 if (typeof document !== 'undefined' && document.getElementById?.('app')) boot()
