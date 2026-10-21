@@ -1,0 +1,121 @@
+{
+  "atualizado": 1792287300000,
+  "pausado": false,
+  "aviso": "Arquivo ilustrativo do debate de 18/10. Fatos fictícios.",
+  "video": {
+    "id": "",
+    "ao_vivo": false,
+    "inicio": 0,
+    "t0": 1792281900000,
+    "comeco": 1792281900000,
+    "data": "2026-10-18T21:00:00-03:00"
+  },
+  "encerrado": {
+    "proximo": "2026-10-24T00:00:00Z",
+    "texto": "23 de outubro, 21h"
+  },
+  "candidatos": {
+    "1": {
+      "nome": "Lula",
+      "verdadeiro": 2,
+      "impreciso": 1,
+      "falso": 0,
+      "sem_dados": 0,
+      "propostas": 1,
+      "ataques": 0,
+      "tempo": { "proposta": 200, "ataque": 40, "defesa": 80, "balanco": 30, "outro": 10 }
+    },
+    "2": {
+      "nome": "Flávio Bolsonaro",
+      "verdadeiro": 1,
+      "impreciso": 0,
+      "falso": 2,
+      "sem_dados": 0,
+      "propostas": 0,
+      "ataques": 1,
+      "tempo": { "proposta": 20, "ataque": 180, "defesa": 60, "balanco": 40, "outro": 10 }
+    }
+  },
+  "fatos": [
+    {
+      "tema": "Economia",
+      "atualizado": 1792282500000,
+      "declaracoes": [
+        {
+          "t": 1792282500000,
+          "quem": "1",
+          "afirmacao": "O salário mínimo subiu acima da inflação.",
+          "veredito": "verdadeiro",
+          "motivo": "Série ilustrativa do arquivo de 18/10.",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/salario" }
+        },
+        {
+          "t": 1792284000000,
+          "quem": "2",
+          "afirmacao": "A gasolina custava a metade no ano passado.",
+          "veredito": "falso",
+          "motivo": "Série ilustrativa: o preço desta ficção não caiu pela metade.",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/gasolina" }
+        }
+      ]
+    },
+    {
+      "tema": "Educação",
+      "atualizado": 1792285200000,
+      "declaracoes": [
+        {
+          "t": 1792285200000,
+          "quem": "1",
+          "afirmacao": "As creches públicas ganharam vagas novas.",
+          "veredito": "verdadeiro",
+          "motivo": "Série ilustrativa.",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/creche" }
+        },
+        {
+          "t": 1792286100000,
+          "quem": "1",
+          "afirmacao": "Toda criança de 0 a 3 anos tem vaga garantida.",
+          "veredito": "impreciso",
+          "motivo": "Série ilustrativa: há vagas novas, não cobertura universal.",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/creche" }
+        },
+        {
+          "t": 1792287000000,
+          "quem": "2",
+          "afirmacao": "Nenhuma escola federal foi construída.",
+          "veredito": "falso",
+          "motivo": "Série ilustrativa: esta ficção conta obras entregues.",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/escolas" }
+        },
+        {
+          "t": 1792287300000,
+          "quem": "2",
+          "afirmacao": "O livro didático chegou a todas as escolas em fevereiro.",
+          "veredito": "verdadeiro",
+          "motivo": "Série ilustrativa.",
+          "fonte": { "titulo": "Série ilustrativa", "url": "https://exemplo.com/livros" }
+        }
+      ]
+    }
+  ],
+  "propostas": [
+    {
+      "quem": "1",
+      "titulo": "Ampliar vagas em creche",
+      "explicacao": "Abrir vagas novas em creche pública.",
+      "vezes": 1,
+      "t": 1792283100000
+    }
+  ],
+  "ataques": [
+    {
+      "quem": "2",
+      "resumo": "Disse que o adversário não entrega resultado nenhum em segurança.",
+      "t": 1792282800000
+    }
+  ],
+  "linha": {
+    "1": { "a2": 1 },
+    "2": { "p1": 1 }
+  }
+}

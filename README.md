@@ -63,7 +63,7 @@ flutter run --dart-define=PLACAR_SOURCE=live \
   --dart-define=PLACAR_BASE=http://127.0.0.1:8787/
 ```
 
-O pipeline e o site provisório estão em `pipeline/` e `site/`.
+O pipeline está em `pipeline/`. O site leve do debate (o produto de 23/10) está em `web/`. A casca que o Flutter usa no navegador foi para `flutter_web/`, para não disputar a pasta `web/` com o site estático.
 
 ## De onde vêm os dados
 
