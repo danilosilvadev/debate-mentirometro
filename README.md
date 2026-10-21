@@ -63,7 +63,7 @@ flutter run --dart-define=PLACAR_SOURCE=live \
   --dart-define=PLACAR_BASE=http://127.0.0.1:8787/
 ```
 
-O pipeline está em `pipeline/`. O site leve do debate (o produto de 23/10) está em `web/`. No GitHub Pages ele fica em `https://danilosilvadev.github.io/placar-da-verdade/` e abre na simulação. A casca que o Flutter usa no navegador foi para `flutter_web/`, para não disputar a pasta `web/` com o site estático.
+O pipeline está em `pipeline/`. O site leve do debate (o produto de 23/10) está em `web/`. No GitHub Pages ele fica em `https://danilosilvadev.github.io/debate-mentirometro/` e abre na simulação. A casca que o Flutter usa no navegador foi para `flutter_web/`, para não disputar a pasta `web/` com o site estático.
 
 ## De onde vêm os dados
 
@@ -133,3 +133,9 @@ A conta está em `lib/src/domain/mentiromentro.dart` e é a mesma do site:
 - diferença menor que 0,1 no índice é empate técnico
 
 Os testes em `test/mentiromentro_test.dart` cobrem meio ponto, exclusão de "Sem dados" e "Em revisão", o mínimo de 3, a escala do ponteiro e o empate.
+
+## Licença
+
+MIT. Copyright 2026 danilosilvadev. O texto está em `LICENSE`. Para enviar uma mudança, leia `CONTRIBUTING.md`.
+
+Os JSON em `web/demo/` e as amostras do pipeline são fictícios. Não são a checagem de um debate real. O feed público `https://placar-dados.zenithonacademy.com.br/placar.json` pertence aos seus donos; este repositório só o lê quando alguém pede `?live=1`.

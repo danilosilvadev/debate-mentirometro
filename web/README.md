@@ -31,7 +31,7 @@ Um debate passado da simulação:
 
 O arquivo local é `demo/placar-2026-10-18.json`. Com `?live=1&d=2026-10-18`, a página pede `placar-2026-10-18.json` no `PLACAR_BASE`.
 
-`PLACAR_VIDEO` troca o id do YouTube sem esperar o JSON. A página busca o placar a cada 5 segundos, para quando a aba fica escondida e só redesenha se `atualizado` mudou. O iframe, quando existe, não é recriado nesse redesenho. Se o feed público não responde, entra a simulação, com o aviso no canto. Os CSS, a fonte e o `demo/` usam caminho relativo, então o site abre tanto na raiz quanto em `/placar-da-verdade/`.
+`PLACAR_VIDEO` troca o id do YouTube sem esperar o JSON. A página busca o placar a cada 5 segundos, para quando a aba fica escondida e só redesenha se `atualizado` mudou. O iframe, quando existe, não é recriado nesse redesenho. Se o feed público não responde, entra a simulação, com o aviso no canto. Os CSS, a fonte e o `demo/` usam caminho relativo, então o site abre tanto na raiz quanto em `/debate-mentirometro/`.
 
 Peso medido nesta máquina, somando o que a página pede. O iframe do YouTube não entra. A Inter latina está em `fonts/inter-latin.woff2` (47 KB, não comprime).
 
@@ -54,7 +54,7 @@ node --test web/test/logic.test.mjs
 
 São arquivos estáticos. A raiz do site é esta pasta (`web/`), não o repositório inteiro.
 
-**GitHub Pages.** O workflow `.github/workflows/pages.yml` publica `web/` em cada push na `main`, com `actions/upload-pages-artifact` e `actions/deploy-pages`. O endereço esperado é [https://danilosilvadev.github.io/placar-da-verdade/](https://danilosilvadev.github.io/placar-da-verdade/). O site abre na simulação. ⌘K → “Placar público” (ou `?live=1`) lê `https://placar-dados.zenithonacademy.com.br/placar.json`.
+**GitHub Pages.** O workflow `.github/workflows/pages.yml` publica `web/` em cada push na `main`, com `actions/upload-pages-artifact` e `actions/deploy-pages`. O endereço esperado é [https://danilosilvadev.github.io/debate-mentirometro/](https://danilosilvadev.github.io/debate-mentirometro/). O site abre na simulação. ⌘K → “Placar público” (ou `?live=1`) lê `https://placar-dados.zenithonacademy.com.br/placar.json`.
 
 O workflow tenta ligar o Pages pela API (`build_type: workflow`). O `GITHUB_TOKEN` do Actions às vezes não tem permissão para criar o site na primeira vez. Se o deploy falhar com “Get Pages site failed”, no repositório abra **Settings → Pages → Build and deployment → Source: GitHub Actions** e rode o workflow de novo.
 
