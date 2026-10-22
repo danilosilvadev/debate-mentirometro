@@ -483,6 +483,21 @@ export function shownVerdict(claim) {
   return v
 }
 
+/** Placar do lado: só vereditos com fonte (shownVerdict) contam. */
+export function sideScore(claims, quem) {
+  const out = { verdades: 0, mentiras: 0, imprecisos: 0 }
+  for (const claim of claims || []) {
+    if (quem != null && claim?.quem !== quem) continue
+    const v = shownVerdict(claim)
+    if (v === 'verdadeiro') out.verdades++
+    else if (v === 'falso') out.mentiras++
+    else if (v === 'impreciso') out.imprecisos++
+  }
+  return out
+}
+
+export const colTabs = new Map() // quem -> 'checagens' | 'propostas'
+
 function itemTag(item) {
   if (item.kind === 'proposta') return tag('Proposta')
   if (item.kind === 'ataque') return tag('Ataque')
@@ -609,6 +624,7 @@ function cardHtml(item, person, color, fresh) {
     const motivo = isChecking(claim) ? 'Checando fontes…' : (semFonte ? 'Sem fonte publicada para comprovar; não conta como checagem.' : (claim.motivo || ''))
     const links = srcs.map((src) => `<a class="src" href="${esc(src.url)}" target="_blank" rel="noopener noreferrer">${src.oficial ? '<b class="of">Oficial</b>' : ''}${esc(src.titulo)}${src.host ? ` <span class="host">· ${esc(src.host)}</span>` : ''} ↗</a>`).join('')
     body = `${motivo ? `<span class="cm">${esc(motivo)}</span>` : ''}</button>
+      ${srcs.length && !isChecking(claim) ? `<a class="fbtn" href="${esc(srcs[0].url)}" target="_blank" rel="noopener noreferrer">${srcs[0].oficial ? 'Fonte oficial' : 'Fonte'} ↗</a>` : ''}
       ${links ? `<div class="srcs"><span class="sl">Fonte${srcs.length > 1 ? 's' : ''}</span>${links}</div>` : (isChecking(claim) ? '' : '<span class="src muted">Sem fonte encontrada</span>')}`
   } else {
     const extra = item.proposal?.explicacao || ''
@@ -624,27 +640,30 @@ function cardHtml(item, person, color, fresh) {
 }
 
 /** Coluna de um candidato: as checagens (com veredito e fonte) e as propostas dele. */
-function columnHtml(items, people, index, fresh, side) {
+function columnHtml(items, people, index, fresh, side, all = []) {
   const person = people[index]
   const color = candidateColor(person, index)
   const mine = items.filter((item) => item.quem === person.id).slice().reverse()
   const claims = mine.filter((item) => item.kind === 'claim')
   const props = mine.filter((item) => item.kind === 'proposta')
-  const idx = errorIndex(person)
-  const counts = `<span class="vc"><i style="background:${VERDICT_COLOR.verdadeiro}"></i>${person.verdadeiro || 0}</span><span class="vc"><i style="background:${VERDICT_COLOR.impreciso}"></i>${person.impreciso || 0}</span><span class="vc"><i style="background:${VERDICT_COLOR.falso}"></i>${person.falso || 0}</span>`
-  const section = (title, list, empty) => `<section class="csec"><h3>${title} <span class="muted">${list.length}</span></h3>${list.length ? list.map((item) => cardHtml(item, person, color, fresh)).join('') : `<p class="muted empty">${empty}</p>`}</section>`
+  const sc = sideScore(all, person.id)
+  const tab = colTabs.get(person.id) === 'propostas' ? 'propostas' : 'checagens'
+  const list = tab === 'propostas' ? props : claims
+  const empty = tab === 'propostas' ? 'Nenhuma proposta concreta ainda.' : 'Nenhuma afirmação checável ainda.'
+  const tbtn = (id, label) => `<button type="button" role="tab" class="ctab${tab === id ? ' on' : ''}" aria-selected="${tab === id}" data-act="ctab" data-arg="${esc(person.id)}:${id}">${label}</button>`
   return `<aside class="col-c ${side}" aria-label="${esc(person.nome)}" data-quem="${esc(person.id)}" style="--c:${paintBg(color, '180deg')}">
-    <div class="colh"><span class="bar-c"></span><div class="colt"><div class="colname" style="${paintText(color)}">${esc(person.nome)}</div><div class="colsub">${counts}<span class="muted">${idx.total ? `${idx.erroPct}% de erro` : 'sem fatos checados'}</span></div></div></div>
+    <div class="colh"><div class="colname" style="${paintText(color)}">${esc(person.nome)}</div>
+      <div class="score"><b class="sv">${sc.verdades}</b> ${sc.verdades === 1 ? 'Verdade' : 'Verdades'} <span class="vs">vs</span> <b class="sm">${sc.mentiras}</b> ${sc.mentiras === 1 ? 'Mentira' : 'Mentiras'}${sc.imprecisos ? ` <small class="si">· ${sc.imprecisos} impreciso${sc.imprecisos > 1 ? 's' : ''}</small>` : ''}</div>
+      <div class="ctabs" role="tablist">${tbtn('checagens', 'Checagens')}<span class="sep">|</span>${tbtn('propostas', `Propostas (${props.length})`)}</div></div>
     <div class="colbody">
-      ${section('Checagens', claims, 'Nenhuma afirmação checável ainda.')}
-      ${section('Propostas', props, 'Nenhuma proposta concreta ainda.')}
+      <section class="csec">${list.length ? list.map((item) => cardHtml(item, person, color, fresh)).join('') : `<p class="muted empty">${empty}</p>`}</section>
     </div>
   </aside>`
 }
 
-function listsHtml(items, people, fresh) {
+function listsHtml(items, people, fresh, all) {
   if (people.length < 2) return ''
-  return `${columnHtml(items, people, 0, fresh, 'a')}${columnHtml(items, people, 1, fresh, 'b')}`
+  return `${columnHtml(items, people, 0, fresh, 'a', all)}${columnHtml(items, people, 1, fresh, 'b', all)}`
 }
 
 const FLIP_MS = 950
@@ -717,14 +736,14 @@ function pickCaption(state, items) {
   return null
 }
 
-function mobileFeed(items, people, filter, fresh) {
+function mobileFeed(items, people, filter, fresh, all) {
   if (people.length < 2) return ''
   const chosen = Math.max(0, people.findIndex((p) => p.id === filter?.quem))
   const tabs = people.map((p, i) => (
     `<button type="button" role="tab" class="mtab${i === chosen ? ' on' : ''}" aria-selected="${i === chosen}" data-act="quem" data-arg="${esc(p.id)}" style="--c:${paintBg(candidateColor(p, i), '90deg')}">${esc(p.nome)}</button>`)).join('')
   return `<div class="mfeed">
     <div class="mtabs" role="tablist" aria-label="Escolher candidato">${tabs}</div>
-    ${columnHtml(items, people, chosen, fresh, 'm')}</div>`
+    ${columnHtml(items, people, chosen, fresh, 'm', all)}</div>`
 }
 
 function sheet(title, body) {
@@ -848,9 +867,9 @@ export function renderBoard(state) {
     <div class="edge"></div>
     ${scoreHtml(snapshot)}
     ${note ? `<p class="simline" role="status">${esc(note)}</p>` : ''}
-    ${listsHtml(items, people, state.fresh)}
+    ${listsHtml(items, people, state.fresh, claimsOf(snapshot))}
     ${captionHtml(pickCaption(state, feedItems(snapshot)), people, !state.replay && status.vivo && !snapshot.encerrado)}
-    ${mobileFeed(items, people, state.filter, state.fresh)}
+    ${mobileFeed(items, people, state.filter, state.fresh, claimsOf(snapshot))}
     ${panelHtml(state, items)}`
 }
 
@@ -995,6 +1014,12 @@ function boot() {
     if (act === 'item') {
       state.detailKey = arg
       state.panel = 'detalhe'
+      paint()
+      return
+    }
+    if (act === 'ctab') {
+      const cut = arg.lastIndexOf(':')
+      colTabs.set(arg.slice(0, cut), arg.slice(cut + 1))
       paint()
       return
     }
