@@ -258,7 +258,7 @@ def test_claim_bank_matches_numbers_and_speaker():
     assert b.match("Lula", "o PIB cresceu 7,5% em 2010")["veredito"] == "verdadeiro"
     assert b.match("Lula", "o PIB cresceu 10,5% em 2010") is None  # número diferente: não reaproveita
     assert b.match("Flávio Bolsonaro", "o PIB cresceu 7,5% em 2010") is None  # outro orador
-    assert b.match("Lula", "ele tem três inquéritos, o Lulinha")["veredito"] == "verdadeiro"
+    assert b.match("Lula", "ele tem três inquéritos, o Lulinha") is None  # removido: a fonte não sustenta
 
 
 def test_bank_hit_skips_llm_judge(monkeypatch):
