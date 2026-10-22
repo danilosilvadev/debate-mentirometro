@@ -134,7 +134,8 @@ sudo apt install ffmpeg
 cd pipeline
 python3 -m venv .venv && . .venv/bin/activate
 pip install -e '.[dev]' yt-dlp speechbrain soundfile torch torchaudio
-# vozes já cadastradas em voices/ (lula, flavio, adriana, oinegue). Para outro debate:
+# vozes já cadastradas em voices/ (lula, flavio; mediadores: tralli = César Tralli, mediador da Globo em 23/10,
+# conferido em 2 vídeos da Globo SP com similaridade 0,89; adriana e oinegue = Band). Para outro debate:
 python scripts/enroll_voice.py <perfil> '<url do youtube>' <início_s> <fim_s>   # 2-3 trechos de 20-40 s por pessoa
 ```
 
@@ -180,7 +181,7 @@ Limites da Groq no plano gratuito (cabeçalhos `x-ratelimit-*`, 21/10/2026): 1.0
 cd pipeline && . .venv/bin/activate && set -a && . ./.env && set +a
 # terminal 1: o robô
 python -m placar run --url 'https://www.youtube.com/watch?v=<ID_DO_AO_VIVO>' \
-  --a 'Lula:lula' --b 'Flávio Bolsonaro:flavio' --others adriana,oinegue \
+  --a 'Lula:lula' --b 'Flávio Bolsonaro:flavio' --others tralli \
   --debate-id globo-2turno-2026-10-23 --video-id <ID_DO_AO_VIVO> --out out
 # terminal 2: publica out/placar.json (CORS *)
 python -m placar serve --dir out --host 0.0.0.0 --port 8787

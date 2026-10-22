@@ -47,14 +47,47 @@ SYSTEM_JUDGE_TURN = (
     "- falso: as fontes contradizem claramente.\n"
     "- sem_dados: as fontes não tratam do ponto. Na dúvida, sem_dados. Não use conhecimento próprio "
     "para contradizer sem fonte.\n"
-    "motivo: 1 ou 2 frases citando o dado da fonte. fonte_url deve ser uma das URLs recebidas."
+    "- Use também a lista de presidentes recebida (fato fixo) para contas de anos e mandatos; "
+    "faça a conta explicitamente.\n"
+    "motivo: 1 ou 2 frases citando o dado da fonte, com números corretos. fonte_url deve ser uma das URLs recebidas."
 )
 
 SYSTEM_VERIFY = (
     SYSTEM_JUDGE_TURN
     + "\nVocê é o segundo checador e julga de forma independente; outro modelo já opinou, "
-    "mas você não sabe o que ele disse. Seja rigoroso: falso e impreciso exigem dado na fonte."
+    "mas você não sabe o que ele disse. Seja rigoroso: falso e impreciso exigem dado na fonte. "
+    "Refaça toda conta de anos, porcentagens e valores passo a passo antes de decidir; o seu motivo "
+    "é o que será publicado, então ele precisa estar correto e completo (ex.: incluir o mandato atual)."
 )
+
+# Fatos de referência que o modelo erra sem ajuda (ex.: "PT governou 20 dos últimos 24
+# anos": o juiz contou só 2003-2016 e esqueceu 2023-hoje). Vão no prompt do juiz e do
+# confirmador. Datas oficiais de posse/saída.
+MANDATOS = (
+    ("Fernando Henrique Cardoso", "PSDB", 1995, 2002),
+    ("Lula", "PT", 2003, 2010),
+    ("Dilma Rousseff", "PT", 2011, 2016),  # afastada em maio/2016, impeachment em ago/2016
+    ("Michel Temer", "MDB", 2016, 2018),
+    ("Jair Bolsonaro", "PL", 2019, 2022),
+    ("Lula", "PT", 2023, None),
+)
+
+
+def reference_facts(today=None) -> str:
+    import datetime as _dt
+
+    today = today or _dt.date.today()
+    rows = []
+    for nome, partido, ini, fim in MANDATOS:
+        rows.append(f"{nome} ({partido}): {ini}–{fim if fim else 'hoje (' + str(today.year) + ')'}")
+    pt_years = sum(((fim or today.year) - ini + 1) for _, partido, ini, fim in MANDATOS if partido == "PT")
+    return (
+        f"Data de hoje: {today.isoformat()}. Presidentes desde 1995 (fato fixo, use para contas de período):\n- "
+        + "\n- ".join(rows)
+        + f"\nAnos civis com o PT na Presidência de 2003 até {today.year}: cerca de {pt_years - 1} "
+        "(Dilma saiu em 2016; 2016 conta pela metade)."
+    )
+
 
 REVIEW_TEXT = "Em revisão: aguardando um segundo modelo confirmar com as fontes."
 DIVERGE_TEXT = "Em revisão: os checadores automáticos não chegaram a acordo; fica fora do Mentirômetro."
@@ -138,11 +171,17 @@ def process_turn(
 
 
 def _judge(board, claim, item, llm, retriever, lock, res, can_call) -> None:
-    query = item.get("busca") or item["citacao"]
     started = time.perf_counter()
-    evidence = retriever.search(query)
-    if not evidence and item.get("busca"):
-        evidence = retriever.search(item["citacao"][:160])
+    evidence = []
+    seen: set[str] = set()
+    for query in claim_queries(item):
+        for e in retriever.search(query):
+            if e.url not in seen:
+                seen.add(e.url)
+                evidence.append(e)
+        if len(evidence) >= 6:
+            break
+    evidence = evidence[:6]
     res.retrieve_ms.append((time.perf_counter() - started) * 1000)
     if not evidence:
         with lock:
@@ -152,11 +191,7 @@ def _judge(board, claim, item, llm, retriever, lock, res, can_call) -> None:
     if not can_call():
         return  # fica em revisão
     sources = "\n".join(f"- {e.titulo} ({e.url}): {e.trecho}" for e in evidence)
-    import datetime as _dt
-
-    hoje = _dt.date.today().isoformat()
-    prompt = (f"Data de hoje: {hoje}. Candidato: {board.nomes.get(claim['quem'], '')}. "
-              "Considere o período até hoje (ex.: 'últimos 24 anos' conta até o ano atual).\n") + \
+    prompt = reference_facts() + f"\nCandidato: {board.nomes.get(claim['quem'], '')}.\n" + \
         f"Afirmação (literal): {claim['literal']}\nResumo: {claim['afirmacao']}\nFontes:\n{sources}"
     started = time.perf_counter()
     try:
@@ -203,11 +238,35 @@ def _judge(board, claim, item, llm, retriever, lock, res, can_call) -> None:
             entry["publicado"] = "em_revisao"
             return
         final = verdict if v2 == verdict else "impreciso"  # discordam no grau: o mais brando
-        if final != verdict:
-            motivo = second.data.get("motivo") or motivo
+        # O motivo publicado é o do confirmador, que refez as contas.
+        motivo = second.data.get("motivo") or motivo
         board.set_verdict(claim, veredito=final, motivo=motivo, fonte_titulo=title, fonte_url=url)
         board.note_score()
         entry["publicado"] = final
+
+
+LEGAL_WORDS = ("lei", "emenda", "constitui", "pec", "artigo", "decreto", "medida provisória",
+               "stf", "supremo", "congresso", "câmara", "senado", "aprovad", "sancion", "projeto")
+
+
+def claim_queries(item: dict[str, Any]) -> list[str]:
+    """Várias consultas por afirmação: a do modelo, a citação literal e, para
+    lei/Constituição/Congresso, uma voltada às fontes oficiais (Planalto, Câmara,
+    Senado, Agência Senado/Câmara). No teste de 21/10 metade dos 'sem dados' eram
+    afirmações legais em que a busca única só trouxe o texto genérico."""
+    busca = (item.get("busca") or "").strip()
+    quote = " ".join((item.get("citacao") or "").split())[:160]
+    queries = [q for q in (busca, quote) if q]
+    folded = f"{busca} {quote}".lower()
+    if any(w in folded for w in LEGAL_WORDS):
+        base = busca or quote
+        queries.append(f"{base} planalto.gov.br OR camara.leg.br OR senado.leg.br")
+        queries.append(f"{base} agência senado câmara notícias")
+    out: list[str] = []
+    for q in queries:
+        if q.lower() not in {x.lower() for x in out}:
+            out.append(q)
+    return out[:4]
 
 
 def _pick_source(data, evidence):

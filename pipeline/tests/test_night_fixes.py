@@ -204,3 +204,28 @@ def test_stream_pcm_resumes_vod_when_ytdlp_exits_zero_mid_video():
     data = b"".join(stream_pcm("https://y", start_s=10, popen=popen, sleep=lambda s: None))
     assert len(data) == BYTES_PER_S * 3
     assert offsets == ["*10-inf", "*12-inf", "*13-inf"]
+
+
+def test_reference_facts_counts_current_term():
+    import datetime
+
+    from placar.turns import reference_facts
+
+    txt = reference_facts(datetime.date(2026, 10, 21))
+    assert "Lula (PT): 2023–hoje (2026)" in txt and "cerca de 17" in txt
+
+
+def test_claim_queries_legal_adds_official_queries():
+    from placar.turns import claim_queries
+
+    qs = claim_queries({"busca": "PEC segurança pública 2025", "citacao": "a emenda que eu mandei"})
+    assert qs[0] == "PEC segurança pública 2025" and len(qs) == 4 and "senado.leg.br" in qs[2]
+    assert claim_queries({"busca": "PIB 2010", "citacao": "PIB 2010"}) == ["PIB 2010"]
+
+
+def test_verifier_motivo_is_published_and_prompt_has_facts():
+    board, router, retr, first, second = _setup(FALSO, {"veredito": "falso", "motivo": "Conta certa: 17 anos."})
+    process_turn(board, {"quem": "1", "text": "x", "t_ms": 1, "dur_s": 5}, router, retr)
+    c = _claim(board)
+    assert c["veredito"] == "falso" and c["motivo"] == "Conta certa: 17 anos."
+    assert "Presidentes desde 1995" in second.calls[-1].user
