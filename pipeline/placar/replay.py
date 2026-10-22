@@ -185,12 +185,12 @@ def build_router(settings: Settings) -> ProviderRouter:
                 )
             )
         elif name == "openrouter":
-            providers.append(
-                OpenRouterProvider(
-                    api_key=settings.openrouter_key,
-                    model=settings.openrouter_model,
-                )
+            openrouter = OpenRouterProvider(
+                api_key=settings.openrouter_key,
+                model=settings.openrouter_model,
             )
+            openrouter.timeout_s = settings.openrouter_timeout_s
+            providers.append(openrouter)
         elif name == "anthropic" and settings.anthropic_key:
             providers.append(
                 AnthropicApiProvider(

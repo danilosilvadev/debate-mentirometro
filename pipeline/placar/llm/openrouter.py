@@ -40,7 +40,7 @@ class OpenRouterProvider:
         self,
         *,
         api_key: str,
-        model: str = "meta-llama/llama-3.3-70b-instruct:free",
+        model: str = "nvidia/nemotron-3.5-super-vl:free",
         transport: Transport | None = None,
         app_url: str = "http://127.0.0.1:8787",
     ) -> None:

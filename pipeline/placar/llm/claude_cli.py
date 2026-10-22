@@ -30,6 +30,7 @@ from placar.llm.base import (
     ProviderError,
     RateLimitFailure,
     TimeoutFailure,
+    ProviderUnavailable,
 )
 
 _LIMIT_MARKERS = (
@@ -67,6 +68,8 @@ class ClaudeCliProvider:
         self.persistent = persistent
         self._proc: Any = None
         self._turns = 0
+        # Binário ausente: lembra e não tenta mais nesta execução.
+        self.unavailable = False
 
     def close(self) -> None:
         proc = self._proc
@@ -85,9 +88,14 @@ class ClaudeCliProvider:
             pass
 
     def generate(self, request: LlmRequest, timeout_s: float) -> str:
+        if self.unavailable:
+            raise ProviderUnavailable(f"Claude CLI não encontrado ({self.binary}).")
         if self.persistent:
             try:
                 return self._session_turn(request, timeout_s)
+            except ProviderUnavailable:
+                self.close()
+                raise
             except CliFailure:
                 self.close()
                 return self._oneshot(request, timeout_s)
@@ -126,7 +134,8 @@ class ClaudeCliProvider:
                 text=True,
             )
         except FileNotFoundError as exc:
-            raise CliFailure(f"Claude CLI não encontrado ({self.binary}).") from exc
+            self.unavailable = True
+            raise ProviderUnavailable(f"Claude CLI não encontrado ({self.binary}).") from exc
         try:
             stdout, stderr = proc.communicate(timeout=timeout_s)
         except subprocess.TimeoutExpired as exc:
@@ -201,7 +210,8 @@ class ClaudeCliProvider:
                 bufsize=1,
             )
         except FileNotFoundError as exc:
-            raise CliFailure(f"Claude CLI não encontrado ({self.binary}).") from exc
+            self.unavailable = True
+            raise ProviderUnavailable(f"Claude CLI não encontrado ({self.binary}).") from exc
         self._turns = 0
 
 
