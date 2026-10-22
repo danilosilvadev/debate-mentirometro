@@ -61,3 +61,18 @@ test('itens no replay usam o tempo do vídeo', async () => {
   assert.equal(hhmm(766000), '12:46')
   assert.equal(hhmm(Date.UTC(2026, 9, 18, 23, 30)), '20:30')
 })
+
+test('seek para frente e para trás em qualquer ordem dá o mesmo placar', () => {
+  const at = (s) => JSON.stringify(snapshotAt(data, s).candidatos)
+  const seq = [340, 900, 400, 770, 765, 1200, 341]
+  const fresh = Object.fromEntries(seq.map((s) => [s, at(s)]))
+  for (const s of [...seq].reverse()) assert.equal(at(s), fresh[s])
+})
+
+test('replay não desenha iframe dentro do placar (o player fica fora e não é recriado)', async () => {
+  const { renderBoard } = await import('../js/placar.mjs')
+  const html = renderBoard({ snapshot: snapshotAt(data, 770), replay: data, replaySec: 770, replayLine: lineAt(data, 765), filter: {}, fresh: new Set(), mode: 'live', now: 0 })
+  assert.ok(!html.includes('<iframe'))
+  assert.ok(!html.includes('id="ytreplay"'))
+  assert.ok(html.includes('REPLAY') && html.includes('O PT já governa'))
+})
