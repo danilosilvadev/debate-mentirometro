@@ -53,3 +53,11 @@ test('relógio simulado e seek', () => {
   assert.equal(c.get(), 701)
   assert.equal(mmss(766), '12:46')
 })
+
+test('itens no replay usam o tempo do vídeo', async () => {
+  const { hhmm } = await import('../js/placar.mjs')
+  const snap = snapshotAt(data, 800)
+  assert.equal(snap.fatos[0].declaracoes.find((c) => c.afirmacao === 'PT 20/24').t, 766000)
+  assert.equal(hhmm(766000), '12:46')
+  assert.equal(hhmm(Date.UTC(2026, 9, 18, 23, 30)), '20:30')
+})

@@ -12,13 +12,15 @@ export function itemSecond(item, data) {
 
 export function snapshotAt(data, sec) {
   const visible = (item) => itemSecond(item, data) <= sec
+  // `t` passa a ser o segundo do vídeo (ms): a lista mostra o tempo do vídeo, não o relógio.
+  const retime = (item) => ({ ...item, t: Math.round(itemSecond(item, data) * 1000) })
   const fatos = []
   for (const group of data?.fatos || []) {
-    const declaracoes = (group.declaracoes || []).filter(visible)
+    const declaracoes = (group.declaracoes || []).filter(visible).map(retime)
     if (declaracoes.length) fatos.push({ ...group, declaracoes })
   }
-  const propostas = (data?.propostas || []).filter(visible)
-  const ataques = (data?.ataques || []).filter(visible)
+  const propostas = (data?.propostas || []).filter(visible).map(retime)
+  const ataques = (data?.ataques || []).filter(visible).map(retime)
   const candidatos = {}
   const fim = Number(data?.replay?.fim || 0) || 1
   const inicio = Number(data?.replay?.inicio || 0)

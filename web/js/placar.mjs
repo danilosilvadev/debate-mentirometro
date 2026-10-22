@@ -162,6 +162,8 @@ export function sortClaims(claims, order) {
 }
 
 export function hhmm(epochMs) {
+  // Replay: o `t` dos itens é o segundo do vídeo × 1000 (bem menor que um epoch)
+  if (epochMs < 1e10) return mmss(epochMs / 1000)
   const time = new Date(epochMs - 3 * 60 * 60 * 1000)
   const hour = String(time.getUTCHours()).padStart(2, '0')
   const minute = String(time.getUTCMinutes()).padStart(2, '0')
@@ -1004,6 +1006,7 @@ function boot() {
         seek: (sec) => { sim.seek(sec); hold = sec; if (ready && !failed && player?.seekTo) player.seekTo(sec, true); tick() },
         mode: () => (simulated || failed ? 'clock' : (ready ? 'player' : 'loading')),
         now: current,
+        player: () => player,
         data,
       }
       setInterval(tick, 250)
