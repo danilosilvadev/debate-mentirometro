@@ -1,161 +1,226 @@
 {
-  "atualizado": 1792634489150,
+  "atualizado": 1792661230913,
   "video": {
     "id": "RugVB17uRVM",
     "ao_vivo": true,
     "inicio": 0,
-    "t0": 1792633916847,
-    "comeco": 1792633916847
+    "t0": 1792660028715,
+    "comeco": 1792660028715
   },
   "candidatos": {
     "1": {
       "nome": "Lula",
-      "verdadeiro": 4,
-      "impreciso": 0,
-      "falso": 1,
+      "verdadeiro": 6,
+      "impreciso": 3,
+      "falso": 2,
       "sem_dados": 3,
-      "propostas": 4,
-      "ataques": 1,
+      "propostas": 3,
+      "ataques": 19,
       "tempo": {
-        "proposta": 102.72,
-        "ataque": 45.72,
+        "proposta": 152.14,
+        "ataque": 381.2,
         "defesa": 0.0,
-        "balanco": 110.06,
-        "outro": 0.0
+        "balanco": 107.38,
+        "outro": 5.1
       }
     },
     "2": {
       "nome": "Flávio Bolsonaro",
-      "verdadeiro": 0,
-      "impreciso": 0,
-      "falso": 1,
-      "sem_dados": 0,
-      "propostas": 7,
-      "ataques": 1,
+      "verdadeiro": 4,
+      "impreciso": 3,
+      "falso": 0,
+      "sem_dados": 1,
+      "propostas": 13,
+      "ataques": 31,
       "tempo": {
-        "proposta": 125.52,
-        "ataque": 48.0,
-        "defesa": 0.0,
+        "proposta": 125.98,
+        "ataque": 532.74,
+        "defesa": 35.86,
         "balanco": 0.0,
-        "outro": 0.0
+        "outro": 11.6
       }
     }
   },
   "fatos": [
     {
       "tema": "politica",
-      "atualizado": 1792634337847,
+      "atualizado": 1792661634014,
       "declaracoes": [
         {
-          "t": 1792634052847,
-          "quem": "1",
-          "afirmacao": "Emenda constitucional enviada 25/03",
-          "contexto": "emenda constitucional 25 março segurança pública",
-          "veredito": "sem_dados",
-          "motivo": "Nenhuma das fontes indica que a emenda constitucional foi enviada em 25 de março do ano passado; elas apenas descrevem a PEC 18/2025 sem mencionar data de envio.",
-          "literal": "emenda constitucional que eu mandei dia 25 de março do ano passado",
+          "t": 1792660418994,
+          "quem": "2",
+          "afirmacao": "Lei antifacção aprovada",
+          "contexto": "lei antifacção aprovada Brasil",
+          "veredito": "verdadeiro",
+          "motivo": "A fonte indica que a Lei Antifacção (PL 5.582/2025) foi efetivamente aprovada pelo Legislativo em fevereiro de 2026, confirmando que o projeto foi aprovado.",
+          "literal": "com a lei antifacção que nós aprovamos",
           "fonte": {
-            "titulo": "Proposta de Emenda à Constituição n° 18, de 2025 - Senado Federal",
-            "url": "https://www25.senado.leg.br/web/atividade/materias/-/materia/172997"
+            "titulo": "Lei Antifacção, de combate ao crime organizado, entra em vigor ...",
+            "url": "https://www12.senado.leg.br/noticias/materias/2026/03/25/lei-antifaccao-de-combate-ao-crime-organizado-entra-em-vigor"
           }
         },
         {
-          "t": 1792634052847,
+          "t": 1792660500715,
+          "quem": "1",
+          "afirmacao": "Emenda constitucional enviada 25 de março",
+          "contexto": "emenda constitucional 25 de março 2023",
+          "veredito": "sem_dados",
+          "motivo": "Nenhuma das fontes fornecidas menciona que Lula enviou, em 25 de março do ano passado, proposta ao governo federal sobre condições de interferir na segurança pública.",
+          "literal": "eu mandei dia 25 de março do ano passado para dar ao governo federal as condições de interferir na questão da segurança pública",
+          "fonte": {
+            "titulo": "Candidatos à Presidência da República cumprem agendas em ...",
+            "url": "https://agenciabrasil.ebc.com.br/radioagencia-nacional/politica/audio/2026-10/candidatos-presidencia-da-republica-cumprem-agendas-em-brasilia"
+          }
+        },
+        {
+          "t": 1792660500715,
           "quem": "1",
           "afirmacao": "Constituição 88 atribui segurança aos Estados",
-          "contexto": "",
-          "veredito": "sem_dados",
-          "motivo": "Nenhuma das fontes citadas indica explicitamente que a Constituição de 1988 atribuiu a responsabilidade da segurança pública aos Estados; elas apenas mencionam a institucionalização do sistema de segurança pública sem detalhar a competência estadual.",
-          "literal": "Constituição de 88 garantiu que a segurança pública era uma das responsabilidades dos Estados",
+          "contexto": "Constituição 1988 segurança pública responsabilidade estados",
+          "veredito": "impreciso",
+          "motivo": "As fontes citam o Art. 144 da Constituição, que define a segurança pública como 'dever do Estado, direito e responsabilidade de todos', exercida através de órgãos instituídos pela União e pelos Estados, sem afirmar que é responsabilidade exclusiva dos Estados.",
+          "literal": "A Constituição de 88 garantiu que a segurança pública era uma da responsabilidade dos Estados",
           "fonte": {
-            "titulo": "Constituição de 1988: O Brasil 20 Anos Depois - Senado Federal",
-            "url": "https://www12.senado.leg.br/publicacoes/estudos-legislativos/tipos-de-estudos/outras-publicacoes/volume-iii-constituicao-de-1988-o-brasil-20-anos-depois.-a-consolidacao-das-instituicoes/seguranca-publica-e-defesa-nacional-a-seguranca-no-contexto-constitucional"
+            "titulo": "msg975-970902 - Planalto",
+            "url": "https://www.planalto.gov.br/ccivil_03/projetos/PEC/msg975-970902.htm"
           }
         },
         {
-          "t": 1792634092847,
+          "t": 1792660664875,
           "quem": "1",
-          "afirmacao": "Lei antifacção aprovada",
-          "contexto": "lei antifacção Brasil aprovada",
+          "afirmacao": "Lula governou 12 anos",
+          "contexto": "Lula tempo de governo 12 anos",
+          "veredito": "impreciso",
+          "motivo": "A fonte afirma que Lula voltou à Presidência '12 anos após ter deixado o poder', o que se refere ao intervalo entre o fim de seu segundo mandato (2010) e o início do terceiro (2023), e não ao tempo total de governo acumulado, que seria de 12 anos somando os mandatos de 2003-2010 e 2023-2026.",
+          "literal": "já governa o país há 12 anos",
+          "fonte": {
+            "titulo": "Biografia do Presidente da República — Planalto - Portal Gov.br",
+            "url": "https://www.gov.br/planalto/pt-br/conheca-a-presidencia/biografia-do-presidente"
+          }
+        },
+        {
+          "t": 1792660785715,
+          "quem": "2",
+          "afirmacao": "PT governou 20 anos",
+          "contexto": "PT governou Brasil 20 anos",
+          "veredito": "impreciso",
+          "motivo": "A fonte cita a declaração de Dirceu de que, sem o impeachment, o PT teria governado por 20 anos, mas a lista de presidentes mostra que o PT governou de 2003 a 2016 (13 anos) e voltou em 2023, totalizando cerca de 17 anos civis até 2026, não 20.",
+          "literal": "O PT já governa esse país há 20 anos do ano.",
+          "fonte": {
+            "titulo": "Presidentes da República - GOV.BR",
+            "url": "https://www.gov.br/cti/pt-br/trajetoria-historica/presidentes-da-republica-desde-a-criacao-do-cti"
+          }
+        },
+        {
+          "t": 1792661193715,
+          "quem": "1",
+          "afirmacao": "Três inquéritos contra ele",
+          "contexto": "três inquéritos contra Lula investigação 2023",
+          "veredito": "falso",
+          "motivo": "As fontes confirmam que há três inquéritos contra Fábio Luís Lula da Silva (Lulinha), filho do presidente, e não contra o próprio Lula, o que torna a afirmação do candidato falsa ao atribuir as investigações a ele mesmo.",
+          "literal": "Ele tem três inquéritos",
+          "fonte": {
+            "titulo": "Entenda os três inquéritos em que Lulinha é investigado - CNN Brasil",
+            "url": "https://www.cnnbrasil.com.br/politica/entenda-os-tres-inqueritos-em-que-lulinha-e-investigado/"
+          }
+        },
+        {
+          "t": 1792661387855,
+          "quem": "1",
+          "afirmacao": "Bocaro contou 43 mentiras",
+          "contexto": "Bocaro mentiras 43 contadas",
           "veredito": "em_revisao",
           "motivo": "Em revisão: os checadores automáticos não chegaram a acordo; fica fora do Mentirômetro.",
-          "literal": "eu já fiz a lei antifacção, ela foi aprovada",
+          "literal": "ele contou 43 mentiras",
           "fonte": {
-            "titulo": "Como ficou o PL Antifacção? Após 8 versões, proposta foi aprovada ...",
-            "url": "https://www.estadao.com.br/politica/como-ficou-o-pl-antifaccao-apos-diversas-versoes-proposta-foi-aprovada-veja-o-que-muda-npr/"
+            "titulo": "Debate da Band: checagem do que disseram Flávio Bolsonaro e Lula",
+            "url": "https://noticias.uol.com.br/confere/ultimas-noticias/2026/10/19/debate-band-checagem-flavio-lula.ghtm"
           }
         },
         {
-          "t": 1792634337847,
-          "quem": "2",
-          "afirmacao": "PT governou 20 dos últimos 24 anos",
-          "contexto": "PT governo Brasil últimos 24 anos",
-          "veredito": "falso",
-          "motivo": "A fonte afirma que o PT completou 17 anos e meio de poder ao longo de 24 anos, o que contradiz a afirmação de 20 anos de governo.",
-          "literal": "O PT já governa esse país há 20 anos dos últimos 20 anos. dos últimos 24.",
+          "t": 1792661387855,
+          "quem": "1",
+          "afirmacao": "Pai de Bocaro mentia 11 vezes por dia",
+          "contexto": "pai de Bocaro mentiras 11 vezes por dia",
+          "veredito": "sem_dados",
+          "motivo": "As fontes apenas relatam que no debate foi mencionado que o pai de Flávio mentia 11 vezes por dia, mas não fornecem evidência ou verificação desse número.",
+          "literal": "O pai dele mentia 11 vezes por dia",
           "fonte": {
-            "titulo": "Após 17 anos de poder, PT ainda é rejeitado pelo mercado - Estadão",
-            "url": "https://www.estadao.com.br/economia/fernando-dantas/apos-17-anos-de-poder-pt-ainda-e-rejeitado-pelo-mercado/"
+            "titulo": "Checamos Lula e Flávio Bolsonaro no debate da Band | Aos Fatos",
+            "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"
+          }
+        },
+        {
+          "t": 1792661634014,
+          "quem": "1",
+          "afirmacao": "Bolsonaro está preso",
+          "contexto": "Bolsonaro está preso situação atual",
+          "veredito": "sem_dados",
+          "motivo": "Nenhuma das fontes menciona que Lula está preso; todas tratam da prisão domiciliar de Jair Bolsonaro.",
+          "literal": "ele está preso",
+          "fonte": {
+            "titulo": "STF mantém ex-presidente Bolsonaro em prisão domiciliar",
+            "url": "https://noticias.stf.jus.br/postsnoticias/stf-mantem-ex-presidente-bolsonaro-em-prisao-domiciliar/"
           }
         }
       ]
     },
     {
       "tema": "seguranca",
-      "atualizado": 1792634092847,
+      "atualizado": 1792660460715,
       "declaracoes": [
         {
-          "t": 1792634092847,
-          "quem": "1",
-          "afirmacao": "Aumento do tempo de cadeia",
-          "contexto": "aumento tempo de cadeia facções Brasil lei",
+          "t": 1792660418994,
+          "quem": "2",
+          "afirmacao": "Pena de até 80 anos",
+          "contexto": "pena 80 anos líderes organizações crime Brasil",
           "veredito": "verdadeiro",
-          "motivo": "A lei L15358, sancionada em 2026, aumenta a pena em até 2/3 a 2 vezes para agentes que lideram organizações criminosas, confirmando que o tempo de cadeia foi aumentado.",
-          "literal": "já aumentamos o tempo de cadeia para aqueles que partimos da...",
+          "motivo": "A fonte relata que Flávio Bolsonaro afirmou que, se eleito, fará os líderes de facções criminosas ficarem \"até 80 anos\" presos, confirmando a afirmação.",
+          "literal": "os líderes dessas organizações vão ficar até 80 anos presos",
           "fonte": {
-            "titulo": "L15358 - planalto.gov.br",
-            "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2026/lei/l15358.htm"
+            "titulo": "Flávio defende prisão de 80 anos para chefes do crime; Lula afirma que criará min da segurança",
+            "url": "https://noticias.uol.com.br/ultimas-noticias/agencia-estado/2026/10/18/flavio-defende-prisao-de-80-anos-para-chefes-do-crime-lula-afirma-que-criara-min-da-seguranca.htm"
+          }
+        },
+        {
+          "t": 1792660460715,
+          "quem": "2",
+          "afirmacao": "Falta de vagas no sistema penitenciário",
+          "contexto": "vagas sistema penitenciário falta Brasil",
+          "veredito": "verdadeiro",
+          "motivo": "A fonte indica que há déficit de vagas em torno de 40%, ou seja, a capacidade está abaixo da demanda, confirmando que não há vagas disponíveis no sistema penitenciário.",
+          "literal": "não tem vagas no sistema penitenciário",
+          "fonte": {
+            "titulo": "Déficit de vagas no sistema prisional do país é de 40%, diz diretor",
+            "url": "https://agenciabrasil.ebc.com.br/radioagencia-nacional/politica/audio/2025-11/deficit-de-vagas-no-sistema-prisional-do-pais-e-de-40-diz-diretor"
           }
         }
       ]
     },
     {
       "tema": "economia",
-      "atualizado": 1792634300847,
+      "atualizado": 1792660825095,
       "declaracoes": [
         {
-          "t": 1792634214446,
+          "t": 1792660664875,
           "quem": "1",
           "afirmacao": "Crescimento 10,5% em 2010",
           "contexto": "Brasil crescimento 10,5% 2010 PIB",
           "veredito": "falso",
-          "motivo": "As fontes indicam que o PIB do Brasil cresceu 7,5% em 2010 (BBC) ou 7,8% (Banco Central), enquanto o crescimento de 10,5% refere-se especificamente à produção industrial, não ao PIB total.",
+          "motivo": "As fontes indicam que o PIB variou 7,5% em 2010, não 10,5% como afirmado pelo candidato.",
           "literal": "esse país cresceu 10,5% em 2010",
           "fonte": {
-            "titulo": "Economia - PIB cresce 7,8% em 2010, estima Banco Central - G1",
-            "url": "https://g1.globo.com/economia/noticia/2011/02/pib-cresceu-78-em-2010-diz-banco-central.html"
+            "titulo": "Em 2010, PIB varia 7,5% e fica em R$ 3675 trilhões",
+            "url": "https://agenciadenoticias.ibge.gov.br/agencia-sala-de-imprensa/2013-agencia-de-noticias/releases/13983-asi-em-2010-pib-varia-75-e-fica-em-r-3675-trilhoes"
           }
         },
         {
-          "t": 1792634214446,
+          "t": 1792660706034,
           "quem": "1",
-          "afirmacao": "Primeiro presidente a obter dois graus de investimento",
-          "contexto": "Brasil grau de investimento 2007 2010 primeiro presidente",
-          "veredito": "verdadeiro",
-          "motivo": "As agências Fitch Ratings e S&P concederam grau de investimento ao Brasil em 2008 e a Moody's em 2009, sendo a primeira vez que o país recebeu esse selo, durante o segundo mandato de Lula (2007‑2010).",
-          "literal": "primeiro presidente da República a conseguir dois graus de investimento nesse país de 2007 a 2010",
-          "fonte": {
-            "titulo": "Veja o histórico das notas de crédito do Brasil e entenda o que leva ...",
-            "url": "https://g1.globo.com/economia/noticia/2024/10/01/veja-o-historico-das-notas-de-credito-do-brasil-e-entenda-o-que-leva-um-pais-a-ter-grau-de-investimento.ghtml"
-          }
-        },
-        {
-          "t": 1792634258227,
-          "quem": "1",
-          "afirmacao": "Criação da Lei Geral da PME",
+          "afirmacao": "Lei Geral da PME criada",
           "contexto": "Lei Geral da Pequena e Média Empresa criação governo Lula",
           "veredito": "verdadeiro",
-          "motivo": "A Lei Complementar nº 123, conhecida como Lei Geral da Micro e Pequena Empresa, foi promulgada em 14 de dezembro de 2006, durante o governo de Luiz Inácio Lula da Silva.",
+          "motivo": "A Lei Complementar nº 123, de 14 de dezembro de 2006, que institui normas gerais para micro e pequenas empresas, foi sancionada durante o governo de Luiz Inácio Lula da Silva (2003‑2010).",
           "literal": "foi no meu governo que nós criamos a lei geral da pequena e média empresa",
           "fonte": {
             "titulo": "Lcp 123 - Planalto",
@@ -163,42 +228,171 @@
           }
         },
         {
-          "t": 1792634258227,
+          "t": 1792660706034,
           "quem": "1",
-          "afirmacao": "17,5 milhões de MEIs cadastrados",
-          "contexto": "MEI número 17,5 milhões Brasil",
+          "afirmacao": "17,5 milhões de MEIs",
+          "contexto": "MEI número 17,5 milhões Brasil 2023",
           "veredito": "verdadeiro",
-          "motivo": "A fonte indica que, segundo dados de setembro do governo federal, há cerca de 17,5 milhões de MEIs ativos, confirmando a afirmação de 17,5 milhões.",
-          "literal": "nós temos 17 milhões e 500 mil MEIs hoje",
+          "motivo": "A fonte indica que o Brasil tem 17,56 milhões de MEIs ativos em 30 de setembro de 2026, número que corresponde a aproximadamente 17,5 milhões.",
+          "literal": "temos 17 milhões e 500 mil MEIs hoje",
           "fonte": {
-            "titulo": "Pix MEI de até R$ 5 mil: veja quem pode receber e como vai funcionar ...",
-            "url": "https://economiareal.uol.com.br/noticia/mei/pix-mei-de-ate-r-5-mil-veja-quem-pode-receber-e-como-vai-funcionar-2138"
+            "titulo": "Governo Federal prorroga 'Desenrola MEI' até 29 de janeiro de ...",
+            "url": "https://www.gov.br/memp/pt-br/assuntos/noticias/governo-lanca-desenrola-mei-pequeno-valor-e-amplia-opcoes-para-negociar-dividas"
           }
         },
         {
-          "t": 1792634300847,
+          "t": 1792660746974,
           "quem": "1",
-          "afirmacao": "Reservas de 270 bilhões",
-          "contexto": "reservas Brasil 270 bilhões FMI",
+          "afirmacao": "Reserva de 270 bilhões de dólares",
+          "contexto": "Brasil reservas internacionais 270 bilhões",
+          "veredito": "verdadeiro",
+          "motivo": "Lula afirma que fez uma reserva de US$ 270 bilhões, e a fonte confirma o valor de 270 bilhões de dólares em reservas.",
+          "literal": "nós fizemos 270 bilhões de reservas",
+          "fonte": {
+            "titulo": "Veja o que é #FATO ou #FAKE na entrevista de Lula à Globo no 2º ...",
+            "url": "https://oglobo.globo.com/fato-ou-fake/noticia/2026/10/16/veja-o-que-e-fato-ou-fake-na-entrevista-de-lula-a-globo-no-2o-turno-das-eleicoes-2026.ghtml"
+          }
+        },
+        {
+          "t": 1792660746974,
+          "quem": "1",
+          "afirmacao": "Crescimento econômico de 7,5%",
+          "contexto": "PIB Brasil crescimento 7,5% histórico",
+          "veredito": "em_revisao",
+          "motivo": "Em revisão: os checadores automáticos não chegaram a acordo; fica fora do Mentirômetro.",
+          "literal": "a economia cresceu 7,5%",
+          "fonte": {
+            "titulo": "PIB do Brasil cresce 7,5% em 2010 e tem maior alta em 24 anos - BBC",
+            "url": "https://www.bbc.com/portuguese/noticias/2011/03/110303_pib_2010_rp"
+          }
+        },
+        {
+          "t": 1792660825095,
+          "quem": "2",
+          "afirmacao": "Taxa de juros futuro caiu 2%",
+          "contexto": "taxa de juros futuro caiu 2% Brasil",
+          "veredito": "impreciso",
+          "motivo": "A fonte afirma que as taxas de juros futuros para janeiro de 2028 recuaram 5,50% (de 13,40% para 12,72%), o que contradiz a afirmação de que a queda foi de apenas 2%.",
+          "literal": "a taxa de juros futuro já caiu 2%",
+          "fonte": {
+            "titulo": "Juros futuros despencam mais de 6% após Flávio Bolsonaro ... - Exame",
+            "url": "https://exame.com/invest/mercados/juros-futuros-despencam-mais-de-6-apos-flavio-bolsonaro-ficar-a-frente-no-1o-turno/"
+          }
+        },
+        {
+          "t": 1792660825095,
+          "quem": "2",
+          "afirmacao": "Dívida do governo atual 11 trilhões",
+          "contexto": "dívida Brasil 11 trilhões reais governo atual",
+          "veredito": "verdadeiro",
+          "motivo": "A fonte indica que em agosto de 2026 a dívida do setor público consolidado era de R$ 11,05 trilhões, confirmando o valor de 11 trilhões de reais mencionado na afirmação.",
+          "literal": "dívida que o atual governo está deixando de 11 trilhões de reais",
+          "fonte": {
+            "titulo": "Contas públicas têm déficit de R$ 10 bilhões em agosto; dívida sobe ...",
+            "url": "https://g1.globo.com/economia/noticia/2026/09/30/contas-publicas-tem-deficit-de-r-10-bilhoes-em-agosto-divida-sobe-para-829percent-do-pib.ghtml"
+          }
+        }
+      ]
+    },
+    {
+      "tema": "social",
+      "atualizado": 1792661329715,
+      "declaracoes": [
+        {
+          "t": 1792661088695,
+          "quem": "1",
+          "afirmacao": "Pagamos aposentados",
+          "contexto": "governo pagou aposentados quadrilha previdência",
+          "veredito": "verdadeiro",
+          "motivo": "A fonte relata que Lula afirmou ter descoberto e preso a quadrilha do INSS e que seu governo pagou R$ 3,5 bilhões a cerca de 5 milhões de aposentados, confirmando ambas as partes da afirmação.",
+          "literal": "prendemos a quadrilha e já pagamos os aposentados",
+          "fonte": {
+            "titulo": "Lula diz que Bolsonaro criou “quadrilha” no INSS",
+            "url": "https://www.poder360.com.br/poder-eleicoes-2026/lula-diz-que-bolsonaro-criou-quadrilha-no-inss/"
+          }
+        },
+        {
+          "t": 1792661220715,
+          "quem": "1",
+          "afirmacao": "Pagamento de R$ 3,5 bilhões aos aposentados",
+          "contexto": "R$ 3,5 bilhões pagamento aposentados",
+          "veredito": "verdadeiro",
+          "motivo": "As fontes indicam que o governo federal já gastou cerca de R$ 3,5‑3,6 bilhões para devolver valores a aposentados, confirmando a cifra de 3,5 bilhões mencionada na afirmação.",
+          "literal": "já pagamos 3 bilhões e meio aos aposentados",
+          "fonte": {
+            "titulo": "Fraude no INSS: governo já devolveu R$ 3,6 bi a 5,1 milhões de ...",
+            "url": "https://oglobo.globo.com/economia/noticia/2026/10/20/fraude-no-inss-governo-gasta-r-36-bilhoes-para-ressarcir-aposentados-e-ainda-nao-recuperou-recursos.ghtml"
+          }
+        },
+        {
+          "t": 1792661329715,
+          "quem": "2",
+          "afirmacao": "5 milhões de aposentados roubados",
+          "contexto": "5 milhões aposentados roubados Brasil INSS",
           "veredito": "sem_dados",
-          "motivo": "As fontes apenas registram que Lula afirmou ter feito 270 bilhões de reservas, mas não fornecem dados que confirmem o valor real das reservas internacionais.",
-          "literal": "Nós fizemos 270 bilhões de reservas",
+          "motivo": "Nenhuma das fontes indica que 5 milhões de aposentados foram roubados; elas tratam de valores monetários (R$5 milhões) ou de números diferentes de beneficiários.",
+          "literal": "roubar 5 milhões de aposentados roubados",
+          "fonte": {
+            "titulo": "PF mira quadrilha que roubou R$ 5 milhões em empréstimos ... - G1",
+            "url": "https://g1.globo.com/pe/pernambuco/noticia/2025/08/05/operacao-mira-quadrilha-que-roubou-r-5-milhoes-em-emprestimos-fraudados-em-nome-de-aposentados-do-inss.ghtml"
+          }
+        }
+      ]
+    },
+    {
+      "tema": "corrupcao",
+      "atualizado": 1792661643574,
+      "declaracoes": [
+        {
+          "t": 1792661220715,
+          "quem": "1",
+          "afirmacao": "Arrecadação de R$ 6 bilhões da quadrilha NSF",
+          "contexto": "R$ 6 bilhões quadrilha NSF arrecadado",
+          "veredito": "verdadeiro",
+          "motivo": "A fonte afirma que \"já arrecadamos R$ 6 bilhões da quadrilha\", confirmando a afirmação do candidato.",
+          "literal": "já arrecadamos R$ 6 bilhões da quadrilha",
           "fonte": {
             "titulo": "Checamos Lula e Flávio Bolsonaro no debate da Band | Aos Fatos",
             "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"
           }
         },
         {
-          "t": 1792634300847,
+          "t": 1792661519935,
+          "quem": "2",
+          "afirmacao": "30 milhões ao Instituto Lula por fora",
+          "contexto": "30 milhões Instituto Lula dinheiro ilegal",
+          "veredito": "impreciso",
+          "motivo": "As fontes confirmam que Daniel Vorcaro afirmou ter pago R$ 30 milhões ao Instituto Lula para financiar um filme de Lula, mas não há nas fontes recebidas qualquer menção a que esse dinheiro tenha sido 'ilegal' ou 'por fora' (clandestino), sendo a afirmação do candidato uma interpretação não sustentada pelos trechos fornecidos.",
+          "literal": "30 milhões pro Instituto Lula por fora, dinheiro ilegal",
+          "fonte": {
+            "titulo": "Vorcaro financiou filme de Lula em troca de acesso a fundos, diz revista",
+            "url": "https://www.poder360.com.br/poder-justica/vorcaro-financiou-filme-de-lula-em-troca-de-acesso-a-fundos-diz-revista/"
+          }
+        },
+        {
+          "t": 1792661554715,
           "quem": "1",
-          "afirmacao": "Crescimento de 7,5%",
-          "contexto": "economia Brasil cresceu 7,5% histórico",
+          "afirmacao": "134 milhões de suposto desvio",
+          "contexto": "134 milhões desvio Brasil 2023",
           "veredito": "em_revisao",
           "motivo": "Em revisão: os checadores automáticos não chegaram a acordo; fica fora do Mentirômetro.",
-          "literal": "a economia cresceu 7,5%",
+          "literal": "134 milhões do vocaro que você disse que não pegou e pegou",
           "fonte": {
-            "titulo": "Brasil não supera média de crescimento de 2,5% em mais de 40 anos; veja ...",
-            "url": "https://www.cnnbrasil.com.br/economia/brasil-nao-supera-media-de-crescimento-de-25-em-mais-de-40-anos-veja-historico/"
+            "titulo": "Lula cobra explicações de Flávio sobre R$ 134 milhões de Vorcaro",
+            "url": "https://www.poder360.com.br/poder-eleicoes-2026/lula-cobra-explicacoes-de-flavio-sobre-r-134-milhoes-de-vorcaro/"
+          }
+        },
+        {
+          "t": 1792661643574,
+          "quem": "1",
+          "afirmacao": "Golpe de 60 bilhões de reais",
+          "contexto": "golpe 60 bilhões reais Brasil",
+          "veredito": "impreciso",
+          "motivo": "As fontes confirmam que o caso Master resultou em prejuízos de R$ 60 bilhões ao sistema financeiro, mas descrevem o evento como a 'maior fraude bancária do país' e não como um 'golpe'.",
+          "literal": "golpe de 60 bilhões de reais",
+          "fonte": {
+            "titulo": "Caso Master: a maior fraude bancária do país - Valor Econômico",
+            "url": "https://infograficos.valor.globo.com/especial/caso-master-a-maior-fraude-bancaria-do-pais.html"
           }
         }
       ]
@@ -208,110 +402,446 @@
     {
       "quem": "2",
       "titulo": "Declarar guerra ao narcoterrorismo",
-      "explicacao": "eu vou... declarar guerra ao narcoterrorismo",
+      "explicacao": "a partir de janeiro do ano que vem eu vou declarar guerra ao narcoterrorismo",
       "vezes": 1,
-      "t": 1792633934686
+      "t": 1792660372715
     },
     {
       "quem": "2",
-      "titulo": "Classificar PCC e milícias como narcoterroristas",
-      "explicacao": "eu vou classificar a PCC, Comando Vermelho e Milícias, como organizações de narcotráfico. como organizações narcoterroristas",
+      "titulo": "Recuperar cidades e territórios",
+      "explicacao": "vou recuperar cada cidade, eu vou recuperar cada território",
       "vezes": 1,
-      "t": 1792633934686
+      "t": 1792660418994
     },
     {
       "quem": "2",
-      "titulo": "Recuperar territórios dominados por criminosos",
-      "explicacao": "eu vou recuperar cada metro, eu vou recuperar cada roda Eu vou recuperar cada metro, eu vou recuperar cada rua, eu vou recuperar cada bairro, eu vou recuperar cada cidade, eu vou recuperar cada território que foi tomado do povo brasileiro",
+      "titulo": "Retomar as cadeias",
+      "explicacao": "vou retomar um local que onde eles estão mandando hoje ainda, que são as cadeias",
       "vezes": 1,
-      "t": 1792633934686
+      "t": 1792660418994
     },
     {
       "quem": "2",
-      "titulo": "Leis mais duras para marginais",
-      "explicacao": "vou para dentro desses marginais com leis mais duras, com a lei antiga",
+      "titulo": "Lei antifacção mais dura",
+      "explicacao": "vou para dentro desses marginais com leis mais duras, com a lei antifacção que nós aprovamos",
       "vezes": 1,
-      "t": 1792633983226
-    },
-    {
-      "quem": "2",
-      "titulo": "Líderes presos até 80 anos",
-      "explicacao": "os líderes dessas organizações vão ficar até 80 anos presos",
-      "vezes": 1,
-      "t": 1792633983226
+      "t": 1792660418994
     },
     {
       "quem": "2",
       "titulo": "Construir meio milhão de vagas",
-      "explicacao": "eu vou construir mais de meio milhão de vagas no sistema penitenciário",
+      "explicacao": "Eu vou construir mais de meio milhão de vagas no sistema penitenciário",
       "vezes": 1,
-      "t": 1792634026747
+      "t": 1792660460715
+    },
+    {
+      "quem": "1",
+      "titulo": "Criar Ministério da Segurança Pública",
+      "explicacao": "eu criarei imediatamente o Ministério da Segurança Pública",
+      "vezes": 1,
+      "t": 1792660540715
+    },
+    {
+      "quem": "1",
+      "titulo": "Aprovação da PEC da Segurança",
+      "explicacao": "Vai ser assim quando aprovar a PEC da Segurança",
+      "vezes": 1,
+      "t": 1792660580715
+    },
+    {
+      "quem": "1",
+      "titulo": "Incentivar MEIs para gerar emprego",
+      "explicacao": "estamos discutindo como incentivar esses meios para gerar mais emprego",
+      "vezes": 1,
+      "t": 1792660706034
     },
     {
       "quem": "2",
-      "titulo": "Dedicar mandato à segurança",
-      "explicacao": "eu vou dedicar cada dia do meu mandato como presidente da República para devolver as ruas para vocês",
+      "titulo": "Ajudar a pagar dívida do cidadão",
+      "explicacao": "eu vou ajudar você a pagar a sua dívida",
       "vezes": 1,
-      "t": 1792634026747
+      "t": 1792660825095
     },
     {
-      "quem": "1",
-      "titulo": "Criação da PEC da Segurança",
-      "explicacao": "se o Senado votar, a PEC da Segurança eu criarei imediatamente",
+      "quem": "2",
+      "titulo": "Ajudar governo a pagar dívida",
+      "explicacao": "eu vou ajudar o governo a pagar a própria dívida",
       "vezes": 1,
-      "t": 1792634092847
+      "t": 1792660825095
     },
     {
-      "quem": "1",
-      "titulo": "Criação do Ministério da Segurança Pública",
-      "explicacao": "eu criarei imediatamente o Ministério da Segurança Pública para que a gente possa intervir nos Estados",
+      "quem": "2",
+      "titulo": "Remover Lula da Presidência",
+      "explicacao": "o primeiro passo que a gente tem que dar é tirar o Lula da presidência da República",
       "vezes": 1,
-      "t": 1792634092847
+      "t": 1792660868715
     },
     {
-      "quem": "1",
-      "titulo": "Aprovar PEC da segurança",
-      "explicacao": "Vai ser assim quando aprovar a PEC da segurança.",
+      "quem": "2",
+      "titulo": "Combater a corrupção do governo",
+      "explicacao": "eu vou combater muito a corrupção desse atual governo",
       "vezes": 1,
-      "t": 1792634132847
+      "t": 1792660868715
     },
     {
-      "quem": "1",
-      "titulo": "Economia digital, verde e criativa",
-      "explicacao": "vamos tratar de uma economia nova, a economia digital, a economia verde e a economia criativa para que o Brasil tenha um salto de qualidade",
+      "quem": "2",
+      "titulo": "Aposentadoria preservada",
+      "explicacao": "ninguém vai roubar aposentado e a sua aposentadoria também vai ser preservada no meu governo",
       "vezes": 1,
-      "t": 1792634300847
+      "t": 1792661380715
+    },
+    {
+      "quem": "2",
+      "titulo": "Combater corrupção no governo",
+      "explicacao": "no meu governo eu vou combater a corrupção de verdade",
+      "vezes": 1,
+      "t": 1792661444715
+    },
+    {
+      "quem": "2",
+      "titulo": "Resgatar credibilidade da PF",
+      "explicacao": "eu vou ajudar vocês a resgatar a credibilidade dessa instituição",
+      "vezes": 1,
+      "t": 1792661732715
+    },
+    {
+      "quem": "2",
+      "titulo": "Ser presidente",
+      "explicacao": "Eu sou presidente.",
+      "vezes": 1,
+      "t": 1792661825474
     }
   ],
   "ataques": [
     {
       "quem": "1",
-      "resumo": "Estados não resolvem segurança pública: “Nenhum Estado conseguiu resolver o problema da segurança pública”",
-      "t": 1792634052847
+      "resumo": "Casa de 10 milhões com salário de senador: “comprei uma casa de 10 milhões com salário de senador”",
+      "t": 1792661802195
+    },
+    {
+      "quem": "1",
+      "resumo": "Acusação de 43 mentiras: “você contou 43 mentiras a respeito disso”",
+      "t": 1792661802195
     },
     {
       "quem": "2",
-      "resumo": "Ataque ao governo de Fábio Bolsonaro: “no governo do Fábio Bolsonaro não vai ter ninguém passando a mão”",
-      "t": 1792633983226
+      "resumo": "Você não tem por que ser admirado: “Você não tem por que ser admirado por ninguém.”",
+      "t": 1792661777034
+    },
+    {
+      "quem": "1",
+      "resumo": "Acusação de desvio de 134 milhões: “Você só pode ajudar quando você explicar os 134 milhões. Não é bom, cara, você pegou 134 milhões e mentiu para a sociedade brasileira, digo, o que você fez com esse dinheiro?”",
+      "t": 1792661752315
+    },
+    {
+      "quem": "2",
+      "resumo": "Acusa de proteger amigos e Lulinha: “colocar lá os seus amiguinhos, colocar as pessoas para livrar o Lulinha, colocar as pessoas para livrar os seus amigos que estão enrolados lá com o Vorcaro da Bahia”",
+      "t": 1792661684715
+    },
+    {
+      "quem": "2",
+      "resumo": "Critica nomeação de ministro do STF: “no meu governo, ministro do Supremo não vai ser com esse critério que ele fez, não”",
+      "t": 1792661684715
+    },
+    {
+      "quem": "2",
+      "resumo": "Acusa de roubar autoria de prisões: “você quer roubar até quem foi que prendeu o Borcaro, até quem foi que prendeu o Urbocaro, você quer roubar a autoria sobre isso”",
+      "t": 1792661684715
+    },
+    {
+      "quem": "1",
+      "resumo": "Será preso no meu governo: “vai ser feito prisioneiro no meu governo”",
+      "t": 1792661634014
+    },
+    {
+      "quem": "1",
+      "resumo": "Adversário foi banqueiro no governo Bolsonaro: “você foi feito banqueiro no governo Bolsonaro”",
+      "t": 1792661634014
+    },
+    {
+      "quem": "2",
+      "resumo": "Acusa reunião secreta com Lula: “Você deve explicações à nação brasileira. O que você está fazendo naquela reuniãozinha fechadinha, lá junto com o seu Haddad, junto com o Galípolo, prometendo para o Daniel Vorcaro... falando assim, ó Daniel, não vende o banco agora não, porque a gente vai trocar o presidente do Banco Central?”",
+      "t": 1792661607555
+    },
+    {
+      "quem": "1",
+      "resumo": "Miliciano: “tá com o miliciano”",
+      "t": 1792661597514
+    },
+    {
+      "quem": "1",
+      "resumo": "134 milhões: “os 134 milhões”",
+      "t": 1792661495715
+    },
+    {
+      "quem": "1",
+      "resumo": "Você vai perder as eleições: “você vai perder as eleições”",
+      "t": 1792661484715
+    },
+    {
+      "quem": "2",
+      "resumo": "Lula não terá mais roubalheira: “Lula, ele não vai ter mais roubalheira de velhinho no governo Bolsonaro e no seu governo está tendo roubalheira no seu governo”",
+      "t": 1792661444715
+    },
+    {
+      "quem": "2",
+      "resumo": "Bancada do PT favoreceu sindicatos: “foi a bancada do PT. Lula, o Brasil elegeu agora um Congresso Nacional muito maior. um Congresso Nacional muito mais à direita, Lula, ele não vai ter mais roubalheira de velhinho no governo Bolsonaro e no seu governo está tendo roubalheira no seu governo”",
+      "t": 1792661444715
+    },
+    {
+      "quem": "2",
+      "resumo": "Moro e Delanhol presos por corrupção: “Inclusive o que a gente prendeu está aqui, Moro e Delanhol, bem-vindos.”",
+      "t": 1792661421715
+    },
+    {
+      "quem": "2",
+      "resumo": "Freixo vice-presidente de sindicato que roubou aposentados: “Freixo, que é vice‑presidente de um sindicato que roubou os aposentados”",
+      "t": 1792661268715
+    },
+    {
+      "quem": "2",
+      "resumo": "Bolsonaro favoreceu irmão Freixo: “Você acha que o Bolsonaro montou um esquema para favorecer o seu irmão, o Freixo”",
+      "t": 1792661268715
+    },
+    {
+      "quem": "2",
+      "resumo": "Aliados comemoraram fim da CPI do INSS: “se foram os seus aliados que estavam lá comemorando o fim da CPI do INSS”",
+      "t": 1792661268715
+    },
+    {
+      "quem": "2",
+      "resumo": "Acusação contra Bolsonaro e INSS: “Como é que você acusa o Bolsonaro... de ter iniciado alguma coisa contra o INSS”",
+      "t": 1792661268715
+    },
+    {
+      "quem": "2",
+      "resumo": "Governos marcados por corrupção: “Além da mentira, os seus governos são sempre marcados pela corrupção, Lula.”",
+      "t": 1792661268715
+    },
+    {
+      "quem": "1",
+      "resumo": "Roberta deve ser investigada: “A Roberta é um cago da política federal e ela tem que ser investigada, tem que prestar depoimento.”",
+      "t": 1792661259135
+    },
+    {
+      "quem": "2",
+      "resumo": "Marcola abriu portas para filho: “e o Marcola abriu dela e o Marcola abria as portas dos ministérios para ele negociar.”",
+      "t": 1792661242594
+    },
+    {
+      "quem": "2",
+      "resumo": "Lula filho é sócio de Roberta: “Lula, é melhor você não botar a mão no fogo pelo seu filho, não, porque ela falou que o seu filho é sócio dela.”",
+      "t": 1792661242594
+    },
+    {
+      "quem": "1",
+      "resumo": "Não terá política federal para julgar: “Ele não vai ter uma política federal que traga ele aqui para ser julgado”",
+      "t": 1792661193715
+    },
+    {
+      "quem": "1",
+      "resumo": "Juiz amigo do investigado: “O juiz que está com o processo, que é o seu amigo, que é o André Medonça”",
+      "t": 1792661193715
+    },
+    {
+      "quem": "1",
+      "resumo": "Ele é inocente: “Acho que ele é inocente.”",
+      "t": 1792661191715
+    },
+    {
+      "quem": "2",
+      "resumo": "Acusa desconhecimento de Roberto Lucinga: “Você já não conhece o Roberto Lucinga?”",
+      "t": 1792661173914
+    },
+    {
+      "quem": "2",
+      "resumo": "Acusa desconhecimento de Lulinha: “Que você não conhece também o Lulinha?”",
+      "t": 1792661173914
+    },
+    {
+      "quem": "2",
+      "resumo": "Acusa proteção ao filho: “você protege o seu filho”",
+      "t": 1792661173914
+    },
+    {
+      "quem": "1",
+      "resumo": "Fermão pedindo intervenção Trump: “O Fermão está fugindo nos Estados Unidos tramando contra o Brasil. Tramando contra o Brasil, pedindo intervenção do Trump no Brasil.”",
+      "t": 1792661144654
+    },
+    {
+      "quem": "1",
+      "resumo": "Irmão fugido nos EUA: “O seu irmão está fugido nos Estados Unidos. Ele está exilado, perseguindo. Tramando contra o Brasil.”",
+      "t": 1792661144654
+    },
+    {
+      "quem": "2",
+      "resumo": "Filho fugido na Espanha: “Polícia Federal até agora não foi atrás do seu filho. Por que que ele tá fugido lá na Espanha?”",
+      "t": 1792661128795
+    },
+    {
+      "quem": "2",
+      "resumo": "Quadrilhas no governo do pai: “tem muitas quadrilhas. No governo do seu pai.”",
+      "t": 1792661128795
+    },
+    {
+      "quem": "1",
+      "resumo": "Quadrilha roubou a Previdência: “O careca é resultado de uma quadrilha que eles montaram para roubar a Previdência.”",
+      "t": 1792661088695
+    },
+    {
+      "quem": "2",
+      "resumo": "Filho do Lula sustentado na Espanha: “O dinheiro que o seu filho está sendo sustentado lá fora, na Espanha.”",
+      "t": 1792661071235
+    },
+    {
+      "quem": "2",
+      "resumo": "Pagou coisa para o filho: “ele pagou coisa para o seu filho.”",
+      "t": 1792661071235
+    },
+    {
+      "quem": "2",
+      "resumo": "INSS foi do seu governo: “O careca do INSS foi do seu governo.”",
+      "t": 1792661071235
+    },
+    {
+      "quem": "1",
+      "resumo": "Roberta problema da Polícia Federal: “A Roberta é um problema da Polícia Federal.”",
+      "t": 1792661048955
+    },
+    {
+      "quem": "2",
+      "resumo": "Polícia Federal só vai na casa dela: “Por que a sua Polícia Federal só vai na casa dela e não vai na casa do seu filho?”",
+      "t": 1792661033375
+    },
+    {
+      "quem": "1",
+      "resumo": "Insulto ao adversário: “Aliás, ela é parceira do seu sótrio, careca.”",
+      "t": 1792661030635
+    },
+    {
+      "quem": "2",
+      "resumo": "Polícia Federal investigando: “E, Ciaro, por que a sua Polícia Federal está investigando isso?”",
+      "t": 1792661027715
+    },
+    {
+      "quem": "1",
+      "resumo": "Por que votou contra?: “Por que você votou contra?”",
+      "t": 1792660988715
+    },
+    {
+      "quem": "2",
+      "resumo": "Gasto para reeleição: “está gastando loucamente para tentar se reeleger”",
+      "t": 1792660868715
+    },
+    {
+      "quem": "2",
+      "resumo": "Gastos desenfreados do governo: “essa dívida é do atual governo, que gasta, gasta, gasta de uma forma desenfreada”",
+      "t": 1792660868715
+    },
+    {
+      "quem": "2",
+      "resumo": "Crítica à gastança do governo: “a gastança do atual governo, a consequência é você se endividar”",
+      "t": 1792660825095
+    },
+    {
+      "quem": "2",
+      "resumo": "Governo atual entrega falta de carne: “É isso que esse atual governo está entregando.”",
+      "t": 1792660785715
+    },
+    {
+      "quem": "1",
+      "resumo": "Estados não resolvem segurança pública: “Nenhum Estado conseguiu resolver o problema da segurança pública”",
+      "t": 1792660500715
+    },
+    {
+      "quem": "2",
+      "resumo": "Política de desencarceramento do governo: “como tem no atual governo, que faz uma política de desencarceramento, que coloca nas ruas marginais perigosos”",
+      "t": 1792660460715
+    },
+    {
+      "quem": "2",
+      "resumo": "Classificar PCC como narcoterrorista: “eu vou classificar a PCC, Comando Vermelho e milícias como organizações narcoterroristas”",
+      "t": 1792660372715
     }
   ],
   "linha": {
-    "0": {
-      "p2": 3
-    },
-    "1": {
-      "p2": 4,
+    "5": {
+      "p2": 1,
       "a2": 1
     },
-    "2": {
-      "a1": 1,
-      "p1": 2
-    },
-    "3": {
-      "p1": 1
-    },
     "6": {
+      "p2": 3
+    },
+    "7": {
+      "p2": 1,
+      "a2": 1,
+      "a1": 1
+    },
+    "8": {
       "p1": 1
+    },
+    "9": {
+      "p1": 1
+    },
+    "11": {
+      "p1": 1
+    },
+    "12": {
+      "a2": 1
+    },
+    "13": {
+      "p2": 2,
+      "a2": 1
+    },
+    "14": {
+      "p2": 2,
+      "a2": 2
+    },
+    "16": {
+      "a1": 2,
+      "a2": 2
+    },
+    "17": {
+      "a1": 2,
+      "a2": 3
+    },
+    "18": {
+      "a2": 2,
+      "a1": 2
+    },
+    "19": {
+      "a2": 3,
+      "a1": 3
+    },
+    "20": {
+      "a2": 7,
+      "a1": 1
+    },
+    "22": {
+      "p2": 1
+    },
+    "23": {
+      "a2": 3,
+      "p2": 1
+    },
+    "24": {
+      "a1": 2
+    },
+    "26": {
+      "a1": 3,
+      "a2": 1
+    },
+    "27": {
+      "a2": 3
+    },
+    "28": {
+      "p2": 1,
+      "a1": 1
+    },
+    "29": {
+      "a2": 1,
+      "p2": 1,
+      "a1": 2
     }
   },
   "pausado": false,
