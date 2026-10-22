@@ -564,13 +564,15 @@ function videoHtml(state, colorA, colorB) {
     // iframe no DOM recarrega o vídeo (era o que quebrava ao arrastar a barra do YouTube).
     return `<div class="video rvideo"><span class="live">REPLAY</span>
     <div class="rbar" role="group" aria-label="Controle do replay"><button type="button" data-act="rseek" data-arg="-30">−30s</button><span class="rtime">${esc(mmss(state.replaySec || 0))}</span><button type="button" data-act="rseek" data-arg="30">+30s</button></div>
-    <button type="button" class="eye" data-act="overlays" aria-pressed="${state.quiet ? 'true' : 'false'}">${state.quiet ? 'Mostrar' : 'Ocultar'}</button></div>`
+    <button type="button" class="eye" data-act="overlays" aria-pressed="${state.quiet ? 'true' : 'false'}">${state.quiet ? 'Mostrar' : 'Ocultar'}</button>
+    <button type="button" class="fsb" data-act="fs" aria-pressed="${state.fs ? 'true' : 'false'}" aria-label="${state.fs ? 'Sair da tela cheia' : 'Tela cheia'}">${state.fs ? '✕ Sair' : '⛶ Tela cheia'}</button></div>`
   }
   const media = id
-    ? `<iframe class="stage" data-vid="${esc(id)}" title="Transmissão do debate no YouTube" src="https://www.youtube-nocookie.com/embed/${esc(id)}?rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`
+    ? `<iframe class="stage" data-vid="${esc(id)}" title="Transmissão do debate no YouTube" src="https://www.youtube-nocookie.com/embed/${esc(id)}?rel=0&fs=0&playsinline=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>`
     : stageSvg(colorA, colorB)
   return `<div class="video">${media}<span class="live${live ? ' on' : ''}">${live ? '<i></i>' : ''}${pill}</span>
-    <button type="button" class="eye" data-act="overlays" aria-pressed="${state.quiet ? 'true' : 'false'}">${state.quiet ? 'Mostrar' : 'Ocultar'}</button></div>`
+    <button type="button" class="eye" data-act="overlays" aria-pressed="${state.quiet ? 'true' : 'false'}">${state.quiet ? 'Mostrar' : 'Ocultar'}</button>
+    <button type="button" class="fsb" data-act="fs" aria-pressed="${state.fs ? 'true' : 'false'}" aria-label="${state.fs ? 'Sair da tela cheia' : 'Tela cheia'}">${state.fs ? '✕ Sair' : '⛶ Tela cheia'}</button></div>`
 }
 
 function scoreHtml(snapshot) {
@@ -722,6 +724,40 @@ function captionHtml(item, people, vivo) {
   </div></div>`
 }
 
+/** Última afirmação com veredito comprovado por fonte (até `untilT`, se dado). */
+export function lastVerified(items, untilT = Infinity) {
+  for (let i = items.length - 1; i >= 0; i--) {
+    const it = items[i]
+    if (it.kind !== 'claim' || it.t > untilT) continue
+    const v = shownVerdict(it.claim)
+    if (v === 'verdadeiro' || v === 'falso' || v === 'impreciso') return it
+  }
+  return null
+}
+
+/** Minuto:segundo do debate em que foi dito (replay: t relativo em ms; ao vivo: epoch − começo). */
+export function debateClock(item, snapshot, replay) {
+  const rel = replay ? item.t : item.t - originMs(snapshot)
+  if (!Number.isFinite(rel) || rel < 0) return hhmm(item.t)
+  const sec = Math.floor(rel / 1000)
+  const h = Math.floor(sec / 3600); const m = Math.floor((sec % 3600) / 60); const ss = sec % 60
+  const p2 = (n) => String(n).padStart(2, '0')
+  return h ? `${h}:${p2(m)}:${p2(ss)}` : `${p2(m)}:${p2(ss)}`
+}
+
+function verifiedCaptionHtml(item, people, snapshot, replay) {
+  const person = people.find((c) => c.id === item.quem)
+  const index = Math.max(0, people.findIndex((c) => c.id === item.quem))
+  const color = candidateColor(person || {}, index)
+  const srcs = sourcesOf(item.claim)
+  const fbtn = srcs.length ? `<a class="fbtn" href="${esc(srcs[0].url)}" target="_blank" rel="noopener noreferrer">${srcs[0].oficial ? 'Fonte oficial' : 'Fonte'} ↗</a>` : ''
+  return `<div class="capw"><div class="cap capv" data-cap="${esc(item.key)}" style="--c:${paintBg(color, '180deg')}">
+    <div class="capm"><span class="muted">${esc(debateClock(item, snapshot, replay))}</span><span style="${paintText(color)}">${esc(person?.nome || '')}</span>${itemTag(item)}</div>
+    <div class="capq">${esc(item.text)}</div>
+    <div class="cape">${fbtn}</div>
+  </div></div>`
+}
+
 function pickCaption(state, items) {
   const claims = items.filter((item) => item.kind === 'claim')
   if (state.replay) {
@@ -868,7 +904,13 @@ export function renderBoard(state) {
     ${scoreHtml(snapshot)}
     ${note ? `<p class="simline" role="status">${esc(note)}</p>` : ''}
     ${listsHtml(items, people, state.fresh, claimsOf(snapshot))}
-    ${captionHtml(pickCaption(state, feedItems(snapshot)), people, !state.replay && status.vivo && !snapshot.encerrado)}
+    ${(() => {
+      const all = feedItems(snapshot)
+      const cur = pickCaption(state, all)
+      if (cur && isChecking(cur.claim)) return captionHtml(cur, people, !state.replay && status.vivo && !snapshot.encerrado)
+      const last = lastVerified(all, state.replay ? (state.replaySec || 0) * 1000 : Infinity)
+      return last ? verifiedCaptionHtml(last, people, snapshot, !!state.replay) : captionHtml(null, people, false)
+    })()}
     ${mobileFeed(items, people, state.filter, state.fresh, claimsOf(snapshot))}
     ${panelHtml(state, items)}`
 }
@@ -981,6 +1023,20 @@ function boot() {
     feed.start()
   }
 
+  function toggleFullscreen() {
+    const root = document.documentElement
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement
+    if (fsEl) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return }
+    if (root.classList.contains('pseudo-fs')) { root.classList.remove('pseudo-fs'); state.fs = false; paint(); return }
+    const req = root.requestFullscreen || root.webkitRequestFullscreen
+    if (req) {
+      try { const r = req.call(root); if (r && r.catch) r.catch(() => { root.classList.add('pseudo-fs'); state.fs = true; paint() }) } catch { root.classList.add('pseudo-fs'); state.fs = true; paint() }
+    } else { root.classList.add('pseudo-fs'); state.fs = true; paint() }
+  }
+  const onFs = () => { state.fs = !!(document.fullscreenElement || document.webkitFullscreenElement) || document.documentElement.classList.contains('pseudo-fs'); paint() }
+  document.addEventListener('fullscreenchange', onFs)
+  document.addEventListener('webkitfullscreenchange', onFs)
+
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) feed?.pause()
     else feed?.resume()
@@ -1015,6 +1071,10 @@ function boot() {
       state.detailKey = arg
       state.panel = 'detalhe'
       paint()
+      return
+    }
+    if (act === 'fs') {
+      toggleFullscreen()
       return
     }
     if (act === 'ctab') {
@@ -1162,7 +1222,7 @@ function boot() {
           if (!host) return
           player = new window.YT.Player(host, {
             videoId: vid || data.replay?.video,
-            playerVars: { start: Math.floor(startAt), rel: 0, playsinline: 1 },
+            playerVars: { start: Math.floor(startAt), rel: 0, playsinline: 1, fs: 0 },
             events: {
               onReady: () => { ready = true },
               onError: (event) => {
