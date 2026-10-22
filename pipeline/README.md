@@ -17,7 +17,7 @@ A conta do Mentirômetro é a do app: falso vale 1, impreciso vale 0,5, sem dado
 
 ## Provedores de LLM
 
-Interface única. A ordem padrão é `claude_cli`, depois `openrouter`.
+Interface única. A ordem padrão é `claude_cli`, depois `groq` (gpt-oss-120b), depois `openrouter`; a confirmação de falso/impreciso usa `groq_verify` (qwen3.8-27b) primeiro.
 
 - **Claude Code CLI** (principal), na assinatura de quem roda o robô. Modo headless, conferido na documentação de 21/10/2026 (`code.claude.com/docs/en/headless`):
   - uma chamada: `claude -p "…" --output-format json --json-schema '…' --model haiku --permission-mode dontAsk --max-turns 1`
@@ -56,7 +56,7 @@ O laço de áudio (captura → STT → voz) nunca espera o modelo: cada turno de
 
 ## Busca de fontes sem chave
 
-Além de Google Fact Check, SearXNG e Brave (opcionais, com chave/URL), há DuckDuckGo HTML (`RETRIEVE_DDG=1`, padrão no `from_env`): busca restrita com `site:` a checadores, imprensa e `gov.br`, filtra por lista de domínios confiáveis, espera 2 s entre pedidos e guarda em cache (`~/.cache/placar/ddg.json`). O DuckDuckGo devolve 202 quando desconfia de robô; aí a afirmação fica `sem_dados`. Para um debate inteiro, prefira SearXNG próprio.
+Além de Google Fact Check, SearXNG e Brave (opcionais, com chave/URL), há DuckDuckGo HTML (`RETRIEVE_DDG=1`, padrão no `from_env`): busca restrita com `site:` a checadores, imprensa e `gov.br`, filtra por lista de domínios confiáveis, espera 2 s entre pedidos e guarda em cache (`~/.cache/placar/ddg.json`). O DuckDuckGo devolve 202 quando desconfia de robô; aí a afirmação fica `sem_dados`. Com `SEARXNG_URL`, o SearXNG próprio é a busca principal (resultados de domínios confiáveis primeiro) e o DuckDuckGo só entra se vierem menos de 2 fontes confiáveis ou o SearXNG estiver fora.
 
 ## Vozes (speaker ID)
 
@@ -122,6 +122,88 @@ Este repositório prova a orquestração com áudio e modelos fictícios. Para u
 - duas amostras de voz dos candidatos (o código compara embeddings; quem gera o vetor é o modelo de speaker ID na máquina local — SpeechBrain/ECAPA — ainda não empacotado porque pesa e pede torch)
 - `FACTCHECK_API_KEY` e um SearXNG (`SEARXNG_URL`); Brave é opcional
 - para publicar fora da máquina: `SUPABASE_URL` + service role, ou as chaves R2
+
+## Runbook da noite do debate
+
+Testado de ponta a ponta em 21/10/2026 no debate da Band (`RugVB17uRVM`, 5:40–13:20, tempo real) neste fluxo: captura do YouTube → Groq Whisper → voz ECAPA → Groq/Claude → SearXNG → juiz → segundo modelo → `placar.json` → site.
+
+### 1. Antes (uma vez, ~30 min)
+
+```bash
+sudo apt install ffmpeg
+cd pipeline
+python3 -m venv .venv && . .venv/bin/activate
+pip install -e '.[dev]' yt-dlp speechbrain soundfile torch torchaudio
+# vozes já cadastradas em voices/ (lula, flavio, adriana, oinegue). Para outro debate:
+python scripts/enroll_voice.py <perfil> '<url do youtube>' <início_s> <fim_s>   # 2-3 trechos de 20-40 s por pessoa
+```
+
+SearXNG local (busca principal, sem chave):
+
+```bash
+git clone --depth 1 https://github.com/searxng/searxng ~/searxng/src
+python3 -m venv ~/searxng/venv
+~/searxng/venv/bin/pip install -r ~/searxng/src/requirements.txt
+~/searxng/venv/bin/pip install --no-build-isolation -e ~/searxng/src
+mkdir -p ~/searxng/etc && cat > ~/searxng/etc/settings.yml <<'YML'
+use_default_settings: true
+server: {bind_address: "127.0.0.1", port: 8888, secret_key: "troque-isto", limiter: false}
+search: {formats: [html, json], default_lang: pt-BR}
+YML
+SEARXNG_SETTINGS_PATH=~/searxng/etc/settings.yml ~/searxng/venv/bin/python -m searx.webapp &
+curl -s 'http://127.0.0.1:8888/search?q=PIB+2024+IBGE&format=json' | head -c 200   # tem que vir "results"
+```
+
+Se o SearXNG cair, o pipeline usa o DuckDuckGo HTML sozinho (mais lento, às vezes bloqueia).
+
+Claude CLI (opcional, principal quando existe): `claude` logado na assinatura (`claude /login`, depois `claude -p "ok" --model haiku`). Se o binário não existir, o roteador registra "Claude CLI não encontrado" uma vez e segue para a Groq, sem erro.
+
+### 2. Variáveis (`pipeline/.env` ou `export`)
+
+| variável | valor | para quê |
+|---|---|---|
+| `GROQ_API_KEY` | chave da Groq | STT (Whisper) e LLM de fallback/confirmação |
+| `STT_PROVIDER` | `groq` | Whisper hospedado (cai no local se falhar) |
+| `SEARXNG_URL` | `http://127.0.0.1:8888` | busca principal |
+| `LLM_PROVIDERS` | `claude_cli,groq,openrouter` (padrão) | ordem de quem classifica e julga |
+| `VERIFY_PROVIDERS` | `groq_verify,openrouter,claude_cli,groq` (padrão) | quem confirma falso/impreciso; nunca o mesmo que julgou |
+| `GROQ_LLM_MODEL` | `openai/gpt-oss-120b` | classificação e juiz quando não há Claude |
+| `GROQ_VERIFY_MODEL` | `qwen/qwen3.8-27b` | segundo modelo (outra família) |
+| `OPENROUTER_API_KEY` | opcional | último fallback (`:free`, 50 pedidos/dia sem créditos) |
+| `RETRIEVE_DDG` | `1` | fallback DuckDuckGo |
+
+Limites da Groq no plano gratuito (cabeçalhos `x-ratelimit-*`, 21/10/2026): 1.000 pedidos/dia e 8.000 tokens/min **por modelo**. O provedor espera sozinho quando a Groq diz "try again in Xs" e o prazo da chamada permite. Um debate de 2 h usa ~300–500 chamadas.
+
+### 3. Na hora (21h, 15 min antes)
+
+```bash
+cd pipeline && . .venv/bin/activate && set -a && . ./.env && set +a
+# terminal 1: o robô
+python -m placar run --url 'https://www.youtube.com/watch?v=<ID_DO_AO_VIVO>' \
+  --a 'Lula:lula' --b 'Flávio Bolsonaro:flavio' --others adriana,oinegue \
+  --debate-id globo-2turno-2026-10-23 --video-id <ID_DO_AO_VIVO> --out out
+# terminal 2: publica out/placar.json (CORS *)
+python -m placar serve --dir out --host 0.0.0.0 --port 8787
+# terminal 3: URL pública https temporária (o GitHub Pages é https, então precisa de https)
+cloudflared tunnel --url http://127.0.0.1:8787
+```
+
+Abra `https://danilosilvadev.github.io/debate-mentirometro/?src=https://<o-tunel>.trycloudflare.com/` (a barra final importa).
+
+Fontes de áudio, em ordem de preferência:
+
+1. `--url` do YouTube ao vivo (yt-dlp | ffmpeg).
+2. `--source 'https://<stream-de-radio>'` (rádio/TV em HTTP/Icecast) se o YouTube der 403 ou "confirm you're not a bot".
+3. `--source` com dispositivo do ffmpeg (placa HDMI, `pulse`, `alsa`) para capturar o som da TV.
+
+Teste sem rede de LLM: `--mock`. Ensaio com VOD no relógio real: `--url <vod> --start 340 --seconds 460 --realtime`. Áudio gravado: `--wav arquivo.wav`.
+
+### 4. Durante
+
+- `out/latency_report.json` só sai no fim; ao vivo, olhe o terminal (uma linha por bloco: `stt_ms`, `lag_vs_wallclock_s`). Atraso acima de 5 s seguido = Groq lenta; o STT cai no local sozinho.
+- `curl -s localhost:8787/placar.json | python -m json.tool | head` para ver o placar.
+- Falso/impreciso só aparecem depois que o segundo modelo concorda; até lá ficam "em revisão" com texto neutro (o primeiro veredito nunca vai para a tela).
+- Ctrl-C para parar. Rodar de novo com outro `--out` começa um placar novo.
 
 ## Forma do evento
 

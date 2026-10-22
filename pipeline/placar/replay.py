@@ -191,6 +191,12 @@ def build_router(settings: Settings) -> ProviderRouter:
             )
             openrouter.timeout_s = settings.openrouter_timeout_s
             providers.append(openrouter)
+        elif name == "groq" and settings.groq_key:
+            from placar.llm.groq_llm import GroqLlmProvider
+
+            groq = GroqLlmProvider(api_key=settings.groq_key, model=settings.groq_llm_model)
+            groq.timeout_s = settings.groq_llm_timeout_s
+            providers.append(groq)
         elif name == "anthropic" and settings.anthropic_key:
             providers.append(
                 AnthropicApiProvider(
@@ -201,12 +207,22 @@ def build_router(settings: Settings) -> ProviderRouter:
             providers.append(
                 GeminiProvider(api_key=settings.gemini_key, model=settings.gemini_model)
             )
+    if settings.groq_key and "groq_verify" in settings.verify_providers:
+        # Fica no fim da fila: só entra em classificação se todos os outros caírem.
+        from placar.llm.groq_llm import GroqLlmProvider
+
+        verifier = GroqLlmProvider(api_key=settings.groq_key, model=settings.groq_verify_model,
+                                   name="groq_verify")
+        verifier.timeout_s = settings.groq_llm_timeout_s
+        providers.append(verifier)
     if not providers:
         raise RuntimeError("Nenhum provedor de LLM configurado.")
-    return ProviderRouter(
+    router = ProviderRouter(
         providers,
         retries=settings.retries,
         breaker_threshold=settings.breaker_threshold,
         breaker_cooldown_s=settings.breaker_cooldown_s,
         timeout_s=settings.claude_timeout_s,
     )
+    router.verify_order = list(settings.verify_providers)
+    return router

@@ -162,8 +162,8 @@ def _check_claim(
         timing.providers.append(second.provider)
         if second.provider == judged.provider or second.data["veredito"] != verdict:
             claim["motivo"] = (
-                "Em revisão: o segundo modelo não confirmou o veredito "
-                f"({second.data['veredito']})."
+                "Em revisão: os checadores automáticos não chegaram a acordo; "
+                "fica fora do Mentirômetro."
             )
             return
         board.set_verdict(

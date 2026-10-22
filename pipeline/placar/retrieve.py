@@ -39,6 +39,18 @@ WHITELIST = (
     "ibge.gov.br",
     "portaldatransparencia.gov.br",
     "tse.jus.br",
+    "uol.com.br",
+    "valor.globo.com",
+    "cartacapital.com.br",
+    "nexojornal.com.br",
+    "exame.com",
+    "infomoney.com.br",
+    "jus.br",
+    "ipea.gov.br",
+    "dieese.org.br",
+    "worldbank.org",
+    "imf.org",
+    "reuters.com",
 )
 
 
@@ -70,6 +82,8 @@ class Retriever:
         self._http = http or _http_get
         self._brave_http = brave_http
         self._ddg = ddg
+        self.searx_requests = 0
+        self.searx_failures = 0
 
     def search(self, query: str, *, timeout_s: float = 8.0) -> list[Evidence]:
         found: list[Evidence] = []
@@ -79,12 +93,19 @@ class Retriever:
             found.extend(self._searx(query, timeout_s))
         if self.settings.brave_key:
             found.extend(self._brave(query, timeout_s))
-        if getattr(self.settings, "ddg_enabled", False) and len(found) < 3:
+        trusted = sum(1 for item in found if _whitelisted(item.url))
+        if getattr(self.settings, "ddg_enabled", False) and trusted < 2:
             if self._ddg is None:
                 self._ddg = DuckDuckGoHtml()
             found.extend(self._ddg.search(query, timeout_s=timeout_s))
-        found.sort(key=lambda item: (0 if _whitelisted(item.url) else 1, item.origem))
-        return found[:5]
+        seen: set[str] = set()
+        unique = []
+        for item in found:
+            if item.url not in seen:
+                seen.add(item.url)
+                unique.append(item)
+        unique.sort(key=lambda item: 0 if _whitelisted(item.url) else 1)
+        return unique[:5]
 
     def _factcheck(self, query: str, timeout_s: float) -> list[Evidence]:
         qs = urlencode(
@@ -118,22 +139,30 @@ class Retriever:
 
     def _searx(self, query: str, timeout_s: float) -> list[Evidence]:
         qs = urlencode({"q": query, "format": "json", "language": "pt-BR"})
-        status, body = self._http(f"{self.settings.searxng_url}/search?{qs}", timeout_s)
-        if status >= 400:
+        try:
+            status, body = self._http(f"{self.settings.searxng_url}/search?{qs}", timeout_s)
+        except Exception:  # SearXNG fora do ar: cai no DuckDuckGo
+            self.searx_failures += 1
             return []
+        if status >= 400:
+            self.searx_failures += 1
+            return []
+        self.searx_requests += 1
         try:
             payload = json.loads(body)
         except json.JSONDecodeError:
             return []
+        results = [r for r in (payload.get("results") or []) if r.get("url")]
+        # Primeiro os domínios confiáveis; o resto só se não houver nenhum.
+        trusted = [r for r in results if _whitelisted(r["url"])]
         return [
             Evidence(
                 titulo=item.get("title") or "",
                 url=item.get("url") or "",
-                trecho=item.get("content") or "",
+                trecho=(item.get("content") or "")[:500],
                 origem="searxng",
             )
-            for item in (payload.get("results") or [])[:5]
-            if item.get("url")
+            for item in (trusted or results)[:6]
         ]
 
     def _brave(self, query: str, timeout_s: float) -> list[Evidence]:
