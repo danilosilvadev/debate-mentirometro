@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "interval_min": 10,
+  "duration_s": 40,
+  "position": "bottom-left",
+  "headline": "Apoie o Mentirômetro",
+  "slides": [
+    { "title": "Checagem independente, com fonte oficial em cada veredito", "url": "#" },
+    { "title": "Anuncie aqui durante o debate", "url": "#" }
+  ]
+}

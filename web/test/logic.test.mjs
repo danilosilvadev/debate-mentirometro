@@ -147,7 +147,7 @@ test('a simulação desenha o placar e esconde script', async () => {
   }
   const html = renderBoard(base)
   assert.match(html, /Mentirômetro/)
-  assert.match(html, /pende para/)
+  assert.match(html, /Troféu Pinóquio|Nenhuma mentira ainda/)
   assert.match(html, /Flávio Bolsonaro/)
   assert.match(html, /As contas do governo fecharam/)
   assert.match(html, /Em revisão/)

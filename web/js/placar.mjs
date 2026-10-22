@@ -483,6 +483,16 @@ export function shownVerdict(claim) {
   return v
 }
 
+/** Barra do topo: mentiras (Falso com fonte) de cada lado, cabo de guerra e manchete. */
+export function lieBoard(claims, left, right) {
+  const l = sideScore(claims, left?.id).mentiras, r = sideScore(claims, right?.id).mentiras
+  const call = l + r === 0 ? 'none' : l === r ? 'tie' : l > r ? 'left' : 'right'
+  const leftPct = l + r === 0 ? 50 : Math.round((l / (l + r)) * 100)
+  const headline = call === 'none' ? 'Nenhuma mentira ainda' : call === 'tie' ? 'Empate no Troféu Pinóquio'
+    : `${call === 'left' ? left.nome : right.nome} lidera o Troféu Pinóquio`
+  return { left: l, right: r, call, leftPct, headline }
+}
+
 /** Placar do lado: só vereditos com fonte (shownVerdict) contam. */
 export function sideScore(claims, quem) {
   const out = { verdades: 0, mentiras: 0, imprecisos: 0 }
@@ -583,28 +593,22 @@ function scoreHtml(snapshot) {
   const [left, right] = people
   const colorA = candidateColor(left, 0)
   const colorB = candidateColor(right, 1)
-  const tug = tugOfWar(left, right)
-  const pende = pendeLabel(left, right, colorA, colorB)
-  const score = (candidate) => {
-    const index = errorIndex(candidate)
-    return index.total ? String(index.erroPct) : '–'
-  }
-  const who = pende.name
-    ? `${esc(pende.text)} <b style="${paintText(pende.color)}">${esc(pende.name)}</b>`
-    : esc(pende.text)
-  const label = `Mentirômetro: ${left.nome} ${score(left)}% de erro, ${right.nome} ${score(right)}%. ${pende.reading.headline}. ${pende.reading.detail}`
+  const lies = lieBoard(claimsOf(snapshot), left, right)
+  const lm = (n) => `${n} ${n === 1 ? 'mentira' : 'mentiras'}`
+  const head = lies.call === 'none' ? 'Nenhuma mentira ainda' : lies.call === 'tie' ? 'Empate no Troféu Pinóquio'
+    : `<b style="${paintText(lies.call === 'left' ? colorA : colorB)}">${esc(lies.call === 'left' ? left.nome : right.nome)}</b> lidera o Troféu Pinóquio`
+  const label = `Mentirômetro: ${left.nome} ${lm(lies.left)}, ${right.nome} ${lm(lies.right)}. ${lies.headline}`
   return `<header class="top">
     <div class="logo">Placar da Verdade</div>
     <div class="cand"><span class="dot" style="background:${paintBg(colorA)}"></span>
-      <div><div class="nm">${esc(left.nome)}</div><div class="sub">${left.propostas || 0} propostas · ${left.ataques || 0} ataques</div></div>
-      <div class="sc">${score(left)}</div></div>
+      <div><div class="nm">${esc(left.nome)}</div></div>
+      <div class="sc lies"><b>${lies.left}</b><small>${lies.left === 1 ? 'mentira' : 'mentiras'}</small></div></div>
     <div class="meter" role="img" aria-label="${esc(label)}">
-      <div class="lbl">Mentirômetro <span>${who}</span></div>
-      <div class="bar"><div style="width:${tug.leftPct}%;background:${paintBg(colorA)}"></div><div style="flex:1;background:${paintBg(colorB)}"></div></div>
-      <div class="lbl2"><span>${tug.leftFalsas} falsas/imprecisas</span><span>${tug.rightFalsas}</span></div>
+      <div class="lbl lhead">${head}</div>
+      <div class="bar"><div style="width:${lies.leftPct}%;background:${paintBg(colorA)}"></div><div style="flex:1;background:${paintBg(colorB)}"></div></div>
     </div>
-    <div class="cand r"><div class="sc">${score(right)}</div>
-      <div style="text-align:right"><div class="nm">${esc(right.nome)}</div><div class="sub">${right.propostas || 0} propostas · ${right.ataques || 0} ataques</div></div>
+    <div class="cand r"><div class="sc lies"><b>${lies.right}</b><small>${lies.right === 1 ? 'mentira' : 'mentiras'}</small></div>
+      <div style="text-align:right"><div class="nm">${esc(right.nome)}</div></div>
       <span class="dot" style="background:${paintBg(colorB)}"></span></div>
     <nav class="menu" aria-label="Seções">
       ${typeof window !== 'undefined' && window.PLACAR_REPLAY && !/[?&]replay=/.test(window.location?.search || '') ? `<a class="word" href="${esc(window.PLACAR_REPLAY)}">Replay</a>` : ''}
