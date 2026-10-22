@@ -1,8 +1,8 @@
 /* Visual "TV ticker" (lower-third): sem painéis, últimos itens ancorados embaixo, cartões compactos. */
 .col-c { background: transparent; border: 0; backdrop-filter: none; border-radius: 0; overflow: visible;
   top: auto; bottom: 130px; height: 50vh; width: clamp(300px, 30vw, 460px); }
-.card { background: transparent; border: 0; border-radius: 0; padding: 4px 0 4px 10px; margin: 8px 0 0; }
-.card::before { width: 3px; border-radius: 3px; }
+.card { background: transparent; border: 0; border-radius: 0; padding: 4px 0; margin: 8px 0 0; }
+.card::before { display: none; }
 .srcs { border-top: 0; padding-top: 0; flex-direction: row; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
 .card .q, .ch, .cm, .src { text-shadow: 0 1px 3px #000, 0 0 14px rgba(0,0,0,.9); }
 .ch b { text-shadow: none; filter: drop-shadow(0 1px 2px #000); }
@@ -12,8 +12,8 @@
 
 /* cabeçalho por lado: pílula escura sólida, no fluxo (acima da lista) */
 .colh { order: -1; flex: none; display: block; align-self: flex-start; max-width: 100%; box-sizing: border-box;
-  margin: 0 0 6px; padding: 8px 14px 8px; border: 1px solid rgba(255,255,255,.1); border-radius: 12px;
-  background: #0b0c0e; box-shadow: 0 4px 18px rgba(0,0,0,.5); border-left: 4px solid var(--c); }
+  margin: 0 0 6px; padding: 4px 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.score, .ctabs { text-shadow: 0 1px 3px #000, 0 0 12px rgba(0,0,0,.9); }
 .colname { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
 .colname { text-shadow: none; filter: drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000) drop-shadow(0 2px 3px rgba(0,0,0,.8)); }
 .score { font-size: 13px; color: #e6e7e9; margin-top: 2px; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -24,13 +24,13 @@
 .ctab { background: none; border: 0; padding: 2px 4px; color: #8a8f98; font-weight: 600; cursor: pointer; border-radius: 6px; }
 .ctab.on { color: #f7f8f8; background: rgba(255,255,255,.1); }
 .ctabs .sep { color: #4a4f57; }
-.col-c.b .colh { align-self: flex-end; border-left: 1px solid rgba(255,255,255,.1); border-right: 4px solid var(--c); text-align: right; }
+.col-c.b .colh { align-self: flex-end; text-align: right; }
 .col-c.b .ctabs { justify-content: flex-end; }
 
 .colbody { display: flex; flex-direction: column-reverse; overflow: hidden; padding: 0 4px;
   -webkit-mask-image: linear-gradient(transparent, #000 30%); mask-image: linear-gradient(transparent, #000 30%); }
 .csec { display: flex; flex-direction: column-reverse; }
-.col-c.b .card { text-align: right; padding: 4px 10px 4px 0; }
+.col-c.b .card { text-align: right; padding: 4px 0; }
 .col-c.b .card::before { left: auto; right: 0; }
 .col-c.b .ch, .col-c.b .srcs { justify-content: flex-end; }
 
@@ -50,5 +50,5 @@
 @media (max-width: 700px) {
   .mfeed .col-c { height: auto; }
   .mfeed .colbody, .mfeed .csec { flex-direction: column; overflow: visible; -webkit-mask-image: none; mask-image: none; }
-  .mfeed .colh { align-self: stretch; padding: 8px 12px; margin: 4px 0 8px; }
+  .mfeed .colh { align-self: stretch; padding: 4px 0; margin: 4px 0 8px; }
 }
