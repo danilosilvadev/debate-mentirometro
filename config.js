@@ -6,3 +6,6 @@ window.PLACAR_VIDEO = "";
 // "demo" abre a simulação rotulada. "live" abre PLACAR_BASE.
 // ?live=1 lê o placar público. ?demo=1 força a simulação. ?src= aponta um JSON.
 window.PLACAR_MODE = "demo";
+
+// Link "Replay" no menu (teste com a saída real do pipeline). Vazio esconde.
+window.PLACAR_REPLAY = "?replay=RugVB17uRVM&src=./teste/";

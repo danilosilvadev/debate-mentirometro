@@ -1,3 +1,4 @@
+import { clock as replayClock, lineAt, mmss, signatureAt, snapshotAt } from './replay.mjs'
 /** Placar da Verdade: conta, polling e a página. Sem build. */
 
 export const MINIMO = 3
@@ -499,6 +500,11 @@ function videoHtml(state, colorA, colorB) {
   else if (demo) pill = 'SIMULAÇÃO'
   else if (status.vivo) pill = 'AO VIVO'
   const live = status.vivo && !demo && !state.snapshot.encerrado
+  if (state.replay) {
+    return `<div class="video"><div class="stage" id="ytreplay" data-vid="${esc(id)}"></div><span class="live">REPLAY</span>
+    <div class="rbar" role="group" aria-label="Controle do replay"><button type="button" data-act="rseek" data-arg="-30">−30s</button><span class="rtime">${esc(mmss(state.replaySec || 0))}</span><button type="button" data-act="rseek" data-arg="30">+30s</button></div>
+    <button type="button" class="eye" data-act="overlays" aria-pressed="${state.quiet ? 'true' : 'false'}">${state.quiet ? 'Mostrar' : 'Ocultar'}</button></div>`
+  }
   const media = id
     ? `<iframe class="stage" data-vid="${esc(id)}" title="Transmissão do debate no YouTube" src="https://www.youtube-nocookie.com/embed/${esc(id)}?rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`
     : stageSvg(colorA, colorB)
@@ -538,6 +544,7 @@ function scoreHtml(snapshot) {
       <div style="text-align:right"><div class="nm">${esc(right.nome)}</div><div class="sub">${right.propostas || 0} propostas · ${right.ataques || 0} ataques</div></div>
       <span class="dot" style="background:${esc(colorB)}"></span></div>
     <nav class="menu" aria-label="Seções">
+      ${typeof window !== 'undefined' && window.PLACAR_REPLAY && !/[?&]replay=/.test(window.location?.search || '') ? `<a class="word" href="${esc(window.PLACAR_REPLAY)}">Replay</a>` : ''}
       <button type="button" class="word" data-act="panel" data-arg="linha">Linha do tempo</button>
       <button type="button" class="word" data-act="panel" data-arg="ler">Como ler</button>
       <button type="button" class="word" data-act="panel" data-arg="funciona">Como funciona</button>
@@ -577,6 +584,19 @@ function captionHtml(item, people, vivo) {
     <div class="capm"><span style="color:${esc(color)}">${esc(person?.nome || '')}</span><span class="muted">${stamp}</span>${itemTag(item)}</div>
     <div class="capq">“${esc(item.text)}”</div>
     <div class="cape">${motivo} ${fonte}</div>
+  </div></div>`
+}
+
+function replayCaptionHtml(line, item, people) {
+  if (!line) return captionHtml(item, people, false)
+  const index = Math.max(0, people.findIndex((candidate) => candidate.id === line.quem))
+  const person = people.find((candidate) => candidate.id === line.quem)
+  const color = person ? candidateColor(person, index) : '#8B8D98'
+  const who = person ? person.nome : 'Mediação'
+  const last = item ? `<div class="cape">Última checagem: ${itemTag(item)} ${esc(item.text)}</div>` : ''
+  return `<div class="capw"><div class="cap" style="--c:${esc(color)}" data-line="${esc(String(line.s))}">
+    <div class="capm"><span style="color:${esc(color)}">${esc(who)}</span><span class="muted">${esc(mmss(line.s))}</span></div>
+    <div class="capq">${esc(line.text)}</div>${last}
   </div></div>`
 }
 
@@ -724,7 +744,7 @@ export function renderBoard(state) {
     ${scoreHtml(snapshot)}
     ${note ? `<p class="simline" role="status">${esc(note)}</p>` : ''}
     ${listsHtml(items, people, state.fresh)}
-    ${captionHtml(latestClaim(items), people, status.vivo && !snapshot.encerrado)}
+    ${state.replay ? replayCaptionHtml(state.replayLine, latestClaim(items), people) : captionHtml(latestClaim(items), people, status.vivo && !snapshot.encerrado)}
     ${mobileFeed(items, people, state.filter, state.fresh, snapshot.encerrado)}
     ${panelHtml(state, items)}`
 }
@@ -853,6 +873,10 @@ function boot() {
       paint()
       return
     }
+    if (act === 'rseek' && window.__replay) {
+      window.__replay.seek(Math.max(0, window.__replay.now() + Number(arg)))
+      return
+    }
     if (act === 'overlays') {
       state.quiet = !state.quiet
       paint()
@@ -926,7 +950,97 @@ function boot() {
     }
   })
 
-  load(resolveFeed(location.search, baseDefault, Date.now(), startMode), { fallback: true })
+  const query = new URLSearchParams(location.search)
+  if (query.get('replay')) {
+    startReplay(query)
+  } else {
+    load(resolveFeed(location.search, baseDefault, Date.now(), startMode), { fallback: true })
+  }
+
+  function startReplay(q) {
+    const vid = youtubeId(q.get('replay'))
+    let src = (q.get('src') || './teste/').trim()
+    if (!src.endsWith('.json')) src = `${src.replace(/\/?$/, '/')}replay.json`
+    const simulated = q.get('replay_clock') === '1'
+    const rate = Number(q.get('rate') || 1) || 1
+    state.videoOverride = vid
+    fetch(src, { cache: 'no-store' }).then((r) => {
+      if (!r.ok) throw new Error(String(r.status))
+      return r.json()
+    }).then((data) => {
+      state.replay = data
+      const startAt = Number(q.get('t') || data.replay?.inicio || 0)
+      let player = null
+      let ready = false
+      const sim = replayClock({ start: startAt, rate })
+      let failed = false
+      let hold = startAt // posição enquanto o player não começou a tocar
+      const current = () => {
+        if (simulated || failed) return sim.get()
+        if (!ready || !player?.getPlayerState) return hold
+        const st = player.getPlayerState()
+        // -1 não iniciado, 5 carregado: o vídeo ainda não andou; mostra a posição pedida
+        if (st === -1 || st === 5) return hold
+        return player.getCurrentTime()
+      }
+      let sig = ''
+      const tick = () => {
+        const sec = current()
+        state.replaySec = sec
+        const next = signatureAt(data, sec)
+        const timeNode = app.querySelector('.rtime')
+        if (timeNode) timeNode.textContent = mmss(sec)
+        document.documentElement.dataset.replaySec = String(Math.floor(sec))
+        if (next === sig) return
+        sig = next
+        state.replayLine = lineAt(data, sec)
+        if (simulated) state.banner = 'Replay com relógio simulado (sem player).'
+        show(snapshotAt(data, sec), 'live')
+      }
+      state.banner = 'Replay: os fatos aparecem no momento em que foram ditos.'
+      state.replayLine = lineAt(data, startAt)
+      show(snapshotAt(data, startAt), 'live')
+      window.__replay = {
+        seek: (sec) => { sim.seek(sec); hold = sec; if (ready && !failed && player?.seekTo) player.seekTo(sec, true); tick() },
+        mode: () => (simulated || failed ? 'clock' : (ready ? 'player' : 'loading')),
+        now: current,
+        data,
+      }
+      setInterval(tick, 250)
+      if (!simulated) {
+        const make = () => {
+          const host = document.getElementById('ytreplay')
+          if (!host) return
+          player = new window.YT.Player(host, {
+            videoId: vid || data.replay?.video,
+            playerVars: { start: Math.floor(startAt), rel: 0, playsinline: 1 },
+            events: {
+              onReady: () => { ready = true },
+              onError: () => {
+                // vídeo bloqueado/indisponível neste navegador: segue no relógio simulado
+                failed = true
+                sim.seek(current() || hold)
+                state.banner = 'O vídeo não abriu aqui. Replay seguindo no relógio simulado.'
+                sig = ''
+              },
+            },
+          })
+          const frame = document.getElementById('ytreplay')
+          if (frame) { frame.classList.add('stage'); frame.setAttribute('data-vid', vid) }
+        }
+        if (window.YT?.Player) make()
+        else {
+          window.onYouTubeIframeAPIReady = make
+          const tagEl = document.createElement('script')
+          tagEl.src = 'https://www.youtube.com/iframe_api'
+          document.head.appendChild(tagEl)
+        }
+      }
+    }).catch(() => {
+      state.banner = 'Não deu para abrir os dados do replay.'
+      load(resolveFeed('?demo=1', '', Date.now()), { fallback: false })
+    })
+  }
 }
 
 if (typeof document !== 'undefined' && document.getElementById?.('app')) boot()
