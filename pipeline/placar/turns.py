@@ -166,8 +166,6 @@ def _bank_turn(board, turn, quem, text, t_ms, dur_s, llm, retriever, lock, res, 
         return False
     hit, sent = best
     if is_duplicate(board, quem, t_ms, hit["frase"], sent, banco=hit["frase"]):
-        with lock:
-            board.add_time(quem, "outro", dur_s)
         res.error = "repetida"
         return True
     # Literal: a frase da janela que mais se parece com a frase checada.
@@ -177,7 +175,6 @@ def _bank_turn(board, turn, quem, text, t_ms, dur_s, llm, retriever, lock, res, 
     cands = sentences[max(0, i - 1): i + 2]
     sent = max(cands, key=lambda x: (len(_stems(x) & want) + 2 * len(_nums(x) & set(hit.get("numeros") or []))))
     with lock:
-        board.add_time(quem, "outro", dur_s)
         claim = board.open_claim(quem=quem, tema=hit.get("tema") or "geral",
                                  afirmacao=hit["frase"][:1].upper() + hit["frase"][1:], contexto="", literal=sent[:240], t_ms=t_ms)
         claim["_job"] = turn
@@ -281,8 +278,10 @@ def process_turn(
             board.add_time(quem, "outro", dur_s)
         res.error = "orçamento de chamadas esgotado"
         return res
-    if _bank_turn(board, turn, quem, text, t_ms, dur_s, llm, retriever, lock, res, can_call, on_change):
-        return res
+    # Banco primeiro (instantâneo), mas o turno SEGUE para a extração: um turno costuma ter
+    # várias afirmações e o atalho antigo descartava todas as outras (cobertura 34% no 1º tempo).
+    banked = _bank_turn(board, turn, quem, text, t_ms, dur_s, llm, retriever, lock, res, can_call, on_change)
+    bank_items = res.items
     started = time.perf_counter()
     try:
         out = llm.complete(
@@ -307,7 +306,7 @@ def process_turn(
     res.classify_ms = (time.perf_counter() - started) * 1000
     data = out.data
     items = data.get("itens") or []
-    res.items = len(items)
+    res.items = bank_items + len(items)
     claims = []
     with lock:
         board.add_time(quem, data.get("tom") or "outro", dur_s)
@@ -318,7 +317,9 @@ def process_turn(
             elif item["tipo"] == "ataque":
                 board.add_attack(quem=quem, resumo=f"{item['titulo']}: “{quote}”", t_ms=t_ms)
             elif len(claims) < max_claims:
-                if is_garbled(item, text) or is_duplicate(board, quem, t_ms, item["titulo"], quote):
+                bhit = claim_bank().match(board.nomes.get(quem, ""), item["titulo"], quote)
+                if is_garbled(item, text) or is_duplicate(board, quem, t_ms, item["titulo"], quote,
+                                                          banco=bhit["frase"] if bhit else ""):
                     res.verdicts.append({"titulo": item["titulo"], "descartada": True})
                     continue
                 claim = board.open_claim(

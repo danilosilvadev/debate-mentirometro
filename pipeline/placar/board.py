@@ -14,6 +14,34 @@ def _tempo() -> dict[str, float]:
     return {key: 0.0 for key in TOM_KEYS}
 
 
+DECIDED = ("verdadeiro", "impreciso", "falso")
+NO_SOURCE_TEXT = "Sem dados: nenhuma fonte verificável sustenta um veredito; não publicamos opinião."
+# Não são fonte verificável de fato: redes sociais, vídeo, agregadores e páginas de busca.
+BAD_SOURCE_HOSTS = ("youtube.com", "youtu.be", "facebook.com", "instagram.com", "tiktok.com", "twitter.com",
+                    "x.com", "t.me", "whatsapp.com", "kwai.com", "threads.net", "reddit.com", "google.com/search",
+                    "bing.com", "duckduckgo.com", "brainly.com.br", "pinterest.com")
+
+
+def _host(url: str) -> str:
+    from urllib.parse import urlparse
+    return (urlparse(url).hostname or "").removeprefix("www.")
+
+
+def source_ok(src: Any) -> bool:
+    """Fonte = dict com url http(s) real (host com ponto) fora da lista de não-fontes."""
+    if not isinstance(src, dict):
+        return False
+    url = str(src.get("url") or "").strip()
+    if not url.startswith(("http://", "https://")) or " " in url:
+        return False
+    host = _host(url)
+    if "." not in host or host in ("localhost", "example.com"):
+        return False
+    low = url.lower()
+    return not any(b in low.split("?")[0] if "/" in b else (host == b or host.endswith("." + b))
+                   for b in BAD_SOURCE_HOSTS)
+
+
 class Board:
     def __init__(
         self,
@@ -144,6 +172,17 @@ class Board:
         fonte_titulo: str = "",
         fonte_url: str = "",
     ) -> None:
+        # REGRA DURA: veredito (verdadeiro/impreciso/falso) só sai com fonte verificável.
+        # Sem URL http(s) de fonte aceitável -> sem_dados. Nunca publica opinião do modelo.
+        if veredito in DECIDED:
+            src = {"titulo": fonte_titulo, "url": fonte_url} if fonte_url else claim.get("fonte")
+            if not source_ok(src):
+                veredito, motivo = "sem_dados", NO_SOURCE_TEXT
+                fonte_titulo = fonte_url = ""
+                claim["fonte"] = None
+            elif not fonte_titulo and src:
+                fonte_titulo = src.get("titulo") or _host(src.get("url") or "")
+                fonte_url = src.get("url") or ""
         previous = claim["veredito"]
         if previous != "em_revisao" and previous != veredito:
             claim["corrigido"] = {"antes": previous}

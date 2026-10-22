@@ -372,7 +372,7 @@ def test_worker_lifo_and_stale():
 
 
 @pytest.mark.uses_bank
-def test_bank_shortcut_skips_classify(monkeypatch):
+def test_bank_shortcut_then_still_classifies(monkeypatch):
     from placar import turns
     from placar.claim_bank import ClaimBank
     monkeypatch.setattr(turns, "_BANK", ClaimBank.load(), raising=False)
@@ -383,13 +383,17 @@ def test_bank_shortcut_skips_classify(monkeypatch):
     class P:
         name = "x"
         def generate(self, req, timeout_s):
-            calls.append(req.task); raise AssertionError("não deveria chamar")
+            calls.append(req.task)
+            from placar.llm.base import ProviderError
+            raise ProviderError("sem cota")
     b = Board(debate_id="t", candidatos={"1": "Lula", "2": "Flávio Bolsonaro"}, origin_ms=0, video={}, aviso="")
     class R:
         def search(self, q): return []
     res = turns.process_turn(b, {"quem": "1", "text": "Eu fui o primeiro presidente da república a conseguir dois graus de investimento neste país.", "t_ms": 1, "dur_s": 6},
                              ProviderRouter([P()]), R())
-    assert res.bank_shortcut and not calls
+    # banco publica na hora; o turno ainda vai à extração (outras afirmações do mesmo turno)
+    assert res.bank_shortcut and calls and set(calls) == {"classify_turn"}
+    assert len(b.claims) == 1
     c = b.claims[0]
     assert c["veredito"] == "verdadeiro" and c.get("banco")
 
@@ -425,3 +429,17 @@ def test_grok_cli_provider_text_only_and_errors():
         raise subprocess.TimeoutExpired("grok", 1)
     with pytest.raises(TimeoutFailure):
         GrokCliProvider(runner=slow).generate(LlmRequest(task="judge", system="s", user="u", schema=None), 10)
+
+
+def test_verdict_without_source_becomes_sem_dados():
+    from placar.board import Board
+    b = Board(debate_id="t", candidatos={"1": "Lula"}, origin_ms=0, video={}, aviso="")
+    c = b.open_claim(quem="1", tema="g", afirmacao="a", contexto="", literal="a", t_ms=1)
+    b.set_verdict(c, veredito="falso", motivo="opinião")
+    assert c["veredito"] == "sem_dados" and not c["fonte"]
+    c = b.open_claim(quem="1", tema="g", afirmacao="b", contexto="", literal="b", t_ms=2)
+    b.set_verdict(c, veredito="verdadeiro", motivo="m", fonte_titulo="vid", fonte_url="https://www.youtube.com/watch?v=1")
+    assert c["veredito"] == "sem_dados"
+    c = b.open_claim(quem="1", tema="g", afirmacao="c", contexto="", literal="c", t_ms=3)
+    b.set_verdict(c, veredito="verdadeiro", motivo="m", fonte_titulo="IBGE", fonte_url="https://sidra.ibge.gov.br/t/1")
+    assert c["veredito"] == "verdadeiro" and c["fonte"]["url"].startswith("https://sidra")
