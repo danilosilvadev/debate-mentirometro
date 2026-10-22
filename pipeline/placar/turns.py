@@ -102,7 +102,7 @@ def reference_facts(today=None) -> str:
 
 
 REVIEW_TEXT = "Em revisão: aguardando um segundo modelo confirmar com as fontes."
-DIVERGE_TEXT = "Em revisão: os checadores automáticos não chegaram a acordo; fica fora do Mentirômetro."
+DIVERGE_TEXT = "Sem confirmação: as checagens automáticas discordaram; preferimos não cravar veredito."
 
 
 @dataclass
@@ -284,6 +284,8 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
             board.set_verdict(claim, veredito=hit["veredito"], motivo=hit["motivo"],
                               fonte_titulo=hit["fonte"], fonte_url=hit["url"])
             claim["banco"] = hit["fonte"]
+            # O título mostrado é a frase checada pelo profissional, para o veredito bater com o que se lê.
+            claim["afirmacao"] = hit["frase"][:1].upper() + hit["frase"][1:]
             board.note_score()
         res.verdicts.append({"titulo": claim["afirmacao"], "veredito": hit["veredito"], "banco": hit["frase"],
                              "score": hit["score"], "publicado": claim["veredito"]})
@@ -368,11 +370,11 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
                 _publish(board, claim, v2, second.data.get("motivo") or "", title, url, evidence, entry)
             elif v3 in ("falso", "impreciso") and v3 == verdict:
                 # 2 de 3 confirmam o erro, mas o confirmador independente não: fica em revisão (regra conservadora)
-                claim["motivo"] = DIVERGE_TEXT
-                entry["publicado"] = "em_revisao"
+                board.set_verdict(claim, veredito="sem_dados", motivo=DIVERGE_TEXT)
+                entry["publicado"] = "sem_dados"
             else:
-                claim["motivo"] = DIVERGE_TEXT
-                entry["publicado"] = "em_revisao"
+                board.set_verdict(claim, veredito="sem_dados", motivo=DIVERGE_TEXT)
+                entry["publicado"] = "sem_dados"
             board.note_score()
         return
     with lock:

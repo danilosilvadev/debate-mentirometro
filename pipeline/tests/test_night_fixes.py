@@ -117,7 +117,7 @@ def test_disagreement_stays_em_revisao_without_leaking_first_verdict():
     board, router, retr, *_ = _setup(FALSO, {"veredito": "verdadeiro", "motivo": "ok"})
     process_turn(board, {"quem": "1", "text": "x", "t_ms": 1, "dur_s": 5}, router, retr)
     c = _claim(board)
-    assert c["veredito"] == "em_revisao" and c["motivo"] == DIVERGE_TEXT
+    assert c["veredito"] == "sem_dados" and c["motivo"] == DIVERGE_TEXT
     assert "falso" not in json.dumps(board.snapshot(), ensure_ascii=False).lower().replace("falso\": 0", "")
 
 

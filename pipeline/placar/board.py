@@ -166,6 +166,10 @@ class Board:
         )
 
     def finish(self, *, proximo: str = "", texto: str = "") -> None:
+        for claim in self.claims:
+            if claim["veredito"] == "em_revisao":
+                self.set_verdict(claim, veredito="sem_dados",
+                                 motivo="Sem confirmação: não deu tempo de checar com fontes durante o debate.")
         self.video = {**self.video, "ao_vivo": False}
         if proximo and texto:
             self.encerrado = {"proximo": proximo, "texto": texto}
