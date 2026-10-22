@@ -605,7 +605,7 @@ function scoreHtml(snapshot) {
       <div class="sc lies"><b>${lies.left}</b><small>${lies.left === 1 ? 'mentira' : 'mentiras'}</small></div></div>
     <div class="meter" role="img" aria-label="${esc(label)}">
       <div class="lbl lhead">${head}</div>
-      <div class="bar"><div style="width:${lies.leftPct}%;background:${colorA === SPLIT ? `linear-gradient(135deg,${GREEN} 50%,${YELLOW} 50%)` : paintBg(colorA)}"></div><div style="flex:1;background:${colorB === SPLIT ? `repeating-linear-gradient(135deg,${GREEN} 0 7px,${YELLOW} 7px 14px)` : paintBg(colorB)}"></div></div>
+      <div class="bar"><div style="width:${lies.leftPct}%;background:${colorA === SPLIT ? `linear-gradient(135deg,${GREEN} 50%,${YELLOW} 50%)` : paintBg(colorA)}"></div><div style="flex:1;background:${colorB === SPLIT ? `linear-gradient(135deg,${GREEN} 50%,${YELLOW} 50%)` : paintBg(colorB)}"></div></div>
     </div>
     <div class="cand r"><div class="sc lies"><b>${lies.right}</b><small>${lies.right === 1 ? 'mentira' : 'mentiras'}</small></div>
       <div style="text-align:right"><div class="nm">${esc(right.nome)}</div></div>
