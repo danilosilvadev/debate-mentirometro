@@ -293,6 +293,9 @@ class DuckDuckGoHtml:
         with self._lock:
             if q in self._cache:
                 return [Evidence(**e) for e in self._cache[q]]
+            # disjuntor: DDG bloqueando (202) serializa todas as threads; pula por 120s.
+            if self._clock() < getattr(self, "_open_until", -1e9):
+                return []
             wait = self.min_interval_s - (self._clock() - self._last)
             if wait > 0:
                 self._sleep(wait)
@@ -307,7 +310,11 @@ class DuckDuckGoHtml:
                 self.requests += 1
                 status, body = self._post(q, timeout_s)
                 if status != 200:
+                    self._streak = getattr(self, "_streak", 0) + 1
+                    if self._streak >= 2:
+                        self._open_until = self._clock() + 120
                     return []
+            self._streak = 0
             found = [e for e in parse_ddg(body) if _whitelisted(e.url)][:5]
             self._cache[q] = [e.as_dict() for e in found]
             try:
