@@ -116,7 +116,7 @@ def test_second_model_confirms_falso_publishes():
 
 def test_disagreement_stays_em_revisao_without_leaking_first_verdict():
     board, router, retr, *_ = _setup(FALSO, {"veredito": "verdadeiro", "motivo": "ok"})
-    process_turn(board, {"quem": "1", "text": "x", "t_ms": 1, "dur_s": 5}, router, retr)
+    process_turn(board, {"quem": "1", "text": "esse país cresceu 10,5% em 2010", "t_ms": 1, "dur_s": 5}, router, retr)
     c = _claim(board)
     assert c["veredito"] == "sem_dados" and c["motivo"] == DIVERGE_TEXT
     assert "falso" not in json.dumps(board.snapshot(), ensure_ascii=False).lower().replace("falso\": 0", "")
@@ -124,7 +124,7 @@ def test_disagreement_stays_em_revisao_without_leaking_first_verdict():
 
 def test_degree_disagreement_publishes_milder():
     board, router, retr, *_ = _setup(FALSO, {"veredito": "impreciso", "motivo": "Exagero: foi 7,5%."})
-    process_turn(board, {"quem": "1", "text": "x", "t_ms": 1, "dur_s": 5}, router, retr)
+    process_turn(board, {"quem": "1", "text": "esse país cresceu 10,5% em 2010", "t_ms": 1, "dur_s": 5}, router, retr)
     assert _claim(board)["veredito"] == "impreciso"
 
 
@@ -133,10 +133,10 @@ def test_no_second_provider_keeps_neutral_review_text():
     router = ProviderRouter([first], retries=0)
     retr = Retriever(Settings(searxng_url="http://s"), http=lambda u, t: (200, json.dumps(SEARX)))
     board = Board(debate_id="t", candidatos={"1": "Lula", "2": "B"}, origin_ms=0, video={}, aviso="")
-    process_turn(board, {"quem": "1", "text": "x", "t_ms": 1, "dur_s": 5}, router, retr)
+    process_turn(board, {"quem": "1", "text": "esse país cresceu 10,5% em 2010", "t_ms": 1, "dur_s": 5}, router, retr)
     c = _claim(board)
-    assert c["veredito"] == "em_revisao" and c["motivo"] == REVIEW_TEXT
-    assert "falso" not in c["motivo"] and "_primeiro" not in c
+    # sem segundo provedor: nunca fica preso em revisão, publica sem_dados neutro
+    assert c["veredito"] == "sem_dados" and "falso" not in c["motivo"] and "_primeiro" not in c
 
 
 def test_prompt_rules_promise_is_not_claim():
@@ -226,7 +226,7 @@ def test_claim_queries_legal_adds_official_queries():
 
 def test_verifier_motivo_is_published_and_prompt_has_facts():
     board, router, retr, first, second = _setup(FALSO, {"veredito": "falso", "motivo": "Conta certa: 7,5%."})
-    process_turn(board, {"quem": "1", "text": "x", "t_ms": 1, "dur_s": 5}, router, retr)
+    process_turn(board, {"quem": "1", "text": "esse país cresceu 10,5% em 2010", "t_ms": 1, "dur_s": 5}, router, retr)
     c = _claim(board)
     assert c["veredito"] == "falso" and c["motivo"] == "Conta certa: 7,5%."
     assert "Presidentes desde 1995" in second.calls[-1].user
@@ -269,7 +269,7 @@ def test_bank_hit_skips_llm_judge(monkeypatch):
                                                     "veredito": "verdadeiro", "motivo": "IBGE", "fonte": "Aos Fatos",
                                                     "url": "https://www.aosfatos.org/x"}]))
     board, router, retr, first, second = _setup(FALSO, FALSO)
-    process_turn(board, {"quem": "1", "text": "o PIB cresceu 7,5% em 2010", "t_ms": 1, "dur_s": 5,
+    process_turn(board, {"quem": "1", "text": "esse país cresceu 10,5% em 2010", "t_ms": 1, "dur_s": 5,
                          "clock": (0.0, 100.0, 1.0), "end_v": 99.0}, router, retr)
     c = _claim(board)
     assert c["veredito"] == "verdadeiro" and c["banco"] == "Aos Fatos" and "va" in c and "vv" in c

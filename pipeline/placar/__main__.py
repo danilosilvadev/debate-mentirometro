@@ -121,8 +121,19 @@ def _live(args: argparse.Namespace) -> int:
 
 def _number_stt(settings, args):
     """whisper-large-v3 (não turbo) na Groq, só para blocos com números."""
-    if args.no_number_pass or getattr(settings, "stt_provider", "") != "groq" or not settings.groq_key:
+    import os
+
+    if args.no_number_pass:
         return None
+    if getattr(settings, "stt_provider", "") != "groq" or not settings.groq_key:
+        # Local: modelo maior (large-v3-turbo, beam 5) só nos blocos com número.
+        # No Band, o small ouviu "270 milhões de redes"; o turbo, "270 bilhões de reservas".
+        name = os.environ.get("PLACAR_NUMBER_MODEL", "large-v3-turbo")
+        if name in ("", "0", "off"):
+            return None
+        from placar.transcribe import FasterWhisperTranscriber
+
+        return FasterWhisperTranscriber(model_name=name, beam_size=5)
     from placar.transcribe import GroqWhisperTranscriber
 
     return GroqWhisperTranscriber(api_key=settings.groq_key, model="whisper-large-v3", timeout_s=settings.groq_timeout_s)

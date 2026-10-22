@@ -20,7 +20,9 @@ class FasterWhisperTranscriber:
         model_name: str = "small",
         device: str = "cpu",
         compute_type: str = "int8",
+        beam_size: int = 1,
     ) -> None:
+        self.beam_size = beam_size
         self.model_name = model_name
         self.device = device
         self.compute_type = compute_type
@@ -49,7 +51,7 @@ class FasterWhisperTranscriber:
             audio,
             language="pt",
             vad_filter=True,
-            beam_size=1,
+            beam_size=self.beam_size,
         )
         return [
             TranscriptSegment(start_s=item.start, end_s=item.end, text=item.text.strip())

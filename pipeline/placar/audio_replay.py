@@ -59,7 +59,7 @@ def run(
     crosstalk_margin: float = 0.04,
     max_llm_calls: int = 0,
     llm_workers: int = int(__import__("os").environ.get("PLACAR_LLM_WORKERS", "4")),
-    max_claims_per_turn: int = 2,
+    max_claims_per_turn: int = 3,
     chunk_source: Any = None,
     silence_flush_s: float = 3.0,
 ) -> dict[str, Any]:
@@ -339,6 +339,18 @@ def has_number(text: str) -> bool:
     return bool(_NUM_RE.search(text or ""))
 
 
+_MAG_RE = re.compile(r"\b(mil|milh\w*|bilh\w*|trilh\w*|por cento|%)", re.I)
+
+
+def magnitudes(text: str) -> set[str]:
+    """Ordem de grandeza falada: '270 milhões' x '270 bilhões' tem o mesmo dígito."""
+    out = set()
+    for m in _MAG_RE.findall(text or ""):
+        m = m.lower()
+        out.add("%" if m in ("%", "por cento") else m[:4])
+    return out
+
+
 def reconcile_numbers(primary, secondary):
     """Segunda transcrição (modelo maior) para blocos com números. Para cada segmento
     do primário com número, pega o segmento do secundário que mais se sobrepõe no tempo;
@@ -359,8 +371,8 @@ def reconcile_numbers(primary, secondary):
         if best is None or best_ov < 0.3 * (seg.end_s - seg.start_s):
             out.append(seg)
             continue
-        a, b = numbers(seg.text), numbers(best.text)
-        if a != b:
+        a, b = numbers(seg.text) | magnitudes(seg.text), numbers(best.text) | magnitudes(best.text)
+        if a != b and numbers(best.text):
             fixes.append({"start_s": round(seg.start_s, 1), "turbo": seg.text, "v3": best.text,
                           "num_turbo": sorted(a), "num_v3": sorted(b)})
             out.append(TranscriptSegment(start_s=seg.start_s, end_s=seg.end_s, text=best.text))
