@@ -50,6 +50,14 @@ Alternativas quando o YouTube bloquear (403, "confirm you're not a bot"):
 
 Cada bloco é dono do trecho `[início + 1 s, fim − 1 s]`; um segmento só sai no bloco que contém o seu meio, e `dedupe_overlap` tira palavras repetidas na emenda.
 
+## LLM assíncrono e classificação por turno
+
+O laço de áudio (captura → STT → voz) nunca espera o modelo: cada turno de fala de um candidato (segmentos seguidos da mesma voz, até 60 s) entra numa fila (`placar/worker.py`, pool de 2 threads). Uma chamada `classify_turn` por turno devolve a LISTA de itens (`TURN_SCHEMA`: proposta, ataque ou afirmação checável, cada um com título curto, citação exata, categoria e, para afirmações, palavras de busca). Cada afirmação (até 2 por turno) passa por busca e julgamento. O `placar.json` é reescrito a cada item que chega. Toda chamada tem prazo de relógio de parede (`CLAUDE_TIMEOUT_S`, `OPENROUTER_TIMEOUT_S`).
+
+## Busca de fontes sem chave
+
+Além de Google Fact Check, SearXNG e Brave (opcionais, com chave/URL), há DuckDuckGo HTML (`RETRIEVE_DDG=1`, padrão no `from_env`): busca restrita com `site:` a checadores, imprensa e `gov.br`, filtra por lista de domínios confiáveis, espera 2 s entre pedidos e guarda em cache (`~/.cache/placar/ddg.json`). O DuckDuckGo devolve 202 quando desconfia de robô; aí a afirmação fica `sem_dados`. Para um debate inteiro, prefira SearXNG próprio.
+
 ## Vozes (speaker ID)
 
 `scripts/enroll_voice.py <nome> <url> [início fim]` baixa o trecho, gera embeddings ECAPA (speechbrain, CPU) e acumula em `voices/<nome>.npy` + `voices/<nome>.json` (fontes e checagens). Avisa quando um clipe novo não bate com os anteriores (outra voz). Cadastre também os mediadores; sem eles, uma voz masculina de mediador pode cair no candidato.

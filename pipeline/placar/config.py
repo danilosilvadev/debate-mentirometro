@@ -40,6 +40,8 @@ class Settings:
     factcheck_key: str = ""
     searxng_url: str = ""
     brave_key: str = ""
+    # Desligado no Settings() puro (testes, replay de roteiro); from_env liga por padrão.
+    ddg_enabled: bool = False
     chunk_seconds: float = 10.0
     chunk_overlap_seconds: float = 2.0
     whisper_model: str = "small"
@@ -88,6 +90,7 @@ class Settings:
             factcheck_key=os.environ.get("FACTCHECK_API_KEY", "").strip(),
             searxng_url=os.environ.get("SEARXNG_URL", "").strip().rstrip("/"),
             brave_key=os.environ.get("BRAVE_API_KEY", "").strip(),
+            ddg_enabled=os.environ.get("RETRIEVE_DDG", "1").strip() != "0",
             chunk_seconds=_float("CHUNK_SECONDS", 10.0),
             chunk_overlap_seconds=_float("CHUNK_OVERLAP_SECONDS", 2.0),
             whisper_model=os.environ.get("WHISPER_MODEL", "small").strip() or "small",

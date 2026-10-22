@@ -17,7 +17,10 @@ from placar.audio import chunk_windows, cut_chunk
 from placar.board import Board
 from placar.llm.router import ProviderRouter
 from placar.retrieve import Retriever
-from placar.stages import process_utterance
+import threading
+
+from placar.turns import process_turn
+from placar.worker import LlmWorker
 from placar.transcribe import FasterWhisperTranscriber, dedupe_overlap
 
 
@@ -51,6 +54,8 @@ def run(
     offset_s: float = 0.0,
     turn_max_s: float = 45.0,
     max_llm_calls: int = 0,
+    llm_workers: int = 2,
+    max_claims_per_turn: int = 2,
 ) -> dict[str, Any]:
     """turn_max_s: junta segmentos seguidos do mesmo candidato num turno
     (uma chamada de classificação por turno, não por frase). max_llm_calls:
@@ -77,24 +82,41 @@ def run(
     llm_turns: list[dict[str, Any]] = []
     budget_hit = False
 
+    lock = threading.Lock()
+
+    def write_board() -> None:
+        with lock:
+            snap = board.snapshot()
+        tmp = out / "placar.json.tmp"
+        tmp.write_text(json.dumps(snap, ensure_ascii=False, indent=2), encoding="utf-8")
+        tmp.replace(out / "placar.json")
+
+    def can_call() -> bool:
+        nonlocal budget_hit
+        used = len([r for r in router.history if r.provider != "claude-cli"])
+        if max_llm_calls and used >= max_llm_calls:
+            budget_hit = True
+            return False
+        return True
+
+    def run_turn(job: dict[str, Any]) -> Any:
+        return process_turn(board, job, router, retriever, lock=lock, on_change=write_board,
+                            max_claims=max_claims_per_turn, can_call=can_call)
+
+    worker = LlmWorker(run_turn, workers=llm_workers)
+
     def flush() -> float:
-        nonlocal turn, budget_hit
+        nonlocal turn
         if not turn:
             return 0.0
         t0 = time.perf_counter()
-        calls_before = len([r for r in router.history if r.ok or r.error])
-        if max_llm_calls and calls_before >= max_llm_calls:
-            budget_hit = True
-            if turn["slot"] in board.nomes:
-                board.add_time(turn["slot"], "outro", turn["dur_s"])
-        else:
-            process_utterance(board, {"t_ms": origin + int(turn["t_s"] * 1000), "quem": turn["slot"],
-                                      "dur_s": turn["dur_s"], "text": turn["text"]}, router, retriever)
-        ms = (time.perf_counter() - t0) * 1000
         if turn["slot"] in board.nomes:
-            llm_turns.append({**turn, "llm_ms": round(ms), "speech_end_to_board_s": round(time.perf_counter() - wall0 - turn["end_audio_s"] / (speed or 1), 2) if speed else None})
+            worker.submit({"t_ms": origin + int(turn["t_s"] * 1000), "quem": turn["slot"],
+                           "dur_s": turn["dur_s"], "text": turn["text"], "t_s": turn["t_s"],
+                           "speech_end_wall": wall0 + turn["end_audio_s"] / (speed or 1)})
         turn = None
-        return ms
+        return (time.perf_counter() - t0) * 1000
+
     windows = chunk_windows(duration, chunk_s=chunk_s, overlap_s=overlap_s)
     for index, (start, length) in enumerate(windows):
         ready_at = (start + length) / speed if speed > 0 else 0
@@ -144,7 +166,10 @@ def run(
             turn["dur_s"] += seg.end_s - seg.start_s
             turn["end_audio_s"] = start + seg.end_s
             turn["text"] = (turn["text"] + " " + text).strip()
-        (out / "placar.json").write_text(json.dumps(board.snapshot(), ensure_ascii=False, indent=2), encoding="utf-8")
+        # turno que já passou de turn_max_s sai sem esperar a próxima fala
+        if turn and turn["dur_s"] >= turn_max_s:
+            llm_ms += flush()
+        write_board()
         done = time.perf_counter()
         stt_name = getattr(stt, "last_provider", "") or getattr(stt, "name", "local")
         chunks.append({"chunk": index, "stt": stt_name, "start_s": start, "len_s": length, "segments": new,
@@ -153,10 +178,22 @@ def run(
                        "lag_vs_wallclock_s": round(done - wall0 - ready_at, 2)})
         print(json.dumps(chunks[-1]), flush=True)
     flush()
-    (out / "placar.json").write_text(json.dumps(board.snapshot(), ensure_ascii=False, indent=2), encoding="utf-8")
+    worker.drain()
+    write_board()
+    for item in worker.done:
+        job, res = item["job"], item["result"]
+        llm_turns.append({"quem": job["quem"], "t_s": round(offset_s + job["t_s"], 1), "dur_s": round(job["dur_s"], 1),
+                          "queue_wait_s": item["queue_wait_s"], "run_s": item["run_s"],
+                          "speech_end_to_items_s": round(item["finished_at"] - job["speech_end_wall"], 2),
+                          "classify_ms": round(res.classify_ms) if res else None,
+                          "retrieve_ms": [round(x) for x in res.retrieve_ms] if res else [],
+                          "judge_ms": [round(x) for x in res.judge_ms] if res else [],
+                          "items": res.items if res else 0, "error": (res.error if res else item["error"]),
+                          "text": job["text"]})
     (out / "events.jsonl").write_text("".join(json.dumps(e, ensure_ascii=False) + "\n" for e in board.events), encoding="utf-8")
     report = {"llm_turns": llm_turns, "llm_budget_hit": budget_hit, "audio_s": duration, "whisper_model": whisper_model, "speed": speed, "chunks": chunks,
-              "llm_calls": [vars(r) if hasattr(r, "__dict__") else str(r) for r in router.history]}
+              "retrieval_requests": getattr(getattr(retriever, "_ddg", None), "requests", 0),
+        "llm_calls": [vars(r) if hasattr(r, "__dict__") else str(r) for r in router.history]}
     (out / "transcript.json").write_text(json.dumps(transcript, ensure_ascii=False, indent=2), encoding="utf-8")
     (out / "latency_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
     return report
