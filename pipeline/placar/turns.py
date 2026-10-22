@@ -6,6 +6,7 @@ Pensado para rodar num worker (placar.worker): nada aqui segura o laço de
 
 from __future__ import annotations
 
+import re as _re
 import threading
 import time
 from dataclasses import dataclass, field
@@ -69,6 +70,10 @@ SYSTEM_JUDGE_TURN = (
     "Diferença de palavra ('golpe' x 'fraude'), arredondamento e ressalvas que não mudam o núcleo = verdadeiro.\n"
     "- Se a fonte traz o mesmo fato com data ou número diferente do dito, é impreciso (ou falso se muito longe), não sem_dados.\n"
     "- Julgue o que o candidato quis dizer, com o sujeito real indicado no resumo e no contexto do turno.\n"
+    "- Números e períodos: só diga verdadeiro se a fonte trouxer o MESMO indicador, o MESMO período "
+    "(ano/mandato/'depois que eu saí') e valor compatível. Se a fonte cobre só parte do período, outro "
+    "indicador ou não permite fechar a conta, NÃO é verdadeiro: use impreciso se há divergência visível, "
+    "senão sem_dados. Afirmações do tipo 'só depois de X voltou a Y' exigem a série do período inteiro.\n"
     "motivo: 1 ou 2 frases citando o dado da fonte, com números corretos. fonte_url deve ser uma das URLs recebidas."
 )
 
@@ -318,7 +323,7 @@ def process_turn(
                 board.add_attack(quem=quem, resumo=f"{item['titulo']}: “{quote}”", t_ms=t_ms)
             elif len(claims) < max_claims:
                 bhit = claim_bank().match(board.nomes.get(quem, ""), item["titulo"], quote)
-                if is_garbled(item, text) or is_duplicate(board, quem, t_ms, item["titulo"], quote,
+                if is_opinion(item) or is_garbled(item, text) or is_duplicate(board, quem, t_ms, item["titulo"], quote,
                                                           banco=bhit["frase"] if bhit else ""):
                     res.verdicts.append({"titulo": item["titulo"], "descartada": True})
                     continue
@@ -399,6 +404,27 @@ def _judge(board, claim, item, llm, retriever, lock, res, can_call) -> None:
             claim["vv"] = vv
 
 
+_NUM_RE = _re.compile(r"\d|%|\b(mil|milh|bilh|trilh|dobr|metade|triplic|por cento)", _re.I)
+
+
+def _numeric(claim) -> bool:
+    return bool(_NUM_RE.search(f"{claim.get('literal','')} {claim.get('afirmacao','')}"))
+
+
+OPINION_RE = _re.compile(r"\b(acho|acredito|vou |vamos |iremos|precisa|precisamos|deveria|devemos|"
+                         r"quero|queremos|todo mundo sabe|ningu[eé]m|sempre|nunca|vergonha|mentir|"
+                         r"incompet|corrup)", _re.I)
+FACT_RE = _re.compile(r"\d|%|\b(lei|emenda|pec|decreto|constitui|aprov|sancion|vetou|criou|criamos|"
+                      r"fizemos|fiz |caiu|cresceu|aumentou|reduziu|recorde|maior|menor|primeir|"
+                      r"mil|milh|bilh|trilh|ibge|banco central|stf|tcu)", _re.I)
+
+
+def is_opinion(item: dict[str, Any]) -> bool:
+    """Opinião/promessa sem fato checável: não abre afirmação (só gera sem_dados e polui o placar)."""
+    txt = f"{item.get('titulo','')} {item.get('citacao','')}"
+    return not FACT_RE.search(txt) or (OPINION_RE.search(txt) and not _re.search(r"\d|%", txt))
+
+
 def _late(claim) -> bool:
     return time.perf_counter() > claim.get("_deadline", float("inf"))
 
@@ -459,6 +485,19 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
     entry = {"titulo": claim["afirmacao"], "veredito": verdict, "fontes": len(evidence),
              "judge": judged.provider, "url": url}
     res.verdicts.append(entry)
+    if verdict == "verdadeiro" and _numeric(claim) and can_call() and not _late(claim):
+        # Verdadeiro numérico também passa por um 2º checador cego: falso publicado como
+        # verdadeiro é o pior erro. Se ele não confirmar, sem_dados.
+        try:
+            chk = llm.complete(LlmRequest(task="verify", system=SYSTEM_VERIFY, user=prompt, schema=JUDGE_SCHEMA),
+                               exclude={judged.provider}, prefer=getattr(llm, "verify_order", None) or None)
+            entry.update(verify=chk.provider, verify_veredito=chk.data["veredito"])
+            if chk.data["veredito"] != "verdadeiro":
+                verdict = "sem_dados"
+        except ProviderError as exc:
+            entry["verify"] = f"erro: {exc.message[:80]}"
+            verdict = "sem_dados"
+        entry["veredito"] = verdict
     if verdict not in ("falso", "impreciso"):
         with lock:
             _publish(board, claim, verdict, motivo, title, url, evidence, entry)

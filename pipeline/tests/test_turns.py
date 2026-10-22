@@ -64,7 +64,8 @@ def test_process_turn_one_classify_call_and_judges_with_sources():
     assert "os estados fracassaram" in b.ataques[0]["resumo"]
     claim = b.claims[0]
     assert claim["literal"] == "bancarizamos 22 milhões de brasileiros"
-    assert claim["veredito"] == "verdadeiro" and claim["fonte"]["url"].startswith("https://agenciabrasil")
+    # verdadeiro numérico exige 2º checador cego; com um provedor só, vira sem_dados.
+    assert claim["veredito"] == "sem_dados"
 
 
 def test_falso_without_second_provider_stays_em_revisao():

@@ -102,7 +102,7 @@ class Settings:
                 "GEMINI_MODEL", "gemini-2.5-flash-lite"
             ).strip(),
             factcheck_key=(os.environ.get("GOOGLE_FACTCHECK_API_KEY") or os.environ.get("FACTCHECK_API_KEY") or "").strip(),
-            searxng_url=os.environ.get("SEARXNG_URL", "").strip().rstrip("/"),
+            searxng_url=os.environ.get("SEARXNG_URL", "http://127.0.0.1:8888").strip().rstrip("/"),
             brave_key=os.environ.get("BRAVE_API_KEY", "").strip(),
             ddg_enabled=os.environ.get("RETRIEVE_DDG", "1").strip() != "0",
             chunk_seconds=_float("CHUNK_SECONDS", 10.0),
