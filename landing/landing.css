@@ -179,3 +179,20 @@ h1, .h1like { font-size: clamp(30px, 7.5vw, 46px); }
 
 .lead { text-align: center; margin: 0 0 8px; }
 .lead + .bigcount { min-height: auto; margin-top: 0; padding-top: 18px; padding-bottom: 30px; }
+
+/* Versus background (top section) */
+body { position: relative; }
+.wrap { position: relative; z-index: 1; }
+.vsbg { position: absolute; left: 0; right: 0; top: 0; height: 100svh; overflow: hidden; pointer-events: none; z-index: 0;
+  background: linear-gradient(105deg, rgba(229,72,77,.5) 0 50%, transparent 50%),
+              linear-gradient(90deg, transparent 0 50%, rgba(47,191,113,.5) 50% 75%, rgba(245,211,59,.5) 75% 100%); }
+.vsbg::before { content: ""; position: absolute; inset: 0; background: rgba(8,9,10,.5); }
+.vsbg::after { content: ""; position: absolute; inset: 0; z-index: 2; background: radial-gradient(ellipse 42% 60% at 50% 45%, rgba(8,9,10,.55), transparent 75%), linear-gradient(to bottom, rgba(8,9,10,.3), transparent 25%, transparent 70%, #08090a); }
+.vsbg img { position: absolute; bottom: 0; height: min(78%, 640px); width: auto; z-index: 1; }
+.vsbg .l { left: max(-4vw, calc(50% - 760px)); }
+.vsbg .r { right: max(-14vw, calc(50% - 880px)); }
+@media (max-width: 760px) {
+  .vsbg img { height: 300px; bottom: auto; top: 150px; -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent); mask-image: linear-gradient(to bottom, #000 60%, transparent); }
+  .vsbg .l { left: -22vw; }
+  .vsbg .r { right: -44vw; }
+}
