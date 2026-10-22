@@ -11,12 +11,13 @@ function tick() {
   $("cd-d").textContent = c.d; $("cd-h").textContent = pad(c.h); $("cd-m").textContent = pad(c.m); $("cd-s").textContent = pad(c.s);
   if (c.live) {
     $("count").classList.add("hidden"); $("watch").classList.remove("hidden"); $("watch").href = window.LANDING_LIVE_URL;
-    $("pill").textContent = "Ao vivo agora"; document.body.classList.add("is-live"); $("go").textContent = "Me avise nos próximos";
+    $("pill").textContent = "Ao vivo agora"; document.body.classList.add("is-live"); $("go").textContent = "Quero o lembrete dos próximos";
   }
 }
 let shown = null;
 function showCount(n) {
   if (typeof n !== "number") return;
+  document.getElementById("subs-row").classList.toggle("hidden", n < 50);
   const el = $("subs"); const from = shown ?? n; shown = n; const t0 = performance.now();
   const step = (t) => { const k = Math.min(1, (t - t0) / 600); el.textContent = Math.round(from + (n - from) * k).toLocaleString("pt-BR"); if (k < 1) requestAnimationFrame(step); };
   requestAnimationFrame(step);

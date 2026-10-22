@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Placar da Verdade · Debate Globo ao vivo com checagem</title>
+<title>O último debate, checado frase por frase · Placar da Verdade</title>
 <meta name="description" content="Debate da Globo, sex 23/10 às 21h20 (Brasília), com checagem de fatos ao vivo. Receba o lembrete.">
 <meta property="og:image" content="../og.jpg">
 <link rel="icon" href="../favicon.svg">
@@ -13,29 +13,51 @@
 </head>
 <body>
 <main class="wrap">
-  <header class="top"><a href="../" class="brand">Placar da Verdade</a><span class="pill"><i class="dot"></i><span id="pill">Ao vivo em breve</span></span></header>
+  <header class="top"><a href="../" class="brand">Placar da Verdade</a><span class="pill"><i class="dot"></i><span id="pill">Sexta, 21h20</span></span></header>
   <section class="hero">
-    <p class="eyebrow" id="when">TV Globo · sexta, 23/10 · 21h20 (Brasília)</p>
-    <h1>O debate do 2º turno, checado ao vivo.</h1>
-    <p class="sub">Cada afirmação dos candidatos vira um veredito com fonte, em segundos, na tela. Avisamos você quando começar.</p>
+    <div class="ticket" aria-hidden="true">
+      <div class="side a"><span>Flávio Bolsonaro</span></div>
+      <svg class="gauge" viewBox="0 0 200 112"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#3b4080"/><stop offset=".5" stop-color="#5e6ad2"/><stop offset="1" stop-color="#3b4080"/></linearGradient></defs>
+        <path d="M16 100a84 84 0 0 1 168 0" fill="none" stroke="url(#g)" stroke-width="10" stroke-linecap="round" opacity=".9"/>
+        <g class="needle"><line x1="100" y1="100" x2="100" y2="30" stroke="#f7f8f8" stroke-width="3" stroke-linecap="round"/><circle cx="100" cy="100" r="6" fill="#f7f8f8"/></g></svg>
+      <div class="side b"><span>Lula</span></div>
+      <p class="tlabel">Mentirômetro ao vivo</p>
+    </div>
+    <p class="eyebrow" id="when">TV Globo · Sexta, 23/10 · 21h20 (Brasília)</p>
+    <h1>O último debate.<br>Ao vivo. Checado frase por frase.</h1>
+    <p class="sub">Flávio Bolsonaro e Lula frente a frente na Globo. Enquanto eles falam, o Mentirômetro checa cada afirmação dos dois, com a mesma régua e a fonte na tela. Você vota em tempo real e manda seu super chat.</p>
+    <ul class="perks">
+      <li><b>Verdade ou não, em segundos.</b> Cada frase vira um veredito com fonte, enquanto o debate acontece.</li>
+      <li><b>A mesma régua para os dois.</b> Os mesmos critérios e as mesmas fontes para os dois candidatos.</li>
+      <li><b>Você não só assiste.</b> Vote ao vivo e veja o placar mudar junto com quem está assistindo.</li>
+    </ul>
+    <p class="clabel">Faltam</p>
     <div class="count" id="count" aria-live="polite">
       <div><b id="cd-d">0</b><span>dias</span></div><div><b id="cd-h">00</b><span>horas</span></div>
       <div><b id="cd-m">00</b><span>min</span></div><div><b id="cd-s">00</b><span>seg</span></div>
     </div>
-    <a class="cta live hidden" id="watch" href="../?live=1">Assistir ao vivo</a>
-    <p class="subs"><b id="subs" class="mono">—</b> pessoas já pediram o lembrete</p>
+    <a class="cta live hidden" id="watch" href="../?live=1">Assistir ao vivo agora</a>
+    <p class="subs hidden" id="subs-row"><b id="subs" class="mono">—</b> pessoas já vão assistir</p>
   </section>
   <form class="card" id="form" novalidate>
-    <h2>Receber o lembrete</h2>
-    <label class="field">E-mail<input id="email" type="email" inputmode="email" autocomplete="email" placeholder="voce@exemplo.com"></label>
-    <label class="check"><input type="checkbox" id="c-email"> <span>Autorizo receber por e-mail o lembrete do debate e novidades do Placar da Verdade. Posso cancelar quando quiser (LGPD).</span></label>
+    <h2>Garanta seu lugar</h2>
+    <p class="muted small">Grátis. A gente te chama pelo WhatsApp ou e-mail minutos antes de começar.</p>
     <label class="field">WhatsApp<input id="wa" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(11) 91234-5678"></label>
     <label class="check"><input type="checkbox" id="c-wa"> <span>Quero receber o lembrete pelo WhatsApp neste número. Posso responder SAIR para parar.</span></label>
+    <label class="field">E-mail<input id="email" type="email" inputmode="email" autocomplete="email" placeholder="voce@exemplo.com"></label>
+    <label class="check"><input type="checkbox" id="c-email"> <span>Autorizo receber por e-mail o lembrete do debate e novidades do Placar da Verdade. Posso cancelar quando quiser (LGPD).</span></label>
     <p class="err" id="err" role="alert"></p>
-    <button class="cta" id="go" type="submit">Me avise</button>
-    <p class="fine muted">Usamos seus dados só para avisar sobre o debate. Não vendemos nem compartilhamos.</p>
+    <button class="cta" id="go" type="submit">Quero o lembrete</button>
+    <p class="fine muted">Só usamos seus dados para avisar sobre o debate. Não vendemos nem compartilhamos.</p>
   </form>
-  <div class="card ok hidden" id="done"><h2>Pronto!</h2><p id="done-msg">Você vai receber o lembrete.</p><a href="../">Ver o placar →</a></div>
+  <div class="card ok hidden" id="done"><h2>Lugar garantido.</h2><p id="done-msg">Você vai receber o lembrete.</p><a href="../">Ver como o placar funciona →</a></div>
+  <section class="faq">
+    <h2>Perguntas rápidas</h2>
+    <details><summary>É grátis?</summary><p>Sim. Assistir, votar e receber o lembrete não custa nada. O super chat é opcional.</p></details>
+    <details><summary>É imparcial?</summary><p>Usamos os mesmos critérios para os dois candidatos. A gente checa o que é dito, não quem diz. Cada veredito mostra a fonte para você conferir.</p></details>
+    <details><summary>Como vocês checam?</summary><p>A fala é transcrita ao vivo e dividida em afirmações. Cada uma é comparada com dados oficiais e checagens profissionais já publicadas. Quando não há dado confiável, aparece "sem dados", nunca um chute.</p></details>
+    <details><summary>Quais fontes?</summary><p>Órgãos oficiais (IBGE, Banco Central, ministérios, TSE) e agências de checagem profissionais. O link da fonte aparece junto com cada veredito.</p></details>
+  </section>
 </main>
 <script type="module" src="./landing.mjs"></script>
 </body>
