@@ -15,6 +15,7 @@ from typing import Any
 import numpy as np
 
 from placar.audio import chunk_windows, cut_chunk
+from placar.transcribe import TranscriptSegment
 from placar.board import Board
 from placar.llm.router import ProviderRouter
 from placar.retrieve import Retriever
@@ -62,6 +63,7 @@ def run(
     max_claims_per_turn: int = 3,
     chunk_source: Any = None,
     silence_flush_s: float = 3.0,
+    transcripts_db: Any = "default",
 ) -> dict[str, Any]:
     """turn_max_s: junta segmentos seguidos do mesmo candidato num turno
     (uma chamada de classificação por turno, não por frase). max_llm_calls:
@@ -71,8 +73,11 @@ def run(
 
     duration = sf.info(str(wav)).duration if chunk_source is None else 0.0
     profiles = load_profiles(voices, list(slot_of_voice))
+    from placar.transcripts_db import TranscriptDB
+
+    tdb = TranscriptDB() if transcripts_db == "default" else transcripts_db  # None = não grava
     stt = transcriber or FasterWhisperTranscriber(model_name=whisper_model)
-    if isinstance(stt, FasterWhisperTranscriber):
+    if isinstance(stt, FasterWhisperTranscriber) and not (tdb and tdb.has(debate_id, 0)):
         stt.transcribe(_silence(out))  # aquece o modelo fora do relógio
     embed(np.zeros(16000, dtype="float32"))
     if __import__("os").environ.get("PLACAR_OFFICIAL", "1") != "0":
@@ -147,6 +152,9 @@ def run(
                 if wait > 0:
                     time.sleep(wait)
                 c0 = time.perf_counter()
+                if tdb is not None and tdb.has(debate_id, index):  # já transcrito: não corta nem transcreve
+                    yield index, start, length, None, ready_at, 0.0
+                    continue
                 dest = cut_chunk(str(wav), out / "chunks" / f"chunk_{index:04d}.wav", start_s=start, duration_s=length)
                 yield index, start, length, dest, ready_at, (time.perf_counter() - c0) * 1000
 
@@ -159,51 +167,84 @@ def run(
         if ready_at is None:  # ao vivo: o bloco acabou de chegar
             ready_at = t_ready - wall0
         c0 = time.perf_counter()
-        segments = stt.transcribe(dest)
-        if number_stt is not None and any(has_number(x.text) for x in segments):
+        cached = tdb.chunk_rows(debate_id, index) if (tdb is not None and tdb.has(debate_id, index)) else None
+        if cached is not None:
+            tdb.reused += 1
+            cached = [r for r in cached if r["owned"]]
+            segments = [TranscriptSegment(r["rel_start"], r["rel_end"], r["text"]) for r in cached]
+        else:
+            segments = stt.transcribe(dest)
+        first_pass = list(segments)
+        number_text = ""
+        if cached is None and number_stt is not None and any(has_number(x.text) for x in segments):
             try:
-                segments, fixes = reconcile_numbers(segments, number_stt.transcribe(dest))
+                second = number_stt.transcribe(dest)
+                number_text = " ".join(x.text for x in second)
+                segments, fixes = reconcile_numbers(segments, second)
                 for fx in fixes:
                     numfix.append({"t_s": round(offset_s + start + fx["start_s"], 1), **fx})
             except Exception as exc:  # noqa: BLE001 - segunda passada é opcional
                 numfix.append({"t_s": round(offset_s + start, 1), "erro": str(exc)[:120]})
         stt_ms = (time.perf_counter() - c0) * 1000
-        audio, _sr = sf.read(str(dest), dtype="float32")
+        audio = None if cached is not None else sf.read(str(dest), dtype="float32")[0]
         spk_ms = llm_ms = 0.0
         new = 0
-        for seg in segments:
+        db_rows: list[dict[str, Any]] = []
+        for k_seg, seg in enumerate(segments):
+            fp = first_pass[k_seg].text if len(first_pass) == len(segments) else None
+            db_rows.append({"t_start": round(offset_s + start + seg.start_s, 2), "t_end": round(offset_s + start + seg.end_s, 2),
+                            "rel_start": seg.start_s, "rel_end": seg.end_s, "text": seg.text, "text_first_pass": fp,
+                            "owned": 0})
+            db_row = db_rows[-1]
             # Cada bloco é dono de [início + sobreposição/2, fim - sobreposição/2]:
             # um segmento só sai no bloco que contém o seu meio. Assim a fala
             # na sobreposição de 2 s não aparece duas vezes.
-            mid = (seg.start_s + seg.end_s) / 2
-            own_from = overlap_s / 2 if index > 0 else -1.0
-            own_to = length - overlap_s / 2 if index != last_index else length + 1.0
-            if not (own_from <= mid < own_to):
-                continue
-            text = dedupe_overlap(prev_tail, seg.text) if index > 0 and seg.start_s < overlap_s + 0.5 else seg.text
-            if not text:
-                continue
-            prev_tail = text
-            new += 1
-            c0 = time.perf_counter()
-            piece = audio[int(seg.start_s * 16000): int(seg.end_s * 16000)]
-            if len(piece) >= 16000:
-                voice, scores = label(embed(piece), profiles, threshold)
-                # Trecho curto/ruidoso abaixo do limiar: se o mais parecido é quem
-                # já estava falando, continua com ele (no teste: 6 de 147, todos certos).
-                if voice == "unknown" and scores:
-                    best = max(scores, key=scores.get)
-                    if best == last_voice and scores[best] >= threshold - 0.15:
-                        voice = best
+            if cached is not None:  # do banco: já é a fala do dono do bloco, com voz identificada
+                row = cached[k_seg]
+                text, voice, scores = seg.text, row["speaker"], json.loads(row["scores"] or "{}")
+                db_row.update(owned=1, speaker=voice)
+                prev_tail = text
+                new += 1
+                c0 = time.perf_counter()
+                if voice == "sobreposta":
+                    crosstalk.append({"t_s": round(offset_s + start + seg.start_s, 1), "scores": scores, "text": text})
+                    transcript.append({"t_s": round(offset_s + start + seg.start_s, 2), "dur_s": round(seg.end_s - seg.start_s, 2),
+                                       "voz": "sobreposta", "slot": "sobreposta", "scores": scores, "text": text})
+                    continue
             else:
-                voice, scores = last_voice, {}
-            if is_crosstalk(scores, threshold, crosstalk_margin, slot_of_voice):
-                # Dois rostos de voz quase empatados: fala sobreposta. Não atribui a ninguém.
-                crosstalk.append({"t_s": round(offset_s + start + seg.start_s, 1), "scores": scores, "text": text})
-                transcript.append({"t_s": round(offset_s + start + seg.start_s, 2), "dur_s": round(seg.end_s - seg.start_s, 2),
-                                   "voz": "sobreposta", "slot": "sobreposta", "scores": scores, "text": text})
-                spk_ms += (time.perf_counter() - c0) * 1000
-                continue
+                mid = (seg.start_s + seg.end_s) / 2
+                own_from = overlap_s / 2 if index > 0 else -1.0
+                own_to = length - overlap_s / 2 if index != last_index else length + 1.0
+                if not (own_from <= mid < own_to):
+                    continue
+                text = dedupe_overlap(prev_tail, seg.text) if index > 0 and seg.start_s < overlap_s + 0.5 else seg.text
+                if not text:
+                    continue
+                db_row.update(owned=1, text=text)
+                prev_tail = text
+                new += 1
+                c0 = time.perf_counter()
+                piece = audio[int(seg.start_s * 16000): int(seg.end_s * 16000)]
+                if len(piece) >= 16000:
+                    voice, scores = label(embed(piece), profiles, threshold)
+                    # Trecho curto/ruidoso abaixo do limiar: se o mais parecido é quem
+                    # já estava falando, continua com ele (no teste: 6 de 147, todos certos).
+                    if voice == "unknown" and scores:
+                        best = max(scores, key=scores.get)
+                        if best == last_voice and scores[best] >= threshold - 0.15:
+                            voice = best
+                else:
+                    voice, scores = last_voice, {}
+                db_row.update(speaker=voice, scores=scores, confidence=max(scores.values()) if scores else None,
+                              slot=slot_of_voice.get(voice, "other"))
+                if is_crosstalk(scores, threshold, crosstalk_margin, slot_of_voice):
+                    db_row.update(speaker="sobreposta", slot="sobreposta")
+                    # Dois rostos de voz quase empatados: fala sobreposta. Não atribui a ninguém.
+                    crosstalk.append({"t_s": round(offset_s + start + seg.start_s, 1), "scores": scores, "text": text})
+                    transcript.append({"t_s": round(offset_s + start + seg.start_s, 2), "dur_s": round(seg.end_s - seg.start_s, 2),
+                                       "voz": "sobreposta", "slot": "sobreposta", "scores": scores, "text": text})
+                    spk_ms += (time.perf_counter() - c0) * 1000
+                    continue
             last_voice = voice
             spk_ms += (time.perf_counter() - c0) * 1000
             slot = slot_of_voice.get(voice, "other")
@@ -227,9 +268,15 @@ def run(
         if turn and (turn["dur_s"] >= turn_max_s
                      or (start + length) - turn["end_audio_s"] >= silence_flush_s):
             llm_ms += flush()
+        if tdb is not None and cached is None:  # grava o bloco já, antes de seguir (retomável)
+            tdb.put_chunk(debate_id, index, start_s=offset_s + start, len_s=length, rows=db_rows,
+                          stt_model=getattr(stt, "model_name", "") or whisper_model,
+                          number_model=getattr(number_stt, "model_name", "") if number_stt else "",
+                          number_text=number_text)
+            tdb.written += 1
         write_board()
         done = time.perf_counter()
-        stt_name = getattr(stt, "last_provider", "") or getattr(stt, "name", "local")
+        stt_name = "db" if cached is not None else (getattr(stt, "last_provider", "") or getattr(stt, "name", "local"))
         chunks.append({"chunk": index, "stt": stt_name, "start_s": start, "len_s": length, "segments": new,
                        "capture_ms": round(capture_ms), "stt_ms": round(stt_ms), "speaker_ms": round(spk_ms),
                        "llm_ms": round(llm_ms), "delay_after_chunk_end_s": round(done - t_ready, 2),
@@ -251,7 +298,8 @@ def run(
                           "items": res.items if res else 0, "error": (res.error if res else item["error"]),
                           "text": job["text"]})
     (out / "events.jsonl").write_text("".join(json.dumps(e, ensure_ascii=False) + "\n" for e in board.events), encoding="utf-8")
-    report = {"numeros_conferidos": numfix, "fala_sobreposta": crosstalk, "llm_turns": llm_turns, "llm_budget_hit": budget_hit, "audio_s": duration, "whisper_model": whisper_model, "speed": speed, "chunks": chunks,
+    report = {"transcripts_db": {"path": str(tdb.path), "reused_chunks": tdb.reused, "new_chunks": tdb.written} if tdb else None,
+              "numeros_conferidos": numfix, "fala_sobreposta": crosstalk, "llm_turns": llm_turns, "llm_budget_hit": budget_hit, "audio_s": duration, "whisper_model": whisper_model, "speed": speed, "chunks": chunks,
               "retrieval_requests": getattr(getattr(retriever, "_ddg", None), "requests", 0),
               "searx_requests": getattr(retriever, "searx_requests", 0),
               "searx_failures": getattr(retriever, "searx_failures", 0),

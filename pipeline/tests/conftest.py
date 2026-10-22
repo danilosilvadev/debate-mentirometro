@@ -28,3 +28,8 @@ def _short_turns_ok(monkeypatch):
 @pytest.fixture(autouse=True)
 def _offline_official(monkeypatch):
     monkeypatch.setenv("PLACAR_OFFICIAL", "0")
+
+
+@pytest.fixture(autouse=True)
+def _tmp_transcripts_db(monkeypatch, tmp_path):
+    monkeypatch.setenv("PLACAR_TRANSCRIPTS_DB", str(tmp_path / "transcripts.sqlite"))
