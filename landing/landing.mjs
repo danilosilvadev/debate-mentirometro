@@ -6,9 +6,16 @@ const hdr = { apikey: SB.key, Authorization: `Bearer ${SB.key}`, "Content-Type":
 const pad = (n) => String(n).padStart(2, "0");
 const cid = localStorage.lp_cid || (localStorage.lp_cid = crypto.randomUUID());
 
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function setD(id, v) {
+  const el = $(id); if (el.dataset.v === v) return;
+  const old = el.dataset.v || ""; el.dataset.v = v;
+  el.innerHTML = [...v].map((ch, i) => (!RM && old && old[i] !== ch && old.length === v.length)
+    ? `<i class="dg roll"><em>${old[i]}</em><em>${ch}</em></i>` : `<i class="dg"><em>${ch}</em></i>`).join("");
+}
 function tick() {
   const c = countdown(START, Date.now());
-  $("cd-d").textContent = c.d; $("cd-h").textContent = pad(c.h); $("cd-m").textContent = pad(c.m); $("cd-s").textContent = pad(c.s);
+  setD("cd-d", String(c.d)); setD("cd-h", pad(c.h)); setD("cd-m", pad(c.m)); setD("cd-s", pad(c.s));
   if (c.live) {
     $("count").classList.add("hidden"); $("watch").classList.remove("hidden"); $("watch").href = window.LANDING_LIVE_URL;
     $("pill").textContent = "Ao vivo agora"; document.body.classList.add("is-live"); $("go").textContent = "Quero o lembrete dos próximos";
