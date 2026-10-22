@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { clock, itemSecond, lineAt, mmss, signatureAt, snapshotAt } from '../js/replay.mjs'
+import { captionClaim, clock, itemSecond, lineAt, mmss, signatureAt, snapshotAt } from '../js/replay.mjs'
 
 const data = {
   video: { id: 'RugVB17uRVM', t0: 1000 },
@@ -74,5 +74,33 @@ test('replay não desenha iframe dentro do placar (o player fica fora e não é 
   const html = renderBoard({ snapshot: snapshotAt(data, 770), replay: data, replaySec: 770, replayLine: lineAt(data, 765), filter: {}, fresh: new Set(), mode: 'live', now: 0 })
   assert.ok(!html.includes('<iframe'))
   assert.ok(!html.includes('id="ytreplay"'))
-  assert.ok(html.includes('REPLAY') && html.includes('O PT já governa'))
+  assert.ok(html.includes('REPLAY') && html.includes('PT 20/24'))
+  assert.ok(!html.includes('O PT já governa'), 'legenda não mostra transcrição crua')
+})
+
+test('legenda: checando até vv, some se chegou depois de 15 s', () => {
+  const d = {
+    legenda_max_s: 15, candidatos: { 1: { nome: 'Lula' } },
+    fatos: [{ tema: 'x', declaracoes: [
+      { id: 'c1', t: 0, quem: '1', veredito: 'falso', vs: 100, va: 108, vv: 115, lat: 8, afirmacao: 'Rápida' },
+      { id: 'c2', t: 0, quem: '1', veredito: 'verdadeiro', vs: 200, va: 230, vv: 240, lat: 30, afirmacao: 'Lenta' },
+    ] }],
+  }
+  assert.equal(captionClaim(d, 107), null)
+  assert.equal(captionClaim(d, 108).id, 'c1')
+  assert.equal(snapshotAt(d, 110).fatos[0].declaracoes[0].veredito, 'checando')
+  assert.equal(snapshotAt(d, 110).candidatos[1].falso, 0)
+  assert.equal(snapshotAt(d, 116).candidatos[1].falso, 1)
+  assert.equal(captionClaim(d, 235), null) // lenta: só na lista
+  assert.equal(snapshotAt(d, 235).fatos[0].declaracoes.length, 2)
+})
+
+test('cartão vira uma vez de checando para veredito', async () => {
+  const { flipState } = await import('../js/placar.mjs')
+  const memo = new Map()
+  assert.equal(flipState('k', true, 0, memo).face, 'front')
+  assert.equal(flipState('k', false, 1000, memo).face, 'flip')
+  assert.equal(flipState('k', false, 1500, memo).delay, 500)
+  assert.equal(flipState('k', false, 3000, memo).face, 'back')
+  assert.equal(flipState('z', false, 0, memo).face, 'back') // já chegou pronto: sem animação
 })

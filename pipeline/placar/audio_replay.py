@@ -7,6 +7,7 @@ de parede chega a s+10 (dividido pela velocidade). Mede atraso por etapa.
 from __future__ import annotations
 
 import json
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -52,7 +53,10 @@ def run(
     video_id: str = "",
     transcriber: Any = None,
     offset_s: float = 0.0,
-    turn_max_s: float = 45.0,
+    turn_max_s: float = 14.0,
+    turn_min_s: float = 5.0,
+    number_stt: Any = None,
+    crosstalk_margin: float = 0.04,
     max_llm_calls: int = 0,
     llm_workers: int = 2,
     max_claims_per_turn: int = 2,
@@ -75,6 +79,8 @@ def run(
     board = Board(debate_id=debate_id, candidatos=candidatos, origin_ms=origin,
                   video={"id": video_id, "ao_vivo": True, "inicio": 0, "t0": origin, "comeco": origin},
                   aviso="Teste em modo dev. Não é o placar publicado.")
+    numfix: list[dict[str, Any]] = []
+    crosstalk: list[dict[str, Any]] = []
     out.mkdir(parents=True, exist_ok=True)
     transcript, chunks = [], []
     wall0 = time.perf_counter()
@@ -85,13 +91,19 @@ def run(
     budget_hit = False
 
     lock = threading.Lock()
+    write_lock = threading.Lock()
+
+    def now_v() -> float:
+        return round(offset_s + (time.perf_counter() - wall0) * (speed or 1), 1)
 
     def write_board() -> None:
         with lock:
             snap = board.snapshot()
-        tmp = out / "placar.json.tmp"
+        # vários threads escrevem (laço principal e juízes): arquivo temporário por thread
+        tmp = out / f"placar.json.{threading.get_ident()}.tmp"
         tmp.write_text(json.dumps(snap, ensure_ascii=False, indent=2), encoding="utf-8")
-        tmp.replace(out / "placar.json")
+        with write_lock:
+            tmp.replace(out / "placar.json")
 
     def can_call() -> bool:
         nonlocal budget_hit
@@ -116,6 +128,7 @@ def run(
             worker.submit({"t_ms": origin + int(turn["t_s"] * 1000), "quem": turn["slot"],
                            "dur_s": turn["dur_s"], "text": turn["text"], "t_s": turn["t_s"],
                            "antes": _context_before(transcript, offset_s + turn["t_s"]),
+                           "clock": turn.get("clock"), "end_v": round(offset_s + turn["end_audio_s"], 1),
                            "speech_end_wall": turn.get("end_wall", wall0 + turn["end_audio_s"] / (speed or 1))})
         turn = None
         return (time.perf_counter() - t0) * 1000
@@ -144,6 +157,13 @@ def run(
             ready_at = t_ready - wall0
         c0 = time.perf_counter()
         segments = stt.transcribe(dest)
+        if number_stt is not None and any(has_number(x.text) for x in segments):
+            try:
+                segments, fixes = reconcile_numbers(segments, number_stt.transcribe(dest))
+                for fx in fixes:
+                    numfix.append({"t_s": round(offset_s + start + fx["start_s"], 1), **fx})
+            except Exception as exc:  # noqa: BLE001 - segunda passada é opcional
+                numfix.append({"t_s": round(offset_s + start, 1), "erro": str(exc)[:120]})
         stt_ms = (time.perf_counter() - c0) * 1000
         audio, _sr = sf.read(str(dest), dtype="float32")
         spk_ms = llm_ms = 0.0
@@ -174,6 +194,13 @@ def run(
                         voice = best
             else:
                 voice, scores = last_voice, {}
+            if is_crosstalk(scores, threshold, crosstalk_margin, slot_of_voice):
+                # Dois rostos de voz quase empatados: fala sobreposta. Não atribui a ninguém.
+                crosstalk.append({"t_s": round(offset_s + start + seg.start_s, 1), "scores": scores, "text": text})
+                transcript.append({"t_s": round(offset_s + start + seg.start_s, 2), "dur_s": round(seg.end_s - seg.start_s, 2),
+                                   "voz": "sobreposta", "slot": "sobreposta", "scores": scores, "text": text})
+                spk_ms += (time.perf_counter() - c0) * 1000
+                continue
             last_voice = voice
             spk_ms += (time.perf_counter() - c0) * 1000
             slot = slot_of_voice.get(voice, "other")
@@ -187,7 +214,11 @@ def run(
             turn["dur_s"] += seg.end_s - seg.start_s
             turn["end_audio_s"] = start + seg.end_s
             turn["end_wall"] = t_ready  # chegada do bloco: mede atraso real mesmo se a captura atrasar
+            turn["clock"] = (t_ready, offset_s + start + length, speed or 1)
             turn["text"] = (turn["text"] + " " + text).strip()
+            # Frase completa e turno já com alguns segundos: manda já (afirmação em até ~15 s).
+            if turn["dur_s"] >= turn_min_s and turn["text"].rstrip().endswith((".", "?", "!")):
+                llm_ms += flush()
         # turno que já passou de turn_max_s, ou cuja voz calou há mais de
         # `silence_flush_s` no fim do bloco, sai sem esperar a próxima fala
         if turn and (turn["dur_s"] >= turn_max_s
@@ -217,7 +248,7 @@ def run(
                           "items": res.items if res else 0, "error": (res.error if res else item["error"]),
                           "text": job["text"]})
     (out / "events.jsonl").write_text("".join(json.dumps(e, ensure_ascii=False) + "\n" for e in board.events), encoding="utf-8")
-    report = {"llm_turns": llm_turns, "llm_budget_hit": budget_hit, "audio_s": duration, "whisper_model": whisper_model, "speed": speed, "chunks": chunks,
+    report = {"numeros_conferidos": numfix, "fala_sobreposta": crosstalk, "llm_turns": llm_turns, "llm_budget_hit": budget_hit, "audio_s": duration, "whisper_model": whisper_model, "speed": speed, "chunks": chunks,
               "retrieval_requests": getattr(getattr(retriever, "_ddg", None), "requests", 0),
               "searx_requests": getattr(retriever, "searx_requests", 0),
               "searx_failures": getattr(retriever, "searx_failures", 0),
@@ -299,3 +330,52 @@ def _context_before(transcript: list[dict[str, Any]], t_s: float, max_chars: int
     lines = [x for x in transcript if x["t_s"] < t_s - 0.05][-8:]
     text = " ".join(f"[{x.get('voz', '?')}] {x['text']}" for x in lines)
     return text[-max_chars:]
+
+
+_NUM_RE = re.compile(r"\d|\b(?:mil|milh|bilh|trilh|por cento|dez|vinte|trinta|cem)\w*", re.I)
+
+
+def has_number(text: str) -> bool:
+    return bool(_NUM_RE.search(text or ""))
+
+
+def reconcile_numbers(primary, secondary):
+    """Segunda transcrição (modelo maior) para blocos com números. Para cada segmento
+    do primário com número, pega o segmento do secundário que mais se sobrepõe no tempo;
+    se os números diferem, fica o texto do secundário e registra a divergência."""
+    from placar.claim_bank import numbers
+    from placar.transcribe import TranscriptSegment
+
+    out, fixes = [], []
+    for seg in primary:
+        if not has_number(seg.text):
+            out.append(seg)
+            continue
+        best, best_ov = None, 0.0
+        for alt in secondary:
+            ov = min(seg.end_s, alt.end_s) - max(seg.start_s, alt.start_s)
+            if ov > best_ov:
+                best, best_ov = alt, ov
+        if best is None or best_ov < 0.3 * (seg.end_s - seg.start_s):
+            out.append(seg)
+            continue
+        a, b = numbers(seg.text), numbers(best.text)
+        if a != b:
+            fixes.append({"start_s": round(seg.start_s, 1), "turbo": seg.text, "v3": best.text,
+                          "num_turbo": sorted(a), "num_v3": sorted(b)})
+            out.append(TranscriptSegment(start_s=seg.start_s, end_s=seg.end_s, text=best.text))
+        else:
+            out.append(seg)
+    return out, fixes
+
+
+def is_crosstalk(scores: dict[str, float], threshold: float, margin: float, slot_of_voice: dict[str, str]) -> bool:
+    """Os dois perfis mais parecidos, de pessoas diferentes (ao menos um candidato),
+    ambos perto do limiar e separados por menos de `margin`."""
+    if len(scores) < 2:
+        return False
+    (v1, s1), (v2, s2) = sorted(scores.items(), key=lambda kv: -kv[1])[:2]
+    slots = {slot_of_voice.get(v1, "other"), slot_of_voice.get(v2, "other")}
+    if slots == {"other"} or len(slots) < 2:
+        return False
+    return s2 >= threshold - 0.05 and (s1 - s2) < margin

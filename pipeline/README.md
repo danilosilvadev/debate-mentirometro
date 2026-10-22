@@ -214,3 +214,34 @@ Teste sem rede de LLM: `--mock`. Ensaio com VOD no relógio real: `--url <vod> -
 ```
 
 Tipos: `claim.created`, `claim.updated`, `proposta.created`, `proposta.incremented`, `ataque.created`, `score.updated`, `debate.status`.
+
+## Interação do público (votos, e-mail, super chat)
+
+- Banco: projeto Supabase `debate-mentirometro` (sa-east-1). Esquema em `supabase/001_interacao.sql`
+  (RPCs `cast_vote`, `subscribe_email`, `create_superchat`, `mod_pending`, `mod_decide`, `export_events`).
+  O site usa só a chave publicável (config.js); e-mails e cliques ficam no esquema `private`.
+- Limites: votos 30 por navegador e 300 por IP a cada 10 s (servidor) + 6 toques/s no navegador;
+  super chat 2 por minuto por navegador, 140 caracteres, R$ 2–1.000.
+- Pagamento: `PLACAR_PAY_PROVIDER = "mock"` (nada é cobrado, rotulado "teste"). Stripe/Mercado Pago
+  precisam de servidor com webhook; `create_superchat` recusa provedor diferente de `mock` até isso existir.
+- Moderação (rodar durante o debate, ao lado do pipeline):
+
+      PLACAR_MOD_TOKEN_FILE=/workspace/secrets/placar_mod_token \
+      SUPABASE_URL=https://igpkunwxmtopdqtbsuso.supabase.co SUPABASE_KEY=<publicável> \
+      python -m placar.superchat
+
+  Regras locais (links, palavrões, tamanho) e depois Groq `openai/gpt-oss-20b`. Só `aprovado` aparece.
+- Depois do debate, eventos para o replay: `python -m placar.events_export <out> globo-2026-10-23`
+  (mesmas variáveis). `--mock` gera eventos simulados, rotulados, para teste.
+- Antes do debate, zerar os totais de teste: `update public.vote_totals set n = 0;`
+
+## Legenda e checagem rápida
+
+- A legenda mostra só resumos de afirmações (quem + uma linha), primeiro "Checando…", depois vira
+  (cartão 3D) para o veredito. Afirmação que aparece mais de 15 s depois de dita vai só para a lista.
+- Turnos saem no fim de frase com 5+ s (máx. 14 s). Fala sobreposta (dois perfis de voz quase
+  empatados) não é atribuída a ninguém.
+- Banco de checagens (`placar/data/claim_bank.json`): afirmação repetida com os mesmos números
+  e orador recebe na hora o veredito do checador profissional. `PLACAR_BANK=0` desliga.
+- Blocos com números passam por uma 2ª transcrição (`whisper-large-v3`); se os números
+  divergem, vale a do modelo maior (`numeros_conferidos` no latency_report.json).

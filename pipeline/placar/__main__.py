@@ -52,6 +52,8 @@ def main(argv: list[str] | None = None) -> int:
     run_cmd.add_argument("--speed", type=float, default=1.0, help="Só com --wav: 1 = tempo real, 2 = dobro")
     run_cmd.add_argument("--mock", action="store_true", help="LLM fictício (sem rede)")
     run_cmd.add_argument("--retries", type=int, default=5)
+    run_cmd.add_argument("--no-number-pass", action="store_true", help="Desliga a 2ª transcrição de trechos com números")
+
 
     args = parser.parse_args(argv)
     if args.cmd == "run":
@@ -117,6 +119,15 @@ def _live(args: argparse.Namespace) -> int:
     return 0
 
 
+def _number_stt(settings, args):
+    """whisper-large-v3 (não turbo) na Groq, só para blocos com números."""
+    if args.no_number_pass or getattr(settings, "stt_provider", "") != "groq" or not settings.groq_key:
+        return None
+    from placar.transcribe import GroqWhisperTranscriber
+
+    return GroqWhisperTranscriber(api_key=settings.groq_key, model="whisper-large-v3", timeout_s=settings.groq_timeout_s)
+
+
 def _run(args: argparse.Namespace) -> int:
     import logging
 
@@ -153,7 +164,7 @@ def _run(args: argparse.Namespace) -> int:
                  chunk_s=settings.chunk_seconds, overlap_s=settings.chunk_overlap_seconds,
                  debate_id=args.debate_id, video_id=args.video_id,
                  transcriber=build_transcriber(settings), offset_s=args.start, chunk_source=source,
-                 speed=args.speed)
+                 speed=args.speed, number_stt=_number_stt(settings, args))
     from placar.replay_data import write as write_replay
 
     write_replay(args.out, offset_s=args.start)  # itens: t relativo ao início do áudio; transcript já em s do vídeo

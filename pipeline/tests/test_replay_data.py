@@ -16,4 +16,4 @@ def test_build_places_items_at_quote_time_and_keeps_lines():
     assert out["propostas"][0]["vs"] == 340.0  # sem citação achada: início do turno
     assert out["ataques"][0]["vs"] == 770.7
     assert out["replay"] == {"video": "v", "inicio": 340, "fim": 770.7}
-    assert len(out["linhas"]) == 3 and out["linhas"][1]["quem"] == "2"
+    assert "linhas" not in out and out["legenda_max_s"] == 15.0

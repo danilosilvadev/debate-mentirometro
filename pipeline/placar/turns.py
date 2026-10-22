@@ -116,6 +116,30 @@ class TurnResult:
     error: str = ""
 
 
+import os as _os
+
+from placar.claim_bank import ClaimBank
+
+_BANK: ClaimBank | None = None
+
+
+def claim_bank() -> ClaimBank:
+    """PLACAR_BANK=0 desliga (para medir a precisão sem o banco)."""
+    global _BANK
+    if _BANK is None:
+        _BANK = ClaimBank.load() if _os.environ.get("PLACAR_BANK", "1") != "0" else ClaimBank([])
+    return _BANK
+
+
+def _now_v(turn: dict[str, Any]) -> float | None:
+    """Segundo do vídeo/áudio 'agora': clock = (perf_counter de referência, segundo do áudio nele, velocidade)."""
+    clock = turn.get("clock")
+    if not clock:
+        return None
+    wall, audio_s, speed = clock
+    return round(audio_s + (time.perf_counter() - wall) * (speed or 1), 1)
+
+
 def process_turn(
     board: Board,
     turn: dict[str, Any],
@@ -177,6 +201,12 @@ def process_turn(
                     contexto=item.get("busca") or "", literal=quote, t_ms=t_ms,
                 )
                 claim["_turno"] = text[-700:]
+                claim["_job"] = turn
+                va = _now_v(turn)
+                if va is not None:
+                    claim["va"] = va
+                    if turn.get("end_v") is not None:
+                        claim["lat"] = round(va - turn["end_v"], 1)
                 claim["_antes"] = (turn.get("antes") or "")[-400:]
                 claims.append((claim, item))
         board.note_score()
@@ -188,6 +218,25 @@ def process_turn(
 
 
 def _judge(board, claim, item, llm, retriever, lock, res, can_call) -> None:
+    try:
+        _judge_inner(board, claim, item, llm, retriever, lock, res, can_call)
+    finally:
+        vv = _now_v(claim.get("_job") or {})
+        if vv is not None and claim.get("vv") is None:
+            claim["vv"] = vv
+
+
+def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> None:
+    hit = claim_bank().match(board.nomes.get(claim["quem"], ""), claim["afirmacao"], claim["literal"])
+    if hit:
+        with lock:
+            board.set_verdict(claim, veredito=hit["veredito"], motivo=hit["motivo"],
+                              fonte_titulo=hit["fonte"], fonte_url=hit["url"])
+            claim["banco"] = hit["fonte"]
+            board.note_score()
+        res.verdicts.append({"titulo": claim["afirmacao"], "veredito": hit["veredito"], "banco": hit["frase"],
+                             "score": hit["score"], "publicado": claim["veredito"]})
+        return
     started = time.perf_counter()
     evidence = []
     seen: set[str] = set()

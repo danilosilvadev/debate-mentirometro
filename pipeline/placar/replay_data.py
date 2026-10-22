@@ -1,5 +1,5 @@
 """Dados de replay: cada item do placar ganha `vs` (segundo do vídeo-fonte em que a frase
-foi dita) e o arquivo leva as falas transcritas (`linhas`) para a legenda.
+foi dita) `va` (quando apareceu), `vv` (quando o veredito saiu) e `lat` (va - vs).
 
 O site, em ?replay=<id>, mostra só o que tem `vs` <= tempo atual do player.
 """
@@ -11,6 +11,9 @@ import re
 import unicodedata
 from pathlib import Path
 from typing import Any
+
+
+CAPTION_MAX_S = 15.0  # afirmação que chega depois disso só entra na lista, não na legenda
 
 
 def _words(text: str) -> list[str]:
@@ -55,6 +58,12 @@ def build(snapshot: dict[str, Any], transcript: list[dict[str, Any]], *, offset_
     for group in out.get("fatos") or []:
         for claim in group.get("declaracoes") or []:
             place(claim, claim.get("literal") or claim.get("afirmacao") or "")
+            if claim.get("va") is not None:
+                # atraso real: do fim da frase até a afirmação aparecer no placar
+                claim["va"] = max(claim["va"], claim["vs"])
+                claim["lat"] = round(claim["va"] - claim["vs"], 1)
+            if claim.get("vv") is not None:
+                claim["vv"] = max(claim["vv"], claim.get("va", claim["vs"]))
     for prop in out.get("propostas") or []:
         place(prop, prop.get("explicacao") or prop.get("titulo") or "")
     for atk in out.get("ataques") or []:
@@ -62,7 +71,8 @@ def build(snapshot: dict[str, Any], transcript: list[dict[str, Any]], *, offset_
         place(atk, quote.group(1) if quote else atk.get("resumo") or "")
     out["replay"] = {"video": (snapshot.get("video") or {}).get("id", ""), "inicio": offset_s,
                      "fim": lines[-1]["e"] if lines else offset_s}
-    out["linhas"] = lines
+    # Sem legenda crua: a legenda do site mostra só resumos de afirmações.
+    out["legenda_max_s"] = CAPTION_MAX_S
     return out
 
 

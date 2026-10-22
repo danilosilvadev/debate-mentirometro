@@ -108,6 +108,7 @@ class Board:
         t_ms: int,
     ) -> dict[str, Any]:
         claim = {
+            "id": f"c{len(self.claims) + 1}",
             "t": t_ms,
             "quem": quem,
             "tema": tema.strip() or "geral",
@@ -263,6 +264,7 @@ class Board:
 
 def _public_claim(claim: dict[str, Any]) -> dict[str, Any]:
     body = {
+        "id": claim.get("id", ""),
         "t": claim["t"],
         "quem": claim["quem"],
         "afirmacao": claim["afirmacao"],
@@ -275,6 +277,9 @@ def _public_claim(claim: dict[str, Any]) -> dict[str, Any]:
         body["fonte"] = claim["fonte"]
     if claim.get("corrigido"):
         body["corrigido"] = claim["corrigido"]
+    for key in ("va", "vv", "lat", "banco"):
+        if claim.get(key) is not None:
+            body[key] = claim[key]
     return body
 
 
