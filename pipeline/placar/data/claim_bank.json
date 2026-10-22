@@ -1,39 +1,501 @@
-{"_sobre": "Afirmações já checadas por checadores profissionais (debate Band 18/10/2026 e audit interno). Usadas para veredito instantâneo quando a mesma afirmação reaparece. Falso/impreciso continuam passando pela aprovação humana.",
+{
+ "_sobre": "Afirmações já checadas por checadores profissionais (debate Band 18/10/2026 e audit interno). Usadas para veredito instantâneo quando a mesma afirmação reaparece. Falso/impreciso continuam passando pela aprovação humana.",
  "itens": [
-  {"quem": "lula", "frase": "primeiro presidente a conseguir dois graus de investimento", "veredito": "verdadeiro", "motivo": "Fitch e S&P deram grau de investimento em 2008 e a Moody's em 2009, no 2º mandato de Lula.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "PIB Brasil cresceu 7,5% em 2010", "numeros": ["7,5"], "veredito": "verdadeiro", "motivo": "IBGE: o PIB cresceu 7,5% em 2010.", "fonte": "Aos Fatos", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "lula", "frase": "só voltou a crescer acima de 3% quando eu voltei", "numeros": ["3"], "veredito": "falso", "motivo": "O PIB cresceu 4,6% em 2021 (IBGE), antes da volta de Lula.", "fonte": "Aos Fatos / Estadão Verifica", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "lula", "frase": "governo criou o MEI", "veredito": "verdadeiro", "motivo": "O MEI foi criado em 2008, no 2º mandato de Lula (LC 128/2008).", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "17,5 milhões de MEIs", "numeros": ["17,5"], "veredito": "verdadeiro", "motivo": "Há 17,56 milhões de MEIs ativos, segundo o governo federal.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "devia 30 bilhões ao FMI pagou reservas 270 bilhões", "numeros": ["270"], "veredito": "verdadeiro", "motivo": "Dívida de US$ 30,4 bi com o FMI quitada em 2005; reservas chegaram a US$ 270 bi em 2010 (BCB).", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "devia 30 bilhões ao FMI quando assumiu", "numeros": ["30"], "veredito": "verdadeiro", "motivo": "Em 2002 o Brasil contraiu US$ 30,4 bi com o FMI; a dívida foi herdada em 2003 e quitada em 2005.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "bancarizou 22 milhões de brasileiros", "numeros": ["22"], "veredito": "verdadeiro", "motivo": "O governo Lula de fato bancarizou 22 milhões de brasileiros.", "fonte": "Aos Fatos", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "lula", "frase": "devolveu 3,5 bilhões aos aposentados INSS", "numeros": ["3,5"], "veredito": "verdadeiro", "motivo": "DataPrev/INSS: R$ 3,52 bi devolvidos a 5 milhões de aposentados e pensionistas.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "arrecadamos 6 bilhões da quadrilha do INSS", "numeros": ["6"], "veredito": "impreciso", "motivo": "PF e CGU desarticularam o esquema, mas a recuperação dos valores ainda depende dos processos judiciais.", "fonte": "Aos Fatos", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "lula", "frase": "Flávio contou 43 mentiras sobre Vorcaro", "numeros": ["43"], "veredito": "verdadeiro", "motivo": "Levantamento do Aos Fatos contou 43 declarações enganosas de Flávio sobre Vorcaro.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "pai Bolsonaro mentia 11 vezes por dia", "numeros": ["11"], "veredito": "impreciso", "motivo": "Exagerado: levantamentos (Aos Fatos, Artigo 19) contam pouco mais de 4 declarações falsas por dia.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "Flávio comprou casa de 10 milhões", "numeros": ["10"], "veredito": "impreciso", "motivo": "Exagerado: a mansão no Lago Sul custou R$ 6,2 milhões.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "único dos deputados a votar contra a licença-maternidade", "veredito": "verdadeiro", "motivo": "Em 2009, Flávio foi o único na Alerj a votar contra ampliar a licença de 120 para 180 dias.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "Flávio quer privatizar 95% das estatais", "numeros": ["95"], "veredito": "verdadeiro", "motivo": "Flávio defendeu privatizar 95% das estatais na CEO Conference 2026 do BTG.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "Bolsonaro não deu aumento do salário mínimo acima da inflação em nenhum ano", "veredito": "impreciso", "motivo": "Enganoso: em 2019 houve ganho real de 1,14%; nos outros três anos, não.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "Mais Médicos tinha 12 mil médicos quando voltei", "numeros": ["12"], "veredito": "impreciso", "motivo": "Em 2023 o programa tinha 13,7 mil médicos, não 12 mil.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "lula", "frase": "Constituição de 1988 segurança pública responsabilidade dos estados", "numeros": ["1988"], "veredito": "verdadeiro", "motivo": "A Constituição de 1988 atribuiu a segurança pública principalmente aos Estados, com papéis definidos para forças federais.", "fonte": "Aos Fatos", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "lula", "frase": "lei antifacção aprovada aumentou tempo de cadeia", "veredito": "verdadeiro", "motivo": "A Lei Antifacção (Lei 15.358/2026), enviada pelo governo, foi aprovada e aumentou as penas.", "fonte": "Aos Fatos / Lupa", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "lula", "frase": "enviei a emenda da segurança pública 25 de março", "numeros": ["25"], "veredito": "impreciso", "motivo": "A PEC da Segurança Pública foi entregue ao Congresso em 23/04/2025, não em 25 de março.", "fonte": "Agência Câmara", "url": "https://www.camara.leg.br/noticias/1152406-lula-entrega-pec-da-seguranca-publica-ao-congresso-motta-garante-celeridade-na-analise-da-proposta"},
-  {"quem": "lula", "frase": "inflação de alimentos 56% Bolsonaro 13% Lula", "numeros": ["56"], "veredito": "verdadeiro", "motivo": "Inflação de alimentos foi de 56,17% nos 4 anos de Bolsonaro e cerca de 13% nos de Lula.", "fonte": "Aos Fatos", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "flavio", "frase": "PT governou 20 dos últimos 24 anos", "numeros": ["20", "24"], "veredito": "impreciso", "motivo": "Exagerado: o PT governou cerca de 17 anos e 4 meses nos últimos 24.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "flavio", "frase": "governo deixa dívida de 11 trilhões", "numeros": ["11"], "veredito": "verdadeiro", "motivo": "BCB: a dívida do setor público chegou a R$ 11,05 trilhões em agosto de 2026.", "fonte": "Aos Fatos", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "flavio", "frase": "filme do Lula recebeu 30 milhões por fora de Vorcaro Instituto Lula", "numeros": ["30"], "veredito": "impreciso", "motivo": "Falta contexto: a PF negou ter recebido depoimento ou documento com esse teor; a equipe do filme negou.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "flavio", "frase": "Lula gastou 7 bilhões com viagens da Janja", "numeros": ["7"], "veredito": "falso", "motivo": "Os R$ 7,35 bi são viagens de cerca de 475 mil servidores e colaboradores de 34 órgãos, não de Lula e Janja.", "fonte": "Aos Fatos / Estadão Verifica", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "flavio", "frase": "Lula teve 73% dos votos nos presídios", "numeros": ["73"], "veredito": "impreciso", "motivo": "Os 72,6% são de seções em presídios, que incluem agentes e servidores; só presos provisórios votam.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "flavio", "frase": "Lula dá emprego a condenados do Mensalão", "veredito": "falso", "motivo": "Nenhum condenado do Mensalão integra o governo Lula.", "fonte": "Aos Fatos / Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "flavio", "frase": "recorde de empresas fechando no governo Lula", "veredito": "falso", "motivo": "Em 2025 houve 5,1 milhões de CNPJs abertos, recorde, contra 2,8 milhões encerrados.", "fonte": "Aos Fatos", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "flavio", "frase": "criminalidade explodiu no Brasil", "veredito": "falso", "motivo": "Os principais indicadores de criminalidade não explodiram no período.", "fonte": "Aos Fatos", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "flavio", "frase": "Careca do INSS fez parte do governo Lula", "veredito": "falso", "motivo": "O Careca do INSS não fez parte do governo Lula.", "fonte": "Aos Fatos", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "flavio", "frase": "André Mendonça prendeu Daniel Vorcaro", "veredito": "falso", "motivo": "Não foi o ministro André Mendonça quem determinou a prisão de Vorcaro.", "fonte": "Aos Fatos", "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/"},
-  {"quem": "flavio", "frase": "mais de 40 milhões de brasileiros moram em áreas dominadas por facções", "numeros": ["40"], "veredito": "impreciso", "motivo": "Subestimado: estudos apontam 50 a 68 milhões de pessoas em áreas dominadas por facções.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "flavio", "frase": "Lula entrou na Justiça para garantir a volta da saidinha", "veredito": "falso", "motivo": "Não há registro de ação de Lula na Justiça pela saidinha; ele vetou parcialmente o fim do benefício em 2024.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "flavio", "frase": "irmão de Lula é vice-presidente de sindicato que roubou aposentados", "veredito": "impreciso", "motivo": "Falta contexto: Frei Chico é vice do Sindnapi, investigado, mas ele não é investigado pela PF.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "flavio", "frase": "Bolsonaro mandou medida provisória contra corrupção no INSS e só o PT foi contra", "veredito": "impreciso", "motivo": "Falta contexto: a MP 871/2019 existiu, mas 11 partidos, incluindo o PL, votaram para flexibilizar a regra.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"},
-  {"quem": "flavio", "frase": "lei antifacção aprovada", "veredito": "verdadeiro", "motivo": "A Lei Antifacção (Lei 15.358/2026) foi aprovada pelo Congresso e sancionada em março de 2026.", "fonte": "Estadão Verifica", "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/"}
- ]}
+  {
+   "quem": "lula",
+   "frase": "primeiro presidente a conseguir dois graus de investimento",
+   "veredito": "verdadeiro",
+   "motivo": "Fitch e S&P deram grau de investimento em 2008 e a Moody's em 2009, no 2º mandato de Lula.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "PIB Brasil cresceu 7,5% em 2010",
+   "numeros": [
+    "7,5"
+   ],
+   "veredito": "verdadeiro",
+   "motivo": "IBGE: o PIB cresceu 7,5% em 2010.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "só voltou a crescer acima de 3% quando eu voltei",
+   "numeros": [
+    "3"
+   ],
+   "veredito": "falso",
+   "motivo": "O PIB cresceu 4,6% em 2021 (IBGE), antes da volta de Lula.",
+   "fonte": "Aos Fatos / Estadão Verifica",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "governo criou o MEI",
+   "veredito": "verdadeiro",
+   "motivo": "O MEI foi criado em 2008, no 2º mandato de Lula (LC 128/2008).",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "17,5 milhões de MEIs",
+   "numeros": [
+    "17,5"
+   ],
+   "veredito": "verdadeiro",
+   "motivo": "Há 17,56 milhões de MEIs ativos, segundo o governo federal.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "devia 30 bilhões ao FMI pagou reservas 270 bilhões",
+   "numeros": [
+    "270"
+   ],
+   "veredito": "verdadeiro",
+   "motivo": "Dívida de US$ 30,4 bi com o FMI quitada em 2005; reservas chegaram a US$ 270 bi em 2010 (BCB).",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "devia 30 bilhões ao FMI quando assumiu",
+   "numeros": [
+    "30"
+   ],
+   "veredito": "verdadeiro",
+   "motivo": "Em 2002 o Brasil contraiu US$ 30,4 bi com o FMI; a dívida foi herdada em 2003 e quitada em 2005.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "bancarizou 22 milhões de brasileiros",
+   "numeros": [
+    "22"
+   ],
+   "veredito": "verdadeiro",
+   "motivo": "O governo Lula de fato bancarizou 22 milhões de brasileiros.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "devolveu 3,5 bilhões aos aposentados INSS",
+   "numeros": [
+    "3,5"
+   ],
+   "veredito": "verdadeiro",
+   "motivo": "DataPrev/INSS: R$ 3,52 bi devolvidos a 5 milhões de aposentados e pensionistas.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "arrecadamos 6 bilhões da quadrilha do INSS",
+   "numeros": [
+    "6"
+   ],
+   "veredito": "impreciso",
+   "motivo": "PF e CGU desarticularam o esquema, mas a recuperação dos valores ainda depende dos processos judiciais.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "Flávio contou 43 mentiras sobre Vorcaro",
+   "numeros": [
+    "43"
+   ],
+   "veredito": "verdadeiro",
+   "motivo": "Levantamento do Aos Fatos contou 43 declarações enganosas de Flávio sobre Vorcaro.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "pai Bolsonaro mentia 11 vezes por dia",
+   "numeros": [
+    "11"
+   ],
+   "veredito": "impreciso",
+   "motivo": "Exagerado: levantamentos (Aos Fatos, Artigo 19) contam pouco mais de 4 declarações falsas por dia.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "Flávio comprou casa de 10 milhões",
+   "numeros": [
+    "10"
+   ],
+   "veredito": "impreciso",
+   "motivo": "Exagerado: a mansão no Lago Sul custou R$ 6,2 milhões.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "único dos deputados a votar contra a licença-maternidade",
+   "veredito": "verdadeiro",
+   "motivo": "Em 2009, Flávio foi o único na Alerj a votar contra ampliar a licença de 120 para 180 dias.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "Flávio quer privatizar 95% das estatais",
+   "numeros": [
+    "95"
+   ],
+   "veredito": "verdadeiro",
+   "motivo": "Flávio defendeu privatizar 95% das estatais na CEO Conference 2026 do BTG.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "Bolsonaro não deu aumento do salário mínimo acima da inflação em nenhum ano",
+   "veredito": "impreciso",
+   "motivo": "Enganoso: em 2019 houve ganho real de 1,14%; nos outros três anos, não.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "Mais Médicos tinha 12 mil médicos quando voltei",
+   "numeros": [
+    "12"
+   ],
+   "veredito": "impreciso",
+   "motivo": "Em 2023 o programa tinha 13,7 mil médicos, não 12 mil.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "Constituição de 1988 segurança pública responsabilidade dos estados",
+   "numeros": [
+    "1988"
+   ],
+   "veredito": "verdadeiro",
+   "motivo": "A Constituição de 1988 atribuiu a segurança pública principalmente aos Estados, com papéis definidos para forças federais.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "lei antifacção aprovada aumentou tempo de cadeia",
+   "veredito": "verdadeiro",
+   "motivo": "A Lei Antifacção (Lei 15.358/2026), enviada pelo governo, foi aprovada e aumentou as penas.",
+   "fonte": "Aos Fatos / Lupa",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "enviei a emenda da segurança pública 25 de março",
+   "numeros": [
+    "25"
+   ],
+   "veredito": "impreciso",
+   "motivo": "A PEC da Segurança Pública foi entregue ao Congresso em 23/04/2025, não em 25 de março.",
+   "fonte": "Agência Câmara",
+   "url": "https://www.camara.leg.br/noticias/1152406-lula-entrega-pec-da-seguranca-publica-ao-congresso-motta-garante-celeridade-na-analise-da-proposta",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "lula",
+   "frase": "inflação de alimentos 56% Bolsonaro 13% Lula",
+   "numeros": [
+    "56"
+   ],
+   "veredito": "verdadeiro",
+   "motivo": "Inflação de alimentos foi de 56,17% nos 4 anos de Bolsonaro e cerca de 13% nos de Lula.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "PT governou 20 dos últimos 24 anos",
+   "numeros": [
+    "20",
+    "24"
+   ],
+   "veredito": "impreciso",
+   "motivo": "Exagerado: o PT governou cerca de 17 anos e 4 meses nos últimos 24.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "governo deixa dívida de 11 trilhões",
+   "numeros": [
+    "11"
+   ],
+   "veredito": "verdadeiro",
+   "motivo": "BCB: a dívida do setor público chegou a R$ 11,05 trilhões em agosto de 2026.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "filme do Lula recebeu 30 milhões por fora de Vorcaro Instituto Lula",
+   "numeros": [
+    "30"
+   ],
+   "veredito": "impreciso",
+   "motivo": "Falta contexto: a PF negou ter recebido depoimento ou documento com esse teor; a equipe do filme negou.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "Lula gastou 7 bilhões com viagens da Janja",
+   "numeros": [
+    "7"
+   ],
+   "veredito": "falso",
+   "motivo": "Os R$ 7,35 bi são viagens de cerca de 475 mil servidores e colaboradores de 34 órgãos, não de Lula e Janja.",
+   "fonte": "Aos Fatos / Estadão Verifica",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "Lula teve 73% dos votos nos presídios",
+   "numeros": [
+    "73"
+   ],
+   "veredito": "impreciso",
+   "motivo": "Os 72,6% são de seções em presídios, que incluem agentes e servidores; só presos provisórios votam.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "Lula dá emprego a condenados do Mensalão",
+   "veredito": "falso",
+   "motivo": "Nenhum condenado do Mensalão integra o governo Lula.",
+   "fonte": "Aos Fatos / Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "recorde de empresas fechando no governo Lula",
+   "veredito": "falso",
+   "motivo": "Em 2025 houve 5,1 milhões de CNPJs abertos, recorde, contra 2,8 milhões encerrados.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "criminalidade explodiu no Brasil",
+   "veredito": "falso",
+   "motivo": "Os principais indicadores de criminalidade não explodiram no período.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "Careca do INSS fez parte do governo Lula",
+   "veredito": "falso",
+   "motivo": "O Careca do INSS não fez parte do governo Lula.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "André Mendonça prendeu Daniel Vorcaro",
+   "veredito": "falso",
+   "motivo": "Não foi o ministro André Mendonça quem determinou a prisão de Vorcaro.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-lula-flavio-bolsonaro-debate-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "mais de 40 milhões de brasileiros moram em áreas dominadas por facções",
+   "numeros": [
+    "40"
+   ],
+   "veredito": "impreciso",
+   "motivo": "Subestimado: estudos apontam 50 a 68 milhões de pessoas em áreas dominadas por facções.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "Lula entrou na Justiça para garantir a volta da saidinha",
+   "veredito": "falso",
+   "motivo": "Não há registro de ação de Lula na Justiça pela saidinha; ele vetou parcialmente o fim do benefício em 2024.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "irmão de Lula é vice-presidente de sindicato que roubou aposentados",
+   "veredito": "impreciso",
+   "motivo": "Falta contexto: Frei Chico é vice do Sindnapi, investigado, mas ele não é investigado pela PF.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "Bolsonaro mandou medida provisória contra corrupção no INSS e só o PT foi contra",
+   "veredito": "impreciso",
+   "motivo": "Falta contexto: a MP 871/2019 existiu, mas 11 partidos, incluindo o PL, votaram para flexibilizar a regra.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "lei antifacção aprovada",
+   "veredito": "verdadeiro",
+   "motivo": "A Lei Antifacção (Lei 15.358/2026) foi aprovada pelo Congresso e sancionada em março de 2026.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/checamos-o-debate-entre-lula-e-flavio-na-band/",
+   "origem": "band-2026-10-18"
+  },
+  {
+   "quem": "flavio",
+   "frase": "a dívida pública chegou a 11 trilhões de reais",
+   "veredito": "verdadeiro",
+   "motivo": "Dívida bruta do governo geral está em cerca de R$ 11 trilhões (BCB).",
+   "fonte": "Agência Lupa",
+   "url": "https://www.agencialupa.org/checagem/2026/10/16/ao-vivo-checagem-da-entrevista-de-flavio-bolsonaro-na-globo/",
+   "numeros": [
+    "11"
+   ],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "flavio",
+   "frase": "a produtora do filme Dark Horse prestou contas",
+   "veredito": "falso",
+   "motivo": "Não houve prestação de contas pública do filme, segundo a checagem.",
+   "fonte": "Agência Lupa",
+   "url": "https://www.agencialupa.org/checagem/2026/10/16/ao-vivo-checagem-da-entrevista-de-flavio-bolsonaro-na-globo/",
+   "numeros": [],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "flavio",
+   "frase": "a Polícia Federal confirmou propina",
+   "veredito": "falso",
+   "motivo": "A PF não confirmou o pagamento de propina citado.",
+   "fonte": "Agência Lupa",
+   "url": "https://www.agencialupa.org/checagem/2026/10/16/ao-vivo-checagem-da-entrevista-de-flavio-bolsonaro-na-globo/",
+   "numeros": [],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "flavio",
+   "frase": "meu pai criou o Pix",
+   "veredito": "falso",
+   "motivo": "O Pix foi desenvolvido pelo Banco Central a partir de 2018, antes do governo Bolsonaro.",
+   "fonte": "Agência Lupa",
+   "url": "https://www.agencialupa.org/checagem/2026/08/28/ao-vivo-checagem-da-entrevista-de-flavio-bolsonaro-ao-jornal-nacional/",
+   "numeros": [],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "flavio",
+   "frase": "recorde de criminalidade no governo Lula",
+   "veredito": "falso",
+   "motivo": "Indicadores de homicídios não mostram recorde no governo atual.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-flavio-bolsonaro-globo-segundo-turno/",
+   "numeros": [],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "flavio",
+   "frase": "recorde de falências de empresas",
+   "veredito": "falso",
+   "motivo": "Dados de falências não mostram recorde.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-flavio-bolsonaro-globo-segundo-turno/",
+   "numeros": [],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "flavio",
+   "frase": "empresas estão indo embora para o Paraguai",
+   "veredito": "falso",
+   "motivo": "Não há dados que sustentem migração em massa de empresas para o Paraguai.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-flavio-bolsonaro-globo-segundo-turno/",
+   "numeros": [],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "flavio",
+   "frase": "[Lula deixou o povo brasileiro] com fome",
+   "veredito": "falso",
+   "motivo": "Aos Fatos: falso — Checamos a live de Flávio Bolsonaro",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-live-flavio-bolsonaro/",
+   "numeros": [],
+   "data": "2026-10-02",
+   "claimant": "Flávio Bolsonaro",
+   "origem": "pre-band",
+   "min_overlap": 0.75
+  },
+  {
+   "quem": "flavio",
+   "frase": "Jair Bolsonaro criou o Pix",
+   "veredito": "impreciso",
+   "motivo": "Estadão: Enganoso — PL distorce fatos ao alegar que Bolsonaro criou o Pix; sistema foi ...",
+   "fonte": "Estadão",
+   "url": "https://www.estadao.com.br/estadao-verifica/pl-distorce-fatos-ao-alegar-que-bolsonaro-criou-o-pix-sistema-foi-desenvolvido-a-partir-de-2018/",
+   "numeros": [],
+   "data": "2026-06-05",
+   "claimant": "Partido Liberal e Flávio Bolsonaro",
+   "origem": "pre-band",
+   "min_overlap": 0.75
+  }
+ ]
+}

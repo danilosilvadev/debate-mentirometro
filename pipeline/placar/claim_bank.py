@@ -49,7 +49,12 @@ class ClaimBank:
         path = path or BANK_PATH
         if not path.exists():
             return cls([])
-        return cls(json.loads(path.read_text(encoding="utf-8")).get("itens") or [])
+        import os
+
+        items = json.loads(path.read_text(encoding="utf-8")).get("itens") or []
+        # PLACAR_BANK_EXCLUDE=band-2026-10-18: avaliação sem vazar as checagens do próprio debate
+        skip = {x.strip() for x in os.environ.get("PLACAR_BANK_EXCLUDE", "").split(",") if x.strip()}
+        return cls([i for i in items if i.get("origem") not in skip])
 
     def match(self, speaker: str, *texts: str) -> dict[str, Any] | None:
         joined = " ".join(t for t in texts if t)
@@ -67,7 +72,8 @@ class ClaimBank:
             if not words:
                 continue
             score = len(words & have_words) / len(words)
-            limit = self.min_overlap - 0.15 if need else self.min_overlap  # números iguais já são forte indício
+            base = float(item.get("min_overlap") or self.min_overlap)  # itens importados pedem mais
+            limit = base - 0.15 if need else base  # números iguais já são forte indício
             if score >= limit and score > best_score:
                 best, best_score = item, score
         return {**best, "score": round(best_score, 2)} if best else None
