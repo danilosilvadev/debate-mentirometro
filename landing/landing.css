@@ -30,7 +30,8 @@ h1 { font-size: clamp(32px, 8vw, 48px); line-height: 1.05; letter-spacing: -.035
 .cta.live { background: #eb5757; margin-bottom: 18px; font-size: 18px; padding: 18px; }
 .fine { font-size: 12px; margin: 0; } .ok p { color: #b4bcd0; margin: 0; }
 .small { font-size: 14px; margin: -6px 0 0; }
-h1 { font-size: clamp(30px, 7.5vw, 46px); }
+h1, .h1like { font-size: clamp(30px, 7.5vw, 46px); }
+.h1like { line-height: 1.05; letter-spacing: -.035em; margin: 0 0 14px; font-weight: 600; background: linear-gradient(180deg,#fff,#b4bcd0); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .ticket { position: relative; display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 8px; margin: 0 0 26px; padding: 18px 16px 14px;
   border: 1px solid rgba(255,255,255,.08); border-radius: 16px; background: linear-gradient(90deg, rgba(229,72,77,.12), rgba(255,255,255,.02) 40%, rgba(255,255,255,.02) 60%, rgba(245,211,59,.08)); }
 .ticket::before, .ticket::after { content: ""; position: absolute; top: 50%; width: 16px; height: 16px; border-radius: 50%; background: #08090a; border: 1px solid rgba(255,255,255,.08); transform: translateY(-50%); }
@@ -122,7 +123,7 @@ h1 { font-size: clamp(30px, 7.5vw, 46px); }
   .brand-hero { display: flex; flex-direction: column; }
   .bh-left { display: contents; }
   .brand-hero > * , .bh-left > * { order: 2; }
-  .bh-q { order: 0 !important; } .bh-art { order: 1 !important; }
+  .bh-q { order: 0 !important; } .bh-h1 { order: 0 !important; } .bh-sub { order: 0 !important; } .bh-art { order: 1 !important; }
 }
 /* ===== desktop real (>=1024px) ===== */
 @media (min-width: 1024px) {
@@ -153,10 +154,10 @@ h1 { font-size: clamp(30px, 7.5vw, 46px); }
   .poll-art img { width: 200px; height: 200px; }
   #form h2, #done h2 { font-size: 28px; }
   .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 56px; align-items: start; margin-bottom: 24px; }
-  .hero .ticket { grid-column: 1; } .hero .eyebrow, .hero h1 { grid-column: 1; }
+  .hero .ticket { grid-column: 1; } .hero .eyebrow, .hero .h1like { grid-column: 1; }
   .hero .sub { grid-column: 2; grid-row: 1; font-size: 19px; align-self: center; }
   .hero .perks { grid-column: 2; grid-row: 2 / span 2; }
-  .hero h1 { font-size: clamp(44px, 4vw, 64px); }
+  .hero .h1like { font-size: clamp(44px, 4vw, 64px); }
   .perks li { font-size: 17px; }
   .faq { margin-top: 24px; padding: 48px 0; position: relative; isolation: isolate; }
   .faq h2 { font-size: 28px; margin-bottom: 18px; }
@@ -168,3 +169,10 @@ h1 { font-size: clamp(30px, 7.5vw, 46px); }
   .wrap { max-width: 1320px; padding-left: 48px; padding-right: 48px; }
   .brand-hero { padding: 80px 0; column-gap: 64px; }
 }
+
+/* manchete do Mentirômetro */
+.bh-kicker { font-size: clamp(16px, 4.4vw, 22px) !important; font-weight: 700; color: #b4bcd0; text-transform: uppercase; letter-spacing: .06em !important; margin: 0 0 10px !important; }
+.bh-h1 { font-size: clamp(36px, 10.5vw, 60px); font-weight: 800; line-height: 1.02; letter-spacing: -.04em; margin: 0 0 14px; color: #fff; background: none; -webkit-background-clip: border-box; background-clip: border-box; overflow-wrap: anywhere; hyphens: manual; }
+.bh-h1 em { font-style: normal; display: inline-block; max-width: 100%; background: linear-gradient(180deg,#c3c9ff 10%,#7d88f0); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: .04em; }
+.bh-sub { color: #c9ccd1; font-size: clamp(17px, 4.6vw, 21px); line-height: 1.45; margin: 0 0 18px; }
+@media (min-width: 1024px) { .bh-h1 { font-size: 10.5cqi; } .bh-sub { font-size: clamp(20px, 1.6vw, 26px); max-width: 34em; } .bh-kicker { font-size: 18px !important; } }
