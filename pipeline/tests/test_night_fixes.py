@@ -154,7 +154,7 @@ def test_settings_default_order_and_claude_skip(monkeypatch):
     assert s.providers == ("claude_cli", "groq", "openrouter")
     router = build_router(s)
     names = [p.name for p in router.providers]
-    assert names[0] == "claude-cli" and "groq" in names and names[-1] == "groq_verify"
+    assert names[0] == "claude-cli" and "groq" in names and names[-1] == "openrouter" and names[-2] == "groq_verify"
     first = Prov("x", {})
     del first
     # CLI ausente: o roteador pula sem erro e segue para a Groq (sem rede aqui: só checa a ordem)
