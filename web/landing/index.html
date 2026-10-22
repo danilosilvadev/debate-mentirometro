@@ -27,12 +27,8 @@
   <a class="cta live hidden" id="watch" href="../?live=1">Assistir ao vivo agora</a>
   <div class="subs hidden" id="subs-row"><b id="subs" class="mono">—</b><span>pessoas já vão assistir</span></div>
   <section class="brand-hero" aria-labelledby="bh-q">
+    <div class="bh-left">
     <h2 class="bh-q" id="bh-q">Quem vai mentir mais?</h2>
-    <picture class="bh-art">
-      <source type="image/webp" srcset="./mics-640.webp 640w, ./mics-1280.webp 1280w" sizes="(min-width: 760px) 620px, 100vw">
-      <img src="./mics-960.jpg" width="960" height="540" decoding="async" fetchpriority="high"
-        alt="Ilustração de dois microfones bravos com luvas de boxe, um vermelho e outro metade verde e metade amarelo, brigando em púlpitos iguais enquanto o ponteiro do Mentirômetro enlouquece no meio">
-    </picture>
     <p class="wordmark" aria-label="Mentirômetro">MENTIRÔMETRO</p>
     <div class="score" aria-label="Placar do Mentirômetro">
       <span class="sc-name a">Lula</span><b class="sc-n a" id="sc-1">0</b><span class="sc-x">×</span><b class="sc-n b" id="sc-2">0</b><span class="sc-name b"><span>Flávio</span></span>
@@ -40,6 +36,12 @@
     <p class="sc-label" id="sc-label">começa sexta, 21h20</p>
     <p class="bh-tag">Cada frase na balança. Ao vivo.</p>
     <p class="bh-bold"><b>A gente checa. Você vê quem mente mais.</b></p>
+    </div>
+    <picture class="bh-art">
+      <source type="image/webp" srcset="./mics-640.webp 640w, ./mics-1280.webp 1280w" sizes="(min-width: 1024px) 50vw, (min-width: 760px) 620px, 100vw">
+      <img src="./mics-960.jpg" width="960" height="540" decoding="async" fetchpriority="high"
+        alt="Ilustração de dois microfones bravos com luvas de boxe, um vermelho e outro metade verde e metade amarelo, brigando em púlpitos iguais enquanto o ponteiro do Mentirômetro enlouquece no meio">
+    </picture>
   </section>
   <section class="card poll" id="poll" aria-labelledby="poll-h">
     <picture class="poll-art">
@@ -98,10 +100,12 @@
   <div class="card ok hidden" id="done"><h2>Lugar garantido.</h2><p id="done-msg">Você vai receber o lembrete.</p><a href="../">Ver como o placar funciona →</a></div>
   <section class="faq">
     <h2>Perguntas rápidas</h2>
+    <div class="faq-g">
     <details><summary>É grátis?</summary><p>Sim. Assistir, votar e receber o lembrete não custa nada. O super chat é opcional.</p></details>
     <details><summary>É imparcial?</summary><p>Usamos os mesmos critérios para os dois candidatos. A gente checa o que é dito, não quem diz. Cada veredito mostra a fonte para você conferir.</p></details>
     <details><summary>Como vocês checam?</summary><p>A fala é transcrita ao vivo e dividida em afirmações. Cada uma é comparada com dados oficiais e checagens profissionais já publicadas. Quando não há dado confiável, aparece "sem dados", nunca um chute.</p></details>
     <details><summary>Quais fontes?</summary><p>Órgãos oficiais (IBGE, Banco Central, ministérios, TSE) e agências de checagem profissionais. O link da fonte aparece junto com cada veredito.</p></details>
+    </div>
   </section>
 </main>
 <script type="module" src="./landing.mjs"></script>

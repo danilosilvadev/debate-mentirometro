@@ -117,3 +117,54 @@ h1 { font-size: clamp(30px, 7.5vw, 46px); }
 .bar.a em { background: #E5484D; } .bar.b em { background: linear-gradient(90deg,#2FBF71 50%,#F5D33B 50%); background-size: 100% 100%; } .bar.c em { background: #8a8f98; }
 .bar b { text-align: right; font-variant-numeric: tabular-nums; } .bar.mine .bl { font-weight: 700; color: #fff; }
 .poll-post { border-top: 1px solid rgba(255,255,255,.08); padding-top: 10px; }
+
+@media (max-width: 1023.98px) {
+  .brand-hero { display: flex; flex-direction: column; }
+  .bh-left { display: contents; }
+  .brand-hero > * , .bh-left > * { order: 2; }
+  .bh-q { order: 0 !important; } .bh-art { order: 1 !important; }
+}
+/* ===== desktop real (>=1024px) ===== */
+@media (min-width: 1024px) {
+  body { overflow-x: clip; }
+  .wrap { max-width: 1280px; overflow-x: visible; padding: 28px 40px 72px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px;
+    grid-template-areas: "top top" "count count" "watch watch" "subs subs" "brand brand" "poll form" "hero hero" "faq faq"; }
+  .top { grid-area: top; } .bigcount { grid-area: count; } #watch { grid-area: watch; } .subs { grid-area: subs; }
+  .brand-hero { grid-area: brand; } .poll { grid-area: poll; } #form, #done { grid-area: form; align-self: start; } .hero { grid-area: hero; } .faq { grid-area: faq; }
+  .bigcount { width: auto; margin: 0 0 40px; padding: 0; min-height: calc(82svh - 90px); }
+  .units { grid-template-columns: repeat(4, auto); gap: 0 3.2vw; }
+  .u b { font-size: min(13.5vw, 300px); }
+  .u span { font-size: clamp(13px, 1.1vw, 20px); }
+  .bigcount .clabel { font-size: clamp(14px, 1.2vw, 20px); }
+  /* hero de duas colunas, fundo full-bleed */
+  .brand-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); column-gap: 48px; align-items: center; text-align: left;
+    padding: 64px 0; margin: 0 0 56px; position: relative;
+    isolation: isolate; }
+  .brand-hero::before, .faq::before { content: ""; position: absolute; top: 0; bottom: 0; left: calc(50% - 50vw); right: calc(50% - 50vw); background: rgba(255,255,255,.025); z-index: -1; }
+  .bh-left { container-type: inline-size; min-width: 0; }
+  .bh-art { grid-column: 2; grid-row: 1; margin: 0; }
+  .bh-q { font-size: clamp(40px, 4vw, 64px); margin-bottom: 10px; }
+  .wordmark { font-size: 11.2cqi; margin: 8px 0 10px; }
+  .score { justify-content: flex-start; }
+  .sc-n { font-size: clamp(96px, 9vw, 160px); } .sc-name { font-size: clamp(22px, 1.8vw, 32px); } .sc-x { font-size: clamp(40px, 3.6vw, 64px); }
+  .bh-tag, .bh-bold { font-size: 22px; }
+  .poll, #form, #done { margin: 0 0 56px; padding: 32px; }
+  .poll { align-self: start; } .poll h2 { font-size: 28px; }
+  .poll-art img { width: 200px; height: 200px; }
+  #form h2, #done h2 { font-size: 28px; }
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 56px; align-items: start; margin-bottom: 24px; }
+  .hero .ticket { grid-column: 1; } .hero .eyebrow, .hero h1 { grid-column: 1; }
+  .hero .sub { grid-column: 2; grid-row: 1; font-size: 19px; align-self: center; }
+  .hero .perks { grid-column: 2; grid-row: 2 / span 2; }
+  .hero h1 { font-size: clamp(44px, 4vw, 64px); }
+  .perks li { font-size: 17px; }
+  .faq { margin-top: 24px; padding: 48px 0; position: relative; isolation: isolate; }
+  .faq h2 { font-size: 28px; margin-bottom: 18px; }
+  .faq .faq-g { display: grid; grid-template-columns: 1fr 1fr; column-gap: 48px; }
+  .faq details:last-child { border-bottom: 0; }
+  .faq p, .faq summary { font-size: 16px; }
+}
+@media (min-width: 1440px) {
+  .wrap { max-width: 1320px; padding-left: 48px; padding-right: 48px; }
+  .brand-hero { padding: 80px 0; column-gap: 64px; }
+}
