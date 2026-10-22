@@ -1,4 +1,4 @@
-import { countdown, validate } from "./logic.mjs";
+import { countdown, validate, pollPct, pollLabel, validPick } from "./logic.mjs";
 const $ = (id) => document.getElementById(id);
 const SB = window.PLACAR_SUPABASE || {}; const DEBATE = window.PLACAR_DEBATE_KEY || "globo-2026-10-23";
 const START = Date.parse(window.LANDING_START);
@@ -54,3 +54,33 @@ $("form").addEventListener("submit", async (ev) => {
   } catch (e) { $("err").textContent = e.message; } finally { $("go").disabled = false; }
 });
 tick(); setInterval(tick, 1000); loadCount(); setInterval(loadCount, 15000);
+
+// Troféu Pinóquio: resultados ficam escondidos até o palpite.
+const NOMES = { lula: "Lula", flavio: "Flávio", empate: "Os dois empatam" };
+function showPoll(t, mine) {
+  const p = pollPct(t);
+  for (const k of ["lula", "flavio", "empate"]) { $("pb-" + k).style.width = p[k] + "%"; $("pp-" + k).textContent = p[k] + "%"; }
+  $("ptot").textContent = pollLabel(p.total); $("pmine").textContent = NOMES[mine] || "—";
+  $("pbtns").classList.add("hidden"); $("pres").classList.remove("hidden");
+  document.querySelectorAll(".pb").forEach((b) => b.classList.toggle("sel", b.dataset.pick === mine));
+  if (t && t.resultado) $("pfinal").dataset.resultado = t.resultado; // gancho pós-debate (não ligado)
+}
+async function loadPoll() {
+  const mine = localStorage.lp_palpite; if (!validPick(mine)) return;
+  try {
+    const r = await fetch(`${SB.url}/rest/v1/palpite_totais?debate=eq.${encodeURIComponent(DEBATE)}&select=lula,flavio,empate,resultado`, { headers: hdr });
+    showPoll((await r.json())[0] || {}, mine);
+  } catch { showPoll({}, mine); }
+}
+document.querySelectorAll(".pb").forEach((b) => b.addEventListener("click", async () => {
+  const pick = b.dataset.pick; $("perr").textContent = "";
+  document.querySelectorAll(".pb").forEach((x) => (x.disabled = true));
+  try {
+    const r = await fetch(`${SB.url}/rest/v1/rpc/palpitar`, { method: "POST", headers: hdr, body: JSON.stringify({ p_debate: DEBATE, p_escolha: pick, p_client: cid }) });
+    const j = await r.json();
+    if (!r.ok || !j.ok) throw new Error({ devagar: "Calma! Muitos palpites daqui, tente em um minuto.", encerrado: "Palpites encerrados." }[j.erro] || "Não deu certo. Tente de novo.");
+    localStorage.lp_palpite = pick; showPoll(j, pick);
+  } catch (e) { $("perr").textContent = e.message; } finally { document.querySelectorAll(".pb").forEach((x) => (x.disabled = false)); }
+}));
+$("pchange").addEventListener("click", () => { $("pres").classList.add("hidden"); $("pbtns").classList.remove("hidden"); });
+loadPoll(); setInterval(loadPoll, 20000);

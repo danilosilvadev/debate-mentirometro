@@ -109,3 +109,28 @@ html,body{overflow-x:clip}
 .brandm .wordmark{width:auto;margin:0;padding:0 2vw;line-height:1.15}
 .brandm .mics-art{margin:0 auto 10px}
 .brandm > p{padding:0 18px}
+
+/* Troféu Pinóquio (palpite) */
+.poll{text-align:center;margin:0 auto 48px;max-width:640px;padding:28px 18px;border:1px solid #23252a;border-radius:20px;background:radial-gradient(ellipse at 50% 0,rgba(245,211,59,.10),transparent 60%),#0f1011}
+.poll .trofeu img{display:block;width:min(60vw,260px);height:auto;margin:0 auto 8px;border-radius:50%;-webkit-mask-image:radial-gradient(circle,#000 58%,transparent 72%);mask-image:radial-gradient(circle,#000 58%,transparent 72%)}
+.poll h2{font-size:clamp(26px,7vw,40px);letter-spacing:-.03em;margin:0 0 8px;color:#F5D33B}
+.psub{color:#b4bcd0;margin:0 0 20px}.psub b{color:#f7f8f8;display:block;margin-top:4px}
+.pbtns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pb{font:inherit;font-size:clamp(20px,5.5vw,28px);font-weight:750;min-height:72px;border:0;border-radius:14px;cursor:pointer;color:#fff;transition:transform .12s}
+.pb:active{transform:scale(.97)}.pb:disabled{opacity:.6;cursor:wait}
+.pb.l{background:#E5484D}
+.pb.f{background:linear-gradient(90deg,#2FBF71 50%,#F5D33B 50%);color:#08090a}
+.pb.f span{background:rgba(8,9,10,.78);color:#fff;padding:2px 12px;border-radius:8px}
+.pb.e{grid-column:1/-1;min-height:52px;font-size:17px;font-weight:600;background:#23252a;color:#d0d6e0}
+.pb.sel{outline:3px solid #fff;outline-offset:2px}
+.pres{text-align:left;margin-top:18px}.pres.hidden,.pbtns.hidden,.pfinal.hidden{display:none}
+.bar{display:grid;grid-template-columns:64px 1fr 48px;align-items:center;gap:10px;margin:10px 0}
+.bar .bn{font-weight:600;font-size:15px}.bar b{text-align:right;font-variant-numeric:tabular-nums;font-size:18px}
+.bar i{display:block;height:22px;border-radius:11px;background:#1c1d21;overflow:hidden}
+.bar s{display:block;height:100%;width:0;border-radius:11px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.bar.l s{background:#E5484D}.bar.l .bn{color:#E5484D}
+.bar.f s{background:linear-gradient(90deg,#2FBF71 50%,#F5D33B 50%)}.bar.f .bn{color:#2FBF71}
+.bar.e s{background:#8a8f98}
+.ptot{color:#8a8f98;font-size:14px;text-align:center;margin:14px 0 0}.ptot b{color:#f7f8f8}
+.plink{font:inherit;background:none;border:0;color:#828fff;text-decoration:underline;cursor:pointer;padding:4px}
+@media (prefers-reduced-motion: reduce){.bar s{transition:none}}

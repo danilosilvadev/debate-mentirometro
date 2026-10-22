@@ -21,3 +21,15 @@ export function validate({ email, wa, cEmail, cWa }) {
   if (wa) { const n = normBR(wa); if (!n) return { ...out, err: "WhatsApp inválido. Use DDD + número." }; if (!cWa) return { ...out, err: "Marque a autorização do WhatsApp." }; out.wa = n; }
   return out;
 }
+// Troféu Pinóquio: percentuais inteiros que sempre somam 100 (maior resto).
+export const PALPITES = ["lula", "flavio", "empate"];
+export function pollPct(t) {
+  const v = PALPITES.map((k) => Math.max(0, Number(t?.[k]) || 0)); const total = v.reduce((a, b) => a + b, 0);
+  if (!total) return { total: 0, lula: 0, flavio: 0, empate: 0 };
+  const raw = v.map((x) => (x * 100) / total); const fl = raw.map(Math.floor);
+  let rest = 100 - fl.reduce((a, b) => a + b, 0);
+  raw.map((x, i) => [x - fl[i], i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => { if (rest > 0) { fl[i]++; rest--; } });
+  return { total, lula: fl[0], flavio: fl[1], empate: fl[2] };
+}
+export const pollLabel = (n) => `${n.toLocaleString("pt-BR")} ${n === 1 ? "palpite" : "palpites"}`;
+export const validPick = (p) => PALPITES.includes(p);
