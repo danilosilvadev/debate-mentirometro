@@ -13,7 +13,7 @@ import threading
 import time
 from typing import Any, Callable
 
-STALE_S = float(os.environ.get("PLACAR_STALE_S", "15"))
+STALE_S = float(os.environ.get("PLACAR_STALE_S", "90"))
 
 
 class LlmWorker:

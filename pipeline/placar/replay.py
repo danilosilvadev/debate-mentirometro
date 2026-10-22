@@ -189,8 +189,10 @@ def build_router(settings: Settings) -> ProviderRouter:
 
             from placar.llm.grok_cli import GrokCliProvider
 
-            grok = GrokCliProvider(model=_os.environ.get("GROK_CLI_MODEL", ""),
-                                   parallel=int(_os.environ.get("GROK_CLI_PARALLEL", "4")))
+            import shutil as _sh
+            _bin = _os.environ.get("GROK_CLI_BIN") or _sh.which("grok") or _os.path.expanduser("~/.local/bin/grok")
+            grok = GrokCliProvider(binary=_bin, model=_os.environ.get("GROK_CLI_MODEL", ""),
+                                   parallel=int(_os.environ.get("GROK_CLI_PARALLEL", "6")))
             grok.timeout_s = float(_os.environ.get("GROK_CLI_TIMEOUT_S", "40"))
             providers.append(grok)
         elif name == "openrouter":

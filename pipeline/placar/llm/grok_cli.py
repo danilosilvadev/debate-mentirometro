@@ -43,8 +43,16 @@ class GrokCliProvider:
                 "--output-format", "json"]
         if request.schema:
             args += ["--json-schema", json.dumps(request.schema, ensure_ascii=False)]
-        if self.model:
-            args += ["-m", self.model]
+        # Padrão do grok (grok-4.7, raciocínio alto) levou até 90 s por chamada e derrubou metade dos
+        # turnos no eval Band (22/10). Medido: build-fast+low 8 s, 4.7+low 16 s, com o mesmo resultado.
+        fast = request.task in ("classify_turn", "classify")
+        model = self.model or (os.environ.get("GROK_CLI_FAST_MODEL", "grok-4.7-build-fast") if fast
+                               else os.environ.get("GROK_CLI_JUDGE_MODEL", "grok-4.7"))
+        if model:
+            args += ["-m", model]
+        effort = os.environ.get("GROK_CLI_EFFORT", "low")
+        if effort:
+            args += ["--reasoning-effort", effort]
         return args
 
     def generate(self, request: LlmRequest, timeout_s: float) -> str:
