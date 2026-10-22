@@ -67,6 +67,7 @@ class ClaimBank:
             if not words:
                 continue
             score = len(words & have_words) / len(words)
-            if score >= self.min_overlap and score > best_score:
+            limit = self.min_overlap - 0.15 if need else self.min_overlap  # números iguais já são forte indício
+            if score >= limit and score > best_score:
                 best, best_score = item, score
         return {**best, "score": round(best_score, 2)} if best else None

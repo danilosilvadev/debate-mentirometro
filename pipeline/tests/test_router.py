@@ -54,7 +54,7 @@ def test_limite_de_uso_abre_o_breaker_e_nao_repete():
     router.complete(REQUEST)
     assert primary.calls == 1
     assert router.breaker.open_for("claude-cli")
-    clock["t"] = 10
+    clock["t"] = 5
     router.complete(REQUEST)
     assert primary.calls == 1
     clock["t"] = 31

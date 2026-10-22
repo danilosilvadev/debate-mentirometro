@@ -32,6 +32,7 @@ class Settings:
     providers: tuple[str, ...] = ("claude_cli", "groq", "openrouter")
     groq_llm_model: str = "openai/gpt-oss-120b"
     groq_verify_model: str = "qwen/qwen3.8-27b"
+    groq_fast_model: str = "openai/gpt-oss-20b"
     groq_llm_timeout_s: float = 10.0
     # Quem confirma falso/impreciso, em ordem; o provedor que julgou nunca confirma a si mesmo.
     verify_providers: tuple[str, ...] = ("groq_verify", "openrouter", "claude_cli", "groq")
@@ -87,6 +88,7 @@ class Settings:
             or "openai/gpt-oss-120b",
             groq_verify_model=os.environ.get("GROQ_VERIFY_MODEL", "qwen/qwen3.8-27b").strip()
             or "qwen/qwen3.8-27b",
+            groq_fast_model=os.environ.get("GROQ_FAST_MODEL", "openai/gpt-oss-20b").strip(),
             groq_llm_timeout_s=_float("GROQ_LLM_TIMEOUT_S", 10.0),
             retries=_int("LLM_RETRIES", 1),
             breaker_threshold=_int("LLM_BREAKER_THRESHOLD", 3),

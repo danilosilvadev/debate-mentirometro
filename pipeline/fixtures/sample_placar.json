@@ -48,6 +48,7 @@
       "atualizado": 1700000000000,
       "declaracoes": [
         {
+          "id": "c1",
           "t": 1700000000000,
           "quem": "2",
           "afirmacao": "O governo gastou mais de 350 bilhões de reais para se reeleger.",
@@ -67,6 +68,7 @@
       "atualizado": 1700000012000,
       "declaracoes": [
         {
+          "id": "c2",
           "t": 1700000012000,
           "quem": "1",
           "afirmacao": "A inflação deste ano está em 2 por cento.",

@@ -44,11 +44,11 @@ class CircuitBreaker:
         self._failures[name] = 0
         self._open_until[name] = 0.0
 
-    def fail(self, name: str, *, force_open: bool = False) -> None:
+    def fail(self, name: str, *, force_open: bool = False, cooldown_s: float | None = None) -> None:
         count = self._failures.get(name, 0) + 1
         self._failures[name] = count
         if force_open or count >= self.threshold:
-            self._open_until[name] = self._clock() + self.cooldown_s
+            self._open_until[name] = self._clock() + (self.cooldown_s if cooldown_s is None else cooldown_s)
             self._failures[name] = 0
 
     def open_for(self, name: str) -> bool:
@@ -164,7 +164,8 @@ class ProviderRouter:
                         error=exc.message,
                         attempt=attempt,
                     )
-                    self.breaker.fail(provider.name, force_open=True)
+                    # Limite por minuto (Groq) libera em segundos: pausa curta, não 60 s.
+                    self.breaker.fail(provider.name, force_open=True, cooldown_s=min(self.breaker.cooldown_s, 8.0))
                     errors.append(f"{provider.name}: {exc.message}")
                     break
                 except ProviderError as exc:

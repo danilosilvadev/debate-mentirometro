@@ -11,3 +11,15 @@ def _no_claim_bank(monkeypatch, request):
         monkeypatch.setenv("PLACAR_BANK", "1")
     else:
         monkeypatch.setattr(turns, "_BANK", turns.ClaimBank([]))
+
+
+@pytest.fixture(autouse=True)
+def _offline_support(monkeypatch):
+    from placar import support
+    monkeypatch.setattr(support, "FETCH", lambda url: "")
+
+
+@pytest.fixture(autouse=True)
+def _short_turns_ok(monkeypatch):
+    from placar import turns
+    monkeypatch.setattr(turns, "MIN_WORDS", 0)

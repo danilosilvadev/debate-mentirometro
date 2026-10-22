@@ -121,6 +121,7 @@ import os as _os
 from placar.claim_bank import ClaimBank
 
 _BANK: ClaimBank | None = None
+MIN_WORDS = 8  # turno menor que isso não vai ao LLM
 
 
 def claim_bank() -> ClaimBank:
@@ -129,6 +130,13 @@ def claim_bank() -> ClaimBank:
     if _BANK is None:
         _BANK = ClaimBank.load() if _os.environ.get("PLACAR_BANK", "1") != "0" else ClaimBank([])
     return _BANK
+
+
+def _fast_first(llm) -> list[str] | None:
+    names = [p.name for p in getattr(llm, "providers", [])]
+    if "groq_fast" not in names:
+        return None
+    return ["groq_fast"] + [n for n in names if n not in ("groq_fast", "groq_verify")] + ["groq_verify"]
 
 
 def _now_v(turn: dict[str, Any]) -> float | None:
@@ -157,6 +165,10 @@ def process_turn(
     dur_s = float(turn.get("dur_s") or 0)
     if quem not in board.nomes or not text:
         return res
+    if len(text.split()) < MIN_WORDS:  # "obrigado", "é verdade": não gasta chamada
+        with lock:
+            board.add_time(quem, "outro", dur_s)
+        return res
     if not can_call():
         with lock:
             board.add_time(quem, "outro", dur_s)
@@ -173,7 +185,8 @@ def process_turn(
                          if turn.get("antes") else "")
                       + f"Turno:\n{text}"),
                 schema=TURN_SCHEMA,
-            )
+            ),
+            prefer=_fast_first(llm),
         )
     except ProviderError as exc:
         res.classify_ms = (time.perf_counter() - started) * 1000
@@ -215,6 +228,44 @@ def process_turn(
         _judge(board, claim, item, llm, retriever, lock, res, can_call)
         on_change()
     return res
+
+
+UNSUPPORTED_TEXT = ("Sem dados: a fonte encontrada não traz o dado que confirmaria a checagem. "
+                    "Na dúvida, não classificamos.")
+
+
+def _supported_verdict(board, claim, veredito, motivo, title, url, evidence, entry) -> str:
+    """Confere a página citada; se não sustenta, publica sem_dados (precisão > cobertura)."""
+    from placar.support import supports
+
+    snippet = next((e.trecho for e in evidence if e.url == url), "")
+    ok, why = supports(veredito=veredito, literal=claim["literal"], afirmacao=claim["afirmacao"],
+                       motivo=motivo, url=url, snippet=snippet)
+    entry["suporte"] = why
+    if ok:
+        return veredito
+    # tenta outra fonte da busca que sustente
+    for e in evidence:
+        if e.url == url:
+            continue
+        ok2, why2 = supports(veredito=veredito, literal=claim["literal"], afirmacao=claim["afirmacao"],
+                             motivo=motivo, url=e.url, snippet=e.trecho)
+        if ok2:
+            entry["suporte"] = f"outra fonte: {why2}"
+            claim["_fonte_alt"] = (e.titulo, e.url)
+            return veredito
+    return "sem_dados"
+
+
+def _publish(board, claim, veredito, motivo, title, url, evidence, entry) -> None:
+    final = _supported_verdict(board, claim, veredito, motivo, title, url, evidence, entry)
+    if final == "sem_dados" and veredito != "sem_dados":
+        board.set_verdict(claim, veredito="sem_dados", motivo=UNSUPPORTED_TEXT)
+    else:
+        if claim.get("_fonte_alt"):
+            title, url = claim.pop("_fonte_alt")
+        board.set_verdict(claim, veredito=final, motivo=motivo, fonte_titulo=title, fonte_url=url)
+    entry["publicado"] = claim["veredito"]
 
 
 def _judge(board, claim, item, llm, retriever, lock, res, can_call) -> None:
@@ -275,7 +326,7 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
     res.verdicts.append(entry)
     if verdict not in ("falso", "impreciso"):
         with lock:
-            board.set_verdict(claim, veredito=verdict, motivo=motivo, fonte_titulo=title, fonte_url=url)
+            _publish(board, claim, verdict, motivo, title, url, evidence, entry)
             board.note_score()
         return
     # Falso/impreciso: só publica se um SEGUNDO provedor, cego ao primeiro, concordar.
@@ -314,9 +365,7 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
         with lock:
             if v3 is not None and v3 == v2 and v2 not in ("falso", "impreciso"):
                 # 2 de 3 dizem que não há erro: publica (verdadeiro ou sem_dados).
-                board.set_verdict(claim, veredito=v2, motivo=second.data.get("motivo") or "",
-                                  fonte_titulo=title, fonte_url=url)
-                entry["publicado"] = v2
+                _publish(board, claim, v2, second.data.get("motivo") or "", title, url, evidence, entry)
             elif v3 in ("falso", "impreciso") and v3 == verdict:
                 # 2 de 3 confirmam o erro, mas o confirmador independente não: fica em revisão (regra conservadora)
                 claim["motivo"] = DIVERGE_TEXT
@@ -330,9 +379,8 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
         final = verdict if v2 == verdict else "impreciso"  # discordam no grau: o mais brando
         # O motivo publicado é o do confirmador, que refez as contas.
         motivo = second.data.get("motivo") or motivo
-        board.set_verdict(claim, veredito=final, motivo=motivo, fonte_titulo=title, fonte_url=url)
+        _publish(board, claim, final, motivo, title, url, evidence, entry)
         board.note_score()
-        entry["publicado"] = final
 
 
 LEGAL_WORDS = ("lei", "emenda", "constitui", "pec", "artigo", "decreto", "medida provisória",

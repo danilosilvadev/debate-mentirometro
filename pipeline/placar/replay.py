@@ -207,6 +207,13 @@ def build_router(settings: Settings) -> ProviderRouter:
             providers.append(
                 GeminiProvider(api_key=settings.gemini_key, model=settings.gemini_model)
             )
+    if settings.groq_key and settings.groq_fast_model:
+        # Classificação de turnos num modelo menor, com cota de tokens/min separada do juiz.
+        from placar.llm.groq_llm import GroqLlmProvider
+
+        fast = GroqLlmProvider(api_key=settings.groq_key, model=settings.groq_fast_model, name="groq_fast")
+        fast.timeout_s = settings.groq_llm_timeout_s
+        providers.append(fast)
     if settings.groq_key and "groq_verify" in settings.verify_providers:
         # Fica no fim da fila: só entra em classificação se todos os outros caírem.
         from placar.llm.groq_llm import GroqLlmProvider

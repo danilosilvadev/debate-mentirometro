@@ -122,7 +122,7 @@ def test_disagreement_stays_em_revisao_without_leaking_first_verdict():
 
 
 def test_degree_disagreement_publishes_milder():
-    board, router, retr, *_ = _setup(FALSO, {"veredito": "impreciso", "motivo": "Exagero."})
+    board, router, retr, *_ = _setup(FALSO, {"veredito": "impreciso", "motivo": "Exagero: foi 7,5%."})
     process_turn(board, {"quem": "1", "text": "x", "t_ms": 1, "dur_s": 5}, router, retr)
     assert _claim(board)["veredito"] == "impreciso"
 
@@ -224,10 +224,10 @@ def test_claim_queries_legal_adds_official_queries():
 
 
 def test_verifier_motivo_is_published_and_prompt_has_facts():
-    board, router, retr, first, second = _setup(FALSO, {"veredito": "falso", "motivo": "Conta certa: 17 anos."})
+    board, router, retr, first, second = _setup(FALSO, {"veredito": "falso", "motivo": "Conta certa: 7,5%."})
     process_turn(board, {"quem": "1", "text": "x", "t_ms": 1, "dur_s": 5}, router, retr)
     c = _claim(board)
-    assert c["veredito"] == "falso" and c["motivo"] == "Conta certa: 17 anos."
+    assert c["veredito"] == "falso" and c["motivo"] == "Conta certa: 7,5%."
     assert "Presidentes desde 1995" in second.calls[-1].user
 
 
@@ -325,3 +325,25 @@ def test_events_export_maps_to_video_time_and_mock_is_labeled():
     assert ev["superchats"][0]["s"] == 350.0 and ev["simulado"] is False
     m = mock_events(replay)
     assert m["simulado"] is True and m["superchats"] and all(c["teste"] for c in m["superchats"])
+
+
+def test_support_check_rules():
+    from placar.support import supports
+    page = lambda txt: (lambda url: txt)  # noqa: E731
+    ok, _ = supports(veredito="verdadeiro", literal="cresceu 7,5% em 2010", afirmacao="PIB 7,5% em 2010", motivo="IBGE 7,5%",
+                     url="https://ibge.gov.br/x", fetch=page("O PIB cresceu 7,5% em 2010, segundo o IBGE"))
+    assert ok
+    ok, why = supports(veredito="verdadeiro", literal="cresceu 7,5% em 2010", afirmacao="PIB 7,5%", motivo="",
+                       url="https://x.com/y", fetch=page("PIB cresceu 3% em 2010"))
+    assert not ok
+    ok, _ = supports(veredito="falso", literal="cresceu 10,5%", afirmacao="PIB 10,5% em 2010", motivo="Foi 7,5% em 2010 (IBGE)",
+                     url="https://ibge.gov.br/x", fetch=page("PIB de 2010: 7,5%"))
+    assert ok
+    ok, why = supports(veredito="falso", literal="cresceu 10,5%", afirmacao="PIB 10,5% em 2010", motivo="Foi 7,5% (IBGE)",
+                       url="https://blog.com/x", fetch=page("crescimento forte"))
+    assert not ok
+    # página que só transcreve o debate
+    lit = "nós já arrecadamos seis bilhões de reais da quadrilha que roubou"
+    ok, why = supports(veredito="verdadeiro", literal=lit, afirmacao="Arrecadou R$ 6 bi", motivo="",
+                       url="https://jornal.com/debate", fetch=page("Lula disse: " + lit + " 6 bilhões"))
+    assert not ok and "reproduz" in why
