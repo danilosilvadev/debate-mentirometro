@@ -56,6 +56,9 @@ SYSTEM_JUDGE_TURN = (
     "- falso: as fontes contradizem claramente.\n"
     "- sem_dados: as fontes não tratam do ponto. Na dúvida, sem_dados. Não use conhecimento próprio "
     "para contradizer sem fonte.\n"
+    "- Fonte marcada '(dado oficial)' é a série do IBGE/Banco Central: é a prova primária para números "
+    "(prefira-a a notícias); confira o ano/mês certo e a unidade (US$ x R$, milhões x bilhões) antes de decidir. "
+    "Se a série não traz o período exato do que foi dito, não conclua só por ela.\n"
     "- Use também a lista de presidentes recebida (fato fixo) para contas de anos e mandatos; "
     "faça a conta explicitamente.\n"
     "- Fonte que só REPRODUZ a fala do candidato (transcrição do debate, 'Lula disse que...') NÃO é prova; "
@@ -423,7 +426,13 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
                 evidence.append(e)
         if len(evidence) >= 5:
             break
-    evidence = evidence[:5]
+    if _os.environ.get("PLACAR_OFFICIAL", "1") != "0":
+        from placar.official import official_evidence
+        try:
+            evidence = official_evidence(f"{claim['literal']} {claim['afirmacao']}") + evidence
+        except Exception:  # noqa: BLE001 - dado oficial é opcional
+            pass
+    evidence = evidence[:6]
     res.retrieve_ms.append((time.perf_counter() - started) * 1000)
     if not evidence:
         with lock:

@@ -101,7 +101,7 @@ class Settings:
             gemini_model=os.environ.get(
                 "GEMINI_MODEL", "gemini-2.5-flash-lite"
             ).strip(),
-            factcheck_key=os.environ.get("FACTCHECK_API_KEY", "").strip(),
+            factcheck_key=(os.environ.get("GOOGLE_FACTCHECK_API_KEY") or os.environ.get("FACTCHECK_API_KEY") or "").strip(),
             searxng_url=os.environ.get("SEARXNG_URL", "").strip().rstrip("/"),
             brave_key=os.environ.get("BRAVE_API_KEY", "").strip(),
             ddg_enabled=os.environ.get("RETRIEVE_DDG", "1").strip() != "0",

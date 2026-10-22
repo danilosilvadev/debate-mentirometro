@@ -23,3 +23,8 @@ def _offline_support(monkeypatch):
 def _short_turns_ok(monkeypatch):
     from placar import turns
     monkeypatch.setattr(turns, "MIN_WORDS", 0)
+
+
+@pytest.fixture(autouse=True)
+def _offline_official(monkeypatch):
+    monkeypatch.setenv("PLACAR_OFFICIAL", "0")
