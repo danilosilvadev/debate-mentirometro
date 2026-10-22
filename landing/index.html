@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Placar da Verdade · Debate Globo ao vivo com checagem</title>
+<meta name="description" content="Debate da Globo, sex 23/10 às 21h20 (Brasília), com checagem de fatos ao vivo. Receba o lembrete.">
+<meta property="og:image" content="../og.jpg">
+<link rel="icon" href="../favicon.svg">
+<link rel="stylesheet" href="./landing.css">
+<script src="../config.js"></script>
+<script src="./landing.config.js"></script>
+</head>
+<body>
+<main class="wrap">
+  <header class="top"><a href="../" class="brand">Placar da Verdade</a><span class="pill"><i class="dot"></i><span id="pill">Ao vivo em breve</span></span></header>
+  <section class="hero">
+    <p class="eyebrow" id="when">TV Globo · sexta, 23/10 · 21h20 (Brasília)</p>
+    <h1>O debate do 2º turno, checado ao vivo.</h1>
+    <p class="sub">Cada afirmação dos candidatos vira um veredito com fonte, em segundos, na tela. Avisamos você quando começar.</p>
+    <div class="count" id="count" aria-live="polite">
+      <div><b id="cd-d">0</b><span>dias</span></div><div><b id="cd-h">00</b><span>horas</span></div>
+      <div><b id="cd-m">00</b><span>min</span></div><div><b id="cd-s">00</b><span>seg</span></div>
+    </div>
+    <a class="cta live hidden" id="watch" href="../?live=1">Assistir ao vivo</a>
+    <p class="subs"><b id="subs" class="mono">—</b> pessoas já pediram o lembrete</p>
+  </section>
+  <form class="card" id="form" novalidate>
+    <h2>Receber o lembrete</h2>
+    <label class="field">E-mail<input id="email" type="email" inputmode="email" autocomplete="email" placeholder="voce@exemplo.com"></label>
+    <label class="check"><input type="checkbox" id="c-email"> <span>Autorizo receber por e-mail o lembrete do debate e novidades do Placar da Verdade. Posso cancelar quando quiser (LGPD).</span></label>
+    <label class="field">WhatsApp<input id="wa" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(11) 91234-5678"></label>
+    <label class="check"><input type="checkbox" id="c-wa"> <span>Quero receber o lembrete pelo WhatsApp neste número. Posso responder SAIR para parar.</span></label>
+    <p class="err" id="err" role="alert"></p>
+    <button class="cta" id="go" type="submit">Me avise</button>
+    <p class="fine muted">Usamos seus dados só para avisar sobre o debate. Não vendemos nem compartilhamos.</p>
+  </form>
+  <div class="card ok hidden" id="done"><h2>Pronto!</h2><p id="done-msg">Você vai receber o lembrete.</p><a href="../">Ver o placar →</a></div>
+</main>
+<script type="module" src="./landing.mjs"></script>
+</body>
+</html>
