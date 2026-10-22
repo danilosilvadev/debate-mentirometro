@@ -79,3 +79,18 @@ h1 { font-size: clamp(30px, 7.5vw, 46px); }
   .units { grid-template-columns: repeat(4, auto); gap: 0 3vw; }
   .u b { font-size: clamp(56px, 14vw, 240px); }
 }
+
+/* marca + placar */
+.brandm { text-align: center; margin: 8px 0 44px; }
+.bq { font-size: clamp(22px, 6vw, 34px); font-weight: 600; letter-spacing: -.03em; margin: 0 0 6px; color: #f7f8f8; }
+.wordmark { width: 100vw; margin: 0 calc(50% - 50vw); font-size: clamp(36px, 12vw, 170px); font-weight: 800; letter-spacing: -.065em; line-height: .9;
+  background: linear-gradient(180deg,#fff 35%,#8a8f98); -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap; padding: 0 2vw; }
+.score { display: flex; align-items: center; justify-content: center; gap: 4vw; margin: 22px 0 8px; }
+.sc { display: flex; align-items: baseline; gap: 12px; }
+.sc b { font-size: clamp(72px, 24vw, 200px); font-weight: 750; letter-spacing: -.06em; line-height: .9; font-variant-numeric: tabular-nums; }
+.sc .nm { font-size: clamp(14px, 4vw, 22px); font-weight: 600; }
+.sc.l b, .sc.l .nm { color: #E5484D; text-shadow: 0 0 40px rgba(229,72,77,.35); }
+.sc.f b, .sc.f .nm { background: linear-gradient(90deg,#2FBF71 50%,#F5D33B 50%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 24px rgba(245,211,59,.2)); }
+.x { font-size: clamp(28px, 8vw, 64px); color: #62666d; font-weight: 300; }
+.sl { margin-top: 4px; }
+.bsub { color: #b4bcd0; font-size: 16px; margin: 18px 0 0; } .bsub b { color: #f7f8f8; font-weight: 600; display: block; margin-top: 4px; }
