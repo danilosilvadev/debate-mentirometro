@@ -29,7 +29,8 @@ class GrokCliProvider:
     def __init__(self, *, binary: str = "grok", model: str = "", parallel: int = 3, runner=None) -> None:
         self.binary = binary
         self.model = model
-        self.timeout_s = 20.0
+        # o prompt de classificação leva 15-20 s no grok; 20 s derrubava metade dos turnos (eval Band)
+        self.timeout_s = float(os.environ.get("GROK_CLI_TIMEOUT_S", "40"))
         self._sem = threading.BoundedSemaphore(max(1, parallel))
         self._run = runner or subprocess.run
         self._cwd = tempfile.mkdtemp(prefix="placar-grok-")  # pasta vazia: nada do repo no contexto
