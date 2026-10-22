@@ -369,7 +369,7 @@ export function paintBg(color, dir = '90deg') {
 /** Texto: cor sólida, ou degradê com corte seco recortado no texto. */
 export function paintText(color) {
   if (color === SPLIT) {
-    return `background:linear-gradient(90deg,${GREEN} 50%,${YELLOW} 50%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent`
+    return `background:linear-gradient(115deg,${GREEN} 50%,${YELLOW} 50%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent`
   }
   return `color:${esc(color)}`
 }
@@ -605,7 +605,7 @@ function scoreHtml(snapshot) {
       <div class="sc lies"><b>${lies.left}</b><small>${lies.left === 1 ? 'mentira' : 'mentiras'}</small></div></div>
     <div class="meter" role="img" aria-label="${esc(label)}">
       <div class="lbl lhead">${head}</div>
-      <div class="bar"><div style="width:${lies.leftPct}%;background:${paintBg(colorA)}"></div><div style="flex:1;background:${paintBg(colorB)}"></div></div>
+      <div class="bar"><div style="width:${lies.leftPct}%;background:${colorA === SPLIT ? `repeating-linear-gradient(135deg,${GREEN} 0 7px,${YELLOW} 7px 14px)` : paintBg(colorA)}"></div><div style="flex:1;background:${colorB === SPLIT ? `repeating-linear-gradient(135deg,${GREEN} 0 7px,${YELLOW} 7px 14px)` : paintBg(colorB)}"></div></div>
     </div>
     <div class="cand r"><div class="sc lies"><b>${lies.right}</b><small>${lies.right === 1 ? 'mentira' : 'mentiras'}</small></div>
       <div style="text-align:right"><div class="nm">${esc(right.nome)}</div></div>
@@ -818,7 +818,7 @@ function panelHtml(state, items) {
       <p>${tag('Falso', VERDICT_COLOR.falso)} os dados contradizem</p>
       <p>${tag('Sem dados', VERDICT_COLOR.sem_dados)} não deu para verificar</p>
       <p>${tag('Em revisão', VERDICT_COLOR.em_revisao)} o áudio não confirmou a frase; fica fora do placar até a conferência</p>
-      <p>O número grande é o índice de erro: falso vale 1, impreciso vale meio, verdadeiro vale 0. Sem dados e em revisão ficam de fora. A barra pende para quem tem o índice mais alto, e só depois de 3 fatos checáveis de cada lado.</p>
+      <p>O número grande é a quantidade de mentiras: afirmações checadas como falsas, sempre com fonte. A barra cresce para quem mentiu mais, e quem tem mais mentiras lidera o Troféu Pinóquio.</p>
     </div>`)
   }
   if (panel === 'funciona') {
