@@ -154,6 +154,12 @@ def _bank_turn(board, turn, quem, text, t_ms, dur_s, llm, retriever, lock, res, 
     if not best:
         return False
     hit, sent = best
+    # Literal: a frase da janela que mais se parece com a frase checada.
+    from placar.claim_bank import numbers as _nums, stems as _stems
+    want = _stems(hit["frase"])
+    i = sentences.index(sent)
+    cands = sentences[max(0, i - 1): i + 2]
+    sent = max(cands, key=lambda x: (len(_stems(x) & want) + 2 * len(_nums(x) & set(hit.get("numeros") or []))))
     with lock:
         board.add_time(quem, "outro", dur_s)
         claim = board.open_claim(quem=quem, tema=hit.get("tema") or "geral",
