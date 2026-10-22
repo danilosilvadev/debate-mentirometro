@@ -245,3 +245,20 @@ Tipos: `claim.created`, `claim.updated`, `proposta.created`, `proposta.increment
   e orador recebe na hora o veredito do checador profissional. `PLACAR_BANK=0` desliga.
 - Blocos com números passam por uma 2ª transcrição (`whisper-large-v3`); se os números
   divergem, vale a do modelo maior (`numeros_conferidos` no latency_report.json).
+
+## Dinheiro: só terceiros (LivePix e Apoia.se)
+
+Nenhum dado de pagamento passa pelo nosso código.
+- **Super chat:** o botão abre `LIVEPIX_URL` (config.js), e o doador paga na página da LivePix. A LivePix chama a Edge Function `supabase/functions/livepix-webhook`, que:
+  1. Confere se o `clientId` é o nosso.
+  2. Pede um token OAuth2 (client credentials) e busca a mensagem em `GET /v2/messages/{id}`. Só confia na API, nunca no corpo do webhook.
+  3. Modera com as regras locais, o `flagged` da LivePix e a Groq. Na dúvida, rejeita.
+  4. Grava em `superchats`, e o Realtime mostra só as aprovadas.
+- **Apoio mensal:** o botão abre `APOIASE_URL`.
+- **Configurar depois:**
+  ```
+  supabase secrets set LIVEPIX_CLIENT_ID=... LIVEPIX_CLIENT_SECRET=... GROQ_API_KEY=... PLACAR_DEBATE_KEY=globo-2026-10-23
+  ```
+  Depois, cadastre o webhook `https://igpkunwxmtopdqtbsuso.supabase.co/functions/v1/livepix-webhook` na LivePix.
+- **Sem segredos:** a função responde 503.
+- **Testes:** `node --test supabase/functions/livepix-webhook/core.test.mjs`, com fixtures de webhook simuladas.

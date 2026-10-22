@@ -25,5 +25,7 @@ window.PLACAR_SOCIAL = {
 };
 // true = exige clicar em ao menos uma rede para entrar. Padrão: opcional.
 window.REQUIRE_SOCIAL_CLICK = false;
-// "mock" = pagamento de teste (nada é cobrado). Stripe/Mercado Pago exigem servidor com webhook.
-window.PLACAR_PAY_PROVIDER = "mock";
+// Dinheiro só em terceiros. Super chat: página LivePix (o webhook da LivePix grava a mensagem moderada).
+// Apoio mensal: Apoia.se. Troque pelos links reais; com SEU_ o botão avisa "não configurado".
+window.LIVEPIX_URL = "https://livepix.gg/SEU_USUARIO";
+window.APOIASE_URL = "https://apoia.se/SEU_PROJETO";
