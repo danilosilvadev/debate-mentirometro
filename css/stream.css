@@ -73,3 +73,11 @@ html.pseudo-fs .app { z-index: 2147483000; }
   .app.replay > .video > * { display: none; }
   .app.replay > .video > .fsb { display: inline-block; position: absolute; white-space: nowrap; pointer-events: auto; top: 8px; right: 8px; background: rgba(0,0,0,.6); }
 }
+
+/* barra do topo simplificada: N mentiras vs M mentiras + cabo de guerra + manchete */
+.top .sc.lies { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.top .sc.lies b { font-size: 26px; font-weight: 800; color: #ff5c5c; font-variant-numeric: tabular-nums; }
+.top .sc.lies small { font-size: 10px; color: #8a8f98; text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+.meter .lhead { text-align: center; font-size: 12.5px; color: #e6e7e9; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meter .bar { height: 6px; }
+@media (max-width: 700px) { .top .sc.lies b { font-size: 20px; } .top .sc.lies small { font-size: 9px; } .meter .lhead { font-size: 12px; } }
