@@ -3,7 +3,9 @@
 
 const VERDICTS = ['verdadeiro', 'impreciso', 'falso', 'sem_dados']
 
+// Segundo em que o item aparece: `va` (quando o pipeline o publicou) ou `vs` (fim da frase).
 export function itemSecond(item, data) {
+  if (typeof item?.va === 'number') return item.va
   if (typeof item?.vs === 'number') return item.vs
   const t0 = Number(data?.video?.t0 || 0)
   const inicio = Number(data?.replay?.inicio || 0)
@@ -16,7 +18,9 @@ export function snapshotAt(data, sec) {
   const retime = (item) => ({ ...item, t: Math.round(itemSecond(item, data) * 1000) })
   const fatos = []
   for (const group of data?.fatos || []) {
-    const declaracoes = (group.declaracoes || []).filter(visible).map(retime)
+    const declaracoes = (group.declaracoes || []).filter(visible).map(retime).map((claim) => (
+      // antes do veredito sair, a afirmação aparece como "checando…"
+      typeof claim.vv === 'number' && sec < claim.vv ? { ...claim, veredito: 'checando', motivo: '' } : claim))
     if (declaracoes.length) fatos.push({ ...group, declaracoes })
   }
   const propostas = (data?.propostas || []).filter(visible).map(retime)
@@ -41,7 +45,7 @@ export function snapshotAt(data, sec) {
       tempo,
     }
   }
-  const { linhas, replay, ...rest } = data || {}
+  const { linhas, replay, eventos, ...rest } = data || {}
   return {
     ...rest,
     candidatos,
@@ -66,8 +70,10 @@ export function lineAt(data, sec, holdS = 1.5) {
 export function signatureAt(data, sec) {
   const n = (list) => (list || []).filter((item) => itemSecond(item, data) <= sec).length
   const claims = (data?.fatos || []).reduce((acc, g) => acc + n(g.declaracoes), 0)
-  const line = lineAt(data, sec)
-  return `${claims}|${n(data?.propostas)}|${n(data?.ataques)}|${line ? line.s : ''}`
+  const done = (data?.fatos || []).reduce((acc, g) => acc + (g.declaracoes || [])
+    .filter((c) => typeof c.vv === 'number' && c.vv <= sec).length, 0)
+  const cap = captionClaim(data, sec)
+  return `${claims}|${done}|${n(data?.propostas)}|${n(data?.ataques)}|${cap ? cap.id || cap.va : ''}`
 }
 
 export function clock({ now = () => Date.now(), start = 0, rate = 1 } = {}) {
@@ -85,4 +91,26 @@ export function mmss(sec) {
   const m = Math.floor((s % 3600) / 60)
   const pad = (x) => String(x).padStart(2, '0')
   return h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${m}:${pad(s % 60)}`
+}
+
+// Legenda: a última afirmação que chegou em até `legenda_max_s` (15 s) depois de dita.
+// Fica na tela até `holdS` depois do veredito. Nada de transcrição crua.
+export function captionClaim(data, sec, holdS = 14) {
+  const max = Number(data?.legenda_max_s || 15)
+  let best = null
+  for (const group of data?.fatos || []) {
+    for (const claim of group.declaracoes || []) {
+      const at = itemSecond(claim, data)
+      if (at > sec) continue
+      if (typeof claim.lat === 'number' && claim.lat > max) continue
+      if (!best || at > itemSecond(best, data)) best = claim
+    }
+  }
+  if (!best) return null
+  const end = (typeof best.vv === 'number' ? best.vv : itemSecond(best, data)) + holdS
+  return sec <= end ? best : null
+}
+
+export function withinCaption(claim, max = 15) {
+  return !(typeof claim?.lat === 'number' && claim.lat > max)
 }

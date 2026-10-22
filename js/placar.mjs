@@ -1,4 +1,4 @@
-import { clock as replayClock, lineAt, mmss, signatureAt, snapshotAt } from './replay.mjs'
+import { captionClaim, clock as replayClock, mmss, signatureAt, snapshotAt, withinCaption } from './replay.mjs'
 /** Placar da Verdade: conta, polling e a página. Sem build. */
 
 export const MINIMO = 3
@@ -9,6 +9,7 @@ const VERDICT_LABEL = {
   falso: 'Falso',
   sem_dados: 'Sem dados',
   em_revisao: 'Em revisão',
+  checando: 'Checando…',
 }
 
 const TONE = [
@@ -378,6 +379,7 @@ const VERDICT_COLOR = {
   falso: '#EB6F6F',
   sem_dados: '#8B8D98',
   em_revisao: '#A594F9',
+  checando: '#8A8F98',
 }
 
 function esc(value) {
@@ -585,40 +587,75 @@ function listsHtml(items, people, fresh) {
     <div class="lst b fade"><div class="lh end">${esc(right.nome)}<span class="dot" style="background:${paintBg(colorB)}"></span></div>${rightHtml}</div>`
 }
 
-function latestClaim(items) {
-  const claims = items.filter((item) => item.kind === 'claim')
-  return claims.length ? claims[claims.length - 1] : null
+
+const FLIP_MS = 950
+const flips = new Map() // key -> { checking: bool, doneAt: ms }
+
+export function isChecking(claim) {
+  if (!claim) return false
+  if (claim.veredito === 'checando') return true
+  return claim.veredito === 'em_revisao' && /^Áudio e fontes ainda/.test(claim.motivo || '')
+}
+
+// Estado da animação: 'front' (checando), 'flip' (virando agora, com atraso negativo) ou 'back'.
+export function flipState(key, checking, now = Date.now(), memo = flips) {
+  const seen = memo.get(key) || { checking: false, doneAt: 0 }
+  if (checking) {
+    memo.set(key, { checking: true, doneAt: 0 })
+    return { face: 'front', delay: 0 }
+  }
+  if (seen.checking && !seen.doneAt) seen.doneAt = now
+  memo.set(key, seen)
+  const elapsed = seen.doneAt ? now - seen.doneAt : Infinity
+  return elapsed < FLIP_MS ? { face: 'flip', delay: elapsed } : { face: 'back', delay: 0 }
 }
 
 function captionHtml(item, people, vivo) {
   if (!item) {
-    return `<div class="capw"><div class="cap" style="--c:#62666D"><div class="capq">Aguardando a primeira checagem.</div><div class="cape">Falso e impreciso só entram no placar quando o segundo modelo confirma.</div></div></div>`
+    return `<div class="capw"><div class="cap" style="--c:#62666D"><div class="capq">Aguardando a primeira afirmação checável.</div><div class="cape">A legenda mostra o resumo de cada afirmação e, em seguida, a checagem.</div></div></div>`
   }
   const person = people.find((candidate) => candidate.id === item.quem)
   const index = Math.max(0, people.findIndex((candidate) => candidate.id === item.quem))
   const color = candidateColor(person || {}, index)
-  const href = item.claim?.fonte ? safeHttpUrl(item.claim.fonte.url) : ''
+  const claim = item.claim || {}
+  const href = claim.fonte ? safeHttpUrl(claim.fonte.url) : ''
   const fonte = href ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">Fonte ↗</a>` : ''
-  const motivo = item.claim?.motivo ? esc(item.claim.motivo) : 'Ainda sem motivo publicado.'
-  const stamp = vivo ? `${hhmm(item.t)} · agora` : hhmm(item.t)
-  return `<div class="capw"><div class="cap" style="--c:${paintBg(color, '180deg')}">
-    <div class="capm"><span style="${paintText(color)}">${esc(person?.nome || '')}</span><span class="muted">${stamp}</span>${itemTag(item)}</div>
-    <div class="capq">“${esc(item.text)}”</div>
-    <div class="cape">${motivo} ${fonte}</div>
+  const motivo = claim.motivo ? esc(claim.motivo) : 'Ainda sem motivo publicado.'
+  const stamp = vivo ? `${hhmm(item.t)} · agora` : (item.replay ? mmss(item.t / 1000) : hhmm(item.t))
+  const checking = isChecking(claim)
+  const st = flipState(item.key, checking)
+  const who = `<span style="${paintText(color)}">${esc(person?.nome || '')}</span><span class="muted">${esc(stamp)}</span>`
+  const banco = claim.banco ? `<span class="muted">· checagem de ${esc(claim.banco)}</span>` : ''
+  const cls = st.face === 'back' ? ' is-done' : (st.face === 'flip' ? ' is-done anim' : '')
+  const delay = st.face === 'flip' ? ` style="--fd:-${Math.round(st.delay)}ms"` : ''
+  return `<div class="capw"><div class="flip3d${cls}"${delay} data-cap="${esc(item.key)}" data-face="${st.face}">
+    <div class="fc-inner">
+      <div class="cap fc-front" style="--c:${paintBg(color, '180deg')}" aria-hidden="${checking ? 'false' : 'true'}">
+        <div class="capm">${who}<span class="tag chk"><i class="spin"></i>Checando…</span></div>
+        <div class="capq">${esc(item.text)}</div>
+        <div class="cape">Buscando fontes e conferindo com dois modelos.</div>
+      </div>
+      <div class="cap fc-back" style="--c:${paintBg(color, '180deg')}" aria-hidden="${checking ? 'true' : 'false'}">
+        <div class="capm">${who}${checking ? '' : itemTag(item)}${banco}</div>
+        <div class="capq">${esc(item.text)}</div>
+        <div class="cape">${checking ? '' : `${motivo} ${fonte}`}</div>
+      </div>
+    </div>
   </div></div>`
 }
 
-function replayCaptionHtml(line, item, people) {
-  if (!line) return captionHtml(item, people, false)
-  const index = Math.max(0, people.findIndex((candidate) => candidate.id === line.quem))
-  const person = people.find((candidate) => candidate.id === line.quem)
-  const color = person ? candidateColor(person, index) : '#8B8D98'
-  const who = person ? person.nome : 'Mediação'
-  const last = item ? `<div class="cape">Última checagem: ${itemTag(item)} ${esc(item.text)}</div>` : ''
-  return `<div class="capw"><div class="cap" style="--c:${paintBg(color, '180deg')}" data-line="${esc(String(line.s))}">
-    <div class="capm"><span style="${paintText(color)}">${esc(who)}</span><span class="muted">${esc(mmss(line.s))}</span></div>
-    <div class="capq">${esc(line.text)}</div>${last}
-  </div></div>`
+function pickCaption(state, items) {
+  const claims = items.filter((item) => item.kind === 'claim')
+  if (state.replay) {
+    const target = captionClaim(state.replay, state.replaySec || 0)
+    if (!target) return null
+    const item = claims.find((it) => (target.id && it.claim.id === target.id) || it.claim.afirmacao === target.afirmacao) || null
+    return item ? { ...item, replay: true } : null
+  }
+  for (let i = claims.length - 1; i >= 0; i--) {
+    if (withinCaption(claims[i].claim)) return claims[i]
+  }
+  return null
 }
 
 function mobileFeed(items, people, filter, fresh, encerrado) {
@@ -637,7 +674,10 @@ function mobileFeed(items, people, filter, fresh, encerrado) {
     </button>`
   }).join('')
   const heading = encerrado ? 'Placar final · mais recentes' : 'Ao vivo · mais recentes'
+  const tabs = [['', 'Todos'], ...people.map((p) => [p.id, p.nome])].map(([id, nome]) => (
+    `<button type="button" role="tab" class="mtab${(filter?.quem || '') === id ? ' on' : ''}" aria-selected="${(filter?.quem || '') === id}" data-act="quem" data-arg="${esc(id)}">${esc(nome)}</button>`)).join('')
   return `<div class="mfeed">
+    <div class="mtabs" role="tablist" aria-label="Filtrar por candidato">${tabs}</div>
     <div class="lh between"><span>${heading}</span>
       <button type="button" class="tag${on ? '' : ' t2'}" data-act="verdict" data-arg="em_revisao"><i style="background:#A594F9"></i>Em revisão</button>
     </div>${chips || '<p class="muted">Nenhum item com esse filtro.</p>'}</div>`
@@ -765,7 +805,7 @@ export function renderBoard(state) {
     ${scoreHtml(snapshot)}
     ${note ? `<p class="simline" role="status">${esc(note)}</p>` : ''}
     ${listsHtml(items, people, state.fresh)}
-    ${state.replay ? replayCaptionHtml(state.replayLine, latestClaim(items), people) : captionHtml(latestClaim(items), people, status.vivo && !snapshot.encerrado)}
+    ${captionHtml(pickCaption(state, feedItems(snapshot)), people, !state.replay && status.vivo && !snapshot.encerrado)}
     ${mobileFeed(items, people, state.filter, state.fresh, snapshot.encerrado)}
     ${panelHtml(state, items)}`
 }
@@ -909,6 +949,11 @@ function boot() {
       paint()
       return
     }
+    if (act === 'quem') {
+      state.filter = { ...state.filter, quem: arg || undefined }
+      paint()
+      return
+    }
     if (act === 'verdict') {
       state.filter = { ...state.filter, verdict: state.filter.verdict === arg ? undefined : arg }
       paint()
@@ -1015,12 +1060,10 @@ function boot() {
         document.documentElement.dataset.replaySec = String(Math.floor(sec))
         if (next === sig) return
         sig = next
-        state.replayLine = lineAt(data, sec)
         if (simulated) state.banner = 'Replay com relógio simulado (sem player).'
         show(snapshotAt(data, sec), 'live')
       }
       state.banner = 'Replay: os fatos aparecem no momento em que foram ditos.'
-      state.replayLine = lineAt(data, startAt)
       show(snapshotAt(data, startAt), 'live')
       window.__replay = {
         seek: (sec) => { sim.seek(sec); hold = sec; if (ready && !failed && player?.seekTo) player.seekTo(sec, true); tick() },

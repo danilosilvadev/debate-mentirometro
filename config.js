@@ -9,3 +9,21 @@ window.PLACAR_MODE = "demo";
 
 // Link "Replay" no menu (teste com a saída real do pipeline). Vazio esconde.
 window.PLACAR_REPLAY = "?replay=RugVB17uRVM&src=./teste/";
+
+// Interação (votos, e-mail, super chat). A chave abaixo é a publicável do Supabase
+// (feita para o navegador; o banco só aceita as RPCs com limite e validação).
+window.PLACAR_SUPABASE = {
+  url: "https://igpkunwxmtopdqtbsuso.supabase.co",
+  key: "sb_publishable_KdJP5K5oLFPEZfkaYv81pw_OjdZ_5aR",
+};
+window.PLACAR_DEBATE_KEY = "globo-2026-10-23";
+// Redes no portão de e-mail (troque pelos perfis reais).
+window.PLACAR_SOCIAL = {
+  instagram: "https://instagram.com/SEU_PERFIL",
+  x: "https://x.com/SEU_PERFIL",
+  youtube: "https://youtube.com/@SEU_CANAL",
+};
+// true = exige clicar em ao menos uma rede para entrar. Padrão: opcional.
+window.REQUIRE_SOCIAL_CLICK = false;
+// "mock" = pagamento de teste (nada é cobrado). Stripe/Mercado Pago exigem servidor com webhook.
+window.PLACAR_PAY_PROVIDER = "mock";
