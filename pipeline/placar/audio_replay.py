@@ -75,6 +75,9 @@ def run(
     if isinstance(stt, FasterWhisperTranscriber):
         stt.transcribe(_silence(out))  # aquece o modelo fora do relógio
     embed(np.zeros(16000, dtype="float32"))
+    if __import__("os").environ.get("PLACAR_OFFICIAL", "1") != "0":
+        from placar import official  # séries do BC/IBGE em segundo plano, antes da 1ª fala
+        threading.Thread(target=official.warm, daemon=True).start()
     origin = int(time.time() * 1000)
     board = Board(debate_id=debate_id, candidatos=candidatos, origin_ms=origin,
                   video={"id": video_id, "ao_vivo": True, "inicio": 0, "t0": origin, "comeco": origin},

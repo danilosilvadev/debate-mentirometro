@@ -496,6 +496,114 @@
    "claimant": "Partido Liberal e Flávio Bolsonaro",
    "origem": "pre-band",
    "min_overlap": 0.75
+  },
+  {
+   "quem": "lula",
+   "frase": "deixei o país crescendo 7,5% em 2010",
+   "veredito": "verdadeiro",
+   "motivo": "IBGE: PIB cresceu 7,5% em 2010, último ano do 2º mandato.",
+   "fonte": "Agência Lupa",
+   "url": "https://www.agencialupa.org/checagem/2026/08/27/ao-vivo-checagem-da-entrevista-de-lula-ao-jornal-nacional/",
+   "numeros": [
+    "2010",
+    "7,5"
+   ],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "lula",
+   "frase": "o PIB só cresceu 3% quando eu voltei, em 2023, 2024 e 2025",
+   "veredito": "falso",
+   "motivo": "O PIB cresceu 3% ou mais em 2011, 2013, 2021 e 2022 (IBGE).",
+   "fonte": "Agência Lupa",
+   "url": "https://www.agencialupa.org/checagem/2026/08/27/ao-vivo-checagem-da-entrevista-de-lula-ao-jornal-nacional/",
+   "numeros": [
+    "2023",
+    "2024",
+    "2025",
+    "3"
+   ],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "lula",
+   "frase": "devolvemos 3 bilhões e meio de reais aos aposentados roubados",
+   "veredito": "verdadeiro",
+   "motivo": "R$ 2,95 bi devolvidos até março mais R$ 547 mi pela MP 1.378/2026 somam cerca de R$ 3,5 bi.",
+   "fonte": "Aos Fatos",
+   "url": "https://www.aosfatos.org/noticias/checamos-entrevista-lula-globo/",
+   "numeros": [
+    "3",
+    "5"
+   ],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "lula",
+   "frase": "nunca vi essa moça, a lobista Roberta Luchsinger, na minha vida",
+   "veredito": "falso",
+   "motivo": "Fotos públicas mostram a lobista ao lado de Lula em 2021 e 2022.",
+   "fonte": "Agência Lupa",
+   "url": "https://www.agencialupa.org/checagem/2026/08/27/ao-vivo-checagem-da-entrevista-de-lula-ao-jornal-nacional/",
+   "numeros": [],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "lula",
+   "frase": "eu já acabei com a fome duas vezes",
+   "veredito": "impreciso",
+   "motivo": "O Brasil saiu do Mapa da Fome (2014 e 2025), mas a fome não foi erradicada.",
+   "fonte": "Agência Lupa",
+   "url": "https://www.agencialupa.org/checagem/2026/08/27/ao-vivo-checagem-da-entrevista-de-lula-ao-jornal-nacional/",
+   "numeros": [
+    "2"
+   ],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "lula",
+   "frase": "tínhamos 5 milhões de trabalhadores com diploma universitário e hoje temos 25 milhões",
+   "veredito": "verdadeiro",
+   "motivo": "IBGE: 5,5 mi ocupados com ensino superior em 2003; 25,5 mi em 2025.",
+   "fonte": "Agência Lupa",
+   "url": "https://www.agencialupa.org/checagem/2026/08/27/ao-vivo-checagem-da-entrevista-de-lula-ao-jornal-nacional/",
+   "numeros": [
+    "25",
+    "5"
+   ],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "lula",
+   "frase": "a quadrilha do INSS foi montada em 2019",
+   "veredito": "impreciso",
+   "motivo": "Há indícios de descontos indevidos antes de 2019; eles se intensificaram depois.",
+   "fonte": "Agência Lupa",
+   "url": "https://www.agencialupa.org/checagem/2026/08/27/ao-vivo-checagem-da-entrevista-de-lula-ao-jornal-nacional/",
+   "numeros": [
+    "2019"
+   ],
+   "origem": "pre-band",
+   "min_overlap": 0.7
+  },
+  {
+   "quem": "lula",
+   "frase": "o Brasil era a sétima economia do mundo e criou 22 milhões de empregos",
+   "veredito": "impreciso",
+   "motivo": "7ª economia em 2010 é correto, mas o saldo de empregos formais foi de cerca de 14 milhões.",
+   "fonte": "Estadão Verifica",
+   "url": "https://www.estadao.com.br/estadao-verifica/entrevista-jn-globo-lula-checagem-verdadeiro-falso/",
+   "numeros": [
+    "22"
+   ],
+   "origem": "pre-band",
+   "min_overlap": 0.7
   }
  ]
 }
