@@ -460,10 +460,33 @@ function tag(label, color) {
   return `<span class="tag"><i style="background:${paintBg(color)}"></i>${esc(label)}</span>`
 }
 
+/** Fontes clicáveis de uma checagem (fonte única ou lista fontes[]), só http(s). */
+export function sourcesOf(claim) {
+  const raw = [...(Array.isArray(claim?.fontes) ? claim.fontes : []), ...(claim?.fonte ? [claim.fonte] : [])]
+  const seen = new Set()
+  const out = []
+  for (const src of raw) {
+    const url = safeHttpUrl(src?.url)
+    if (!url || seen.has(url)) continue
+    seen.add(url)
+    let host = ''
+    try { host = new URL(url).hostname.replace(/^www\./, '') } catch { /* ok */ }
+    out.push({ url, titulo: src.titulo || host || 'Fonte', host, oficial: /(^|\.)(gov\.br|leg\.br|jus\.br|ibge\.gov\.br|bcb\.gov\.br)$/.test(host) })
+  }
+  return out.sort((a, b) => Number(b.oficial) - Number(a.oficial))
+}
+
+/** Nunca mostra veredito sem fonte: verdadeiro/impreciso/falso sem link vira "Sem dados". */
+export function shownVerdict(claim) {
+  const v = claim?.veredito
+  if ((v === 'verdadeiro' || v === 'impreciso' || v === 'falso') && !sourcesOf(claim).length) return 'sem_dados'
+  return v
+}
+
 function itemTag(item) {
   if (item.kind === 'proposta') return tag('Proposta')
   if (item.kind === 'ataque') return tag('Ataque')
-  const verdict = item.claim?.veredito
+  const verdict = shownVerdict(item.claim)
   return tag(VERDICT_LABEL[verdict] || verdict, VERDICT_COLOR[verdict])
 }
 
@@ -576,17 +599,53 @@ function scoreHtml(snapshot) {
   </header>`
 }
 
-function listsHtml(items, people, fresh) {
-  if (people.length < 2) return ''
-  const [left, right] = people
-  const colorA = candidateColor(left, 0)
-  const colorB = candidateColor(right, 1)
-  const leftHtml = sideItems(items, left.id, fresh, 'l')
-  const rightHtml = sideItems(items, right.id, fresh, 'r')
-  return `<div class="lst a fade"><div class="lh"><span class="dot" style="background:${paintBg(colorA)}"></span>${esc(left.nome)}</div>${leftHtml}</div>
-    <div class="lst b fade"><div class="lh end">${esc(right.nome)}<span class="dot" style="background:${paintBg(colorB)}"></span></div>${rightHtml}</div>`
+function cardHtml(item, person, color, fresh) {
+  const freshCls = fresh?.has(item.key) ? ' fresh' : ''
+  const claim = item.claim
+  let body = ''
+  if (item.kind === 'claim') {
+    const srcs = sourcesOf(claim)
+    const semFonte = shownVerdict(claim) !== claim.veredito
+    const motivo = isChecking(claim) ? 'Checando fontes…' : (semFonte ? 'Sem fonte publicada para comprovar; não conta como checagem.' : (claim.motivo || ''))
+    const links = srcs.map((src) => `<a class="src" href="${esc(src.url)}" target="_blank" rel="noopener noreferrer">${src.oficial ? '<b class="of">Oficial</b>' : ''}${esc(src.titulo)}${src.host ? ` <span class="host">· ${esc(src.host)}</span>` : ''} ↗</a>`).join('')
+    body = `${motivo ? `<span class="cm">${esc(motivo)}</span>` : ''}</button>
+      ${links ? `<div class="srcs"><span class="sl">Fonte${srcs.length > 1 ? 's' : ''}</span>${links}</div>` : (isChecking(claim) ? '' : '<span class="src muted">Sem fonte encontrada</span>')}`
+  } else {
+    const extra = item.proposal?.explicacao || ''
+    body = `${extra && extra.toLowerCase() !== String(item.text).toLowerCase() ? `<span class="cm">${esc(extra)}</span>` : ''}${item.proposal?.vezes > 1 ? `<span class="cm">Citada ${item.proposal.vezes} vezes</span>` : ''}</button>`
+  }
+  const stamp = item.replay ? mmss(item.t / 1000) : hhmm(item.t)
+  return `<article class="card${freshCls}" data-quem="${esc(item.quem)}" data-kind="${item.kind}" style="--c:${paintBg(color, '180deg')}">
+    <button type="button" class="cb" data-act="item" data-arg="${esc(item.key)}">
+      <span class="ch"><b style="${paintText(color)}">${esc(person.nome)}</b><span class="muted">${esc(stamp)}</span>${itemTag(item)}</span>
+      <span class="q">${esc(item.text)}</span>
+      ${body}
+  </article>`
 }
 
+/** Coluna de um candidato: as checagens (com veredito e fonte) e as propostas dele. */
+function columnHtml(items, people, index, fresh, side) {
+  const person = people[index]
+  const color = candidateColor(person, index)
+  const mine = items.filter((item) => item.quem === person.id).slice().reverse()
+  const claims = mine.filter((item) => item.kind === 'claim')
+  const props = mine.filter((item) => item.kind === 'proposta')
+  const idx = errorIndex(person)
+  const counts = `<span class="vc"><i style="background:${VERDICT_COLOR.verdadeiro}"></i>${person.verdadeiro || 0}</span><span class="vc"><i style="background:${VERDICT_COLOR.impreciso}"></i>${person.impreciso || 0}</span><span class="vc"><i style="background:${VERDICT_COLOR.falso}"></i>${person.falso || 0}</span>`
+  const section = (title, list, empty) => `<section class="csec"><h3>${title} <span class="muted">${list.length}</span></h3>${list.length ? list.map((item) => cardHtml(item, person, color, fresh)).join('') : `<p class="muted empty">${empty}</p>`}</section>`
+  return `<aside class="col-c ${side}" aria-label="${esc(person.nome)}" data-quem="${esc(person.id)}" style="--c:${paintBg(color, '180deg')}">
+    <div class="colh"><span class="bar-c"></span><div class="colt"><div class="colname" style="${paintText(color)}">${esc(person.nome)}</div><div class="colsub">${counts}<span class="muted">${idx.total ? `${idx.erroPct}% de erro` : 'sem fatos checados'}</span></div></div></div>
+    <div class="colbody">
+      ${section('Checagens', claims, 'Nenhuma afirmação checável ainda.')}
+      ${section('Propostas', props, 'Nenhuma proposta concreta ainda.')}
+    </div>
+  </aside>`
+}
+
+function listsHtml(items, people, fresh) {
+  if (people.length < 2) return ''
+  return `${columnHtml(items, people, 0, fresh, 'a')}${columnHtml(items, people, 1, fresh, 'b')}`
+}
 
 const FLIP_MS = 950
 const flips = new Map() // key -> { checking: bool, doneAt: ms }
@@ -618,8 +677,8 @@ function captionHtml(item, people, vivo) {
   const index = Math.max(0, people.findIndex((candidate) => candidate.id === item.quem))
   const color = candidateColor(person || {}, index)
   const claim = item.claim || {}
-  const href = claim.fonte ? safeHttpUrl(claim.fonte.url) : ''
-  const fonte = href ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">Fonte ↗</a>` : ''
+  const srcs0 = sourcesOf(claim)
+  const fonte = srcs0.length ? `<a href="${esc(srcs0[0].url)}" target="_blank" rel="noopener noreferrer">Fonte: ${esc(srcs0[0].titulo)} ↗</a>` : ''
   const motivo = claim.motivo ? esc(claim.motivo) : 'Ainda sem motivo publicado.'
   const stamp = vivo ? `${hhmm(item.t)} · agora` : (item.replay ? mmss(item.t / 1000) : hhmm(item.t))
   const checking = isChecking(claim)
@@ -658,29 +717,14 @@ function pickCaption(state, items) {
   return null
 }
 
-function mobileFeed(items, people, filter, fresh, encerrado) {
-  const rows = items.slice().reverse().slice(0, 40)
-  const on = filter?.verdict === 'em_revisao'
-  const chips = rows.map((item) => {
-    const person = people.find((candidate) => candidate.id === item.quem)
-    const index = Math.max(0, people.findIndex((candidate) => candidate.id === item.quem))
-    const color = candidateColor(person || {}, index)
-    const right = index === 1
-    const freshCls = fresh?.has(item.key) ? ' fresh' : ''
-    return `<button type="button" class="fi${right ? ' r' : ''}${freshCls}" data-act="item" data-arg="${esc(item.key)}">
-      <span class="who" style="${paintText(color)}">${esc(person?.nome || '')} · ${hhmm(item.t)}</span>
-      <span class="meta">${itemTag(item)}</span>
-      <span class="q">${esc(item.text)}</span>
-    </button>`
-  }).join('')
-  const heading = encerrado ? 'Placar final · mais recentes' : 'Ao vivo · mais recentes'
-  const tabs = [['', 'Todos'], ...people.map((p) => [p.id, p.nome])].map(([id, nome]) => (
-    `<button type="button" role="tab" class="mtab${(filter?.quem || '') === id ? ' on' : ''}" aria-selected="${(filter?.quem || '') === id}" data-act="quem" data-arg="${esc(id)}">${esc(nome)}</button>`)).join('')
+function mobileFeed(items, people, filter, fresh) {
+  if (people.length < 2) return ''
+  const chosen = Math.max(0, people.findIndex((p) => p.id === filter?.quem))
+  const tabs = people.map((p, i) => (
+    `<button type="button" role="tab" class="mtab${i === chosen ? ' on' : ''}" aria-selected="${i === chosen}" data-act="quem" data-arg="${esc(p.id)}" style="--c:${paintBg(candidateColor(p, i), '90deg')}">${esc(p.nome)}</button>`)).join('')
   return `<div class="mfeed">
-    <div class="mtabs" role="tablist" aria-label="Filtrar por candidato">${tabs}</div>
-    <div class="lh between"><span>${heading}</span>
-      <button type="button" class="tag${on ? '' : ' t2'}" data-act="verdict" data-arg="em_revisao"><i style="background:#A594F9"></i>Em revisão</button>
-    </div>${chips || '<p class="muted">Nenhum item com esse filtro.</p>'}</div>`
+    <div class="mtabs" role="tablist" aria-label="Escolher candidato">${tabs}</div>
+    ${columnHtml(items, people, chosen, fresh, 'm')}</div>`
 }
 
 function sheet(title, body) {
@@ -774,10 +818,10 @@ function panelHtml(state, items) {
     const color = candidateColor(person || {}, index)
     let extra = ''
     if (item.kind === 'claim') {
-      const href = item.claim.fonte ? safeHttpUrl(item.claim.fonte.url) : ''
+      const srcs = sourcesOf(item.claim)
       extra = `${item.claim.literal ? `<p class="quote">“${esc(item.claim.literal)}”</p>` : ''}
         <p>${esc(item.claim.motivo || 'Ainda sem motivo publicado.')}</p>
-        ${href ? `<p><a href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(item.claim.fonte.titulo)} ↗</a></p>` : '<p class="muted">Nenhuma fonte encontrada.</p>'}
+        ${srcs.length ? srcs.map((src) => `<p><a href="${esc(src.url)}" target="_blank" rel="noopener noreferrer">${esc(src.titulo)} ↗</a> <span class="muted">${esc(src.host)}</span></p>`).join('') : '<p class="muted">Nenhuma fonte encontrada.</p>'}
         ${item.claim.corrigido ? `<p class="muted">${item.claim.corrigido.por === 'qa_manual' ? 'Corrigido na revisão humana (QA) após o debate' : 'Revisado após o debate'} · a checagem automática dizia ${esc(VERDICT_LABEL[item.claim.corrigido.antes] || '')}</p>` : ''}`
     } else if (item.kind === 'proposta') {
       extra = `<p>${esc(item.proposal.explicacao || '')}</p>${item.proposal.vezes > 1 ? `<p class="muted">Citada ${item.proposal.vezes} vezes</p>` : ''}`
@@ -796,7 +840,7 @@ export function renderBoard(state) {
   const people = candidatesOf(snapshot)
   const colorA = candidateColor(people[0] || {}, 0)
   const colorB = candidateColor(people[1] || {}, 1)
-  const items = feedItems(snapshot).filter((item) => passes(item, state.filter))
+  const items = feedItems(snapshot).filter((item) => passes(item, { ...state.filter, quem: '' }))
   const demo = state.mode === 'demo' || snapshot.simulado
   const status = statusCopy(snapshot, state.now || Date.now(), state.mode)
   const note = state.banner || snapshot.aviso || (demo ? 'Simulação com fatos fictícios. Não é a checagem do debate.' : '')
@@ -806,7 +850,7 @@ export function renderBoard(state) {
     ${note ? `<p class="simline" role="status">${esc(note)}</p>` : ''}
     ${listsHtml(items, people, state.fresh)}
     ${captionHtml(pickCaption(state, feedItems(snapshot)), people, !state.replay && status.vivo && !snapshot.encerrado)}
-    ${mobileFeed(items, people, state.filter, state.fresh, snapshot.encerrado)}
+    ${mobileFeed(items, people, state.filter, state.fresh)}
     ${panelHtml(state, items)}`
 }
 
@@ -844,7 +888,12 @@ function boot() {
     const nextId = resolveVideoId(state.snapshot, state.videoOverride || '')
     const sameStage = previous && (previous.getAttribute('data-vid') || '') === nextId
     app.className = `app${state.quiet ? ' quiet' : ''}${state.replay ? ' replay' : ''}`
+    const scrolls = [...app.querySelectorAll('.col-c')].map((node) => [node.className, node.querySelector('.colbody')?.scrollTop || 0])
     app.innerHTML = renderBoard(state)
+    for (const [cls, top] of scrolls) {
+      const body = [...app.querySelectorAll('.col-c')].find((node) => node.className === cls)?.querySelector('.colbody')
+      if (body && top) body.scrollTop = top
+    }
     if (sameStage && !state.replay) {
       const slot = app.querySelector('.stage')
       if (slot) slot.replaceWith(previous)
