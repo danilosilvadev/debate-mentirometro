@@ -94,7 +94,7 @@ function votesHtml(names, replay) {
     ${replay ? '<span class="ix-lbl">Torcida (gravada)</span>' : ''}
     <button type="button" class="ix-vote s1" data-side="1" ${replay ? 'disabled' : ''} aria-label="Apoiar ${esc(names[0])}"><i></i><b data-n="1">0</b></button>
     <button type="button" class="ix-vote s2" data-side="2" ${replay ? 'disabled' : ''} aria-label="Apoiar ${esc(names[1])}"><i></i><b data-n="2">0</b></button>
-    ${replay ? '' : '<button type="button" class="ix-donate" data-act="donate">Super chat</button>'}
+    ${replay ? '' : linkBtn('ix-donate', W.LIVEPIX_URL, 'Super chat')}${linkBtn('ix-apoie', W.APOIASE_URL, 'Apoie o projeto')}
   </div><div class="ix-chats" aria-live="polite"></div><div class="ix-toast" role="status"></div>`
 }
 
@@ -185,59 +185,18 @@ function gate() {
   })
 }
 
-// ---------- Super chat (doação) ----------
-const PROVIDERS = {
-  // Sem chaves: fluxo de teste completo, rotulado. Stripe/Mercado Pago entram aqui com
-  // confirmação no servidor (webhook) antes de criar o super chat.
-  mock: {
-    label: 'Pagamento de teste (nenhum valor é cobrado)',
-    pay: async () => ({ ok: true, ref: 'teste-' + Date.now() }),
-  },
+// ---------- Super chat e apoio (só links de terceiros) ----------
+// Nenhum dado de pagamento passa pelo nosso código: o super chat é pago na página da LivePix,
+// que avisa nossa Edge Function (webhook); o apoio mensal é no Apoia.se.
+export function externalUrl(u) {
+  return typeof u === 'string' && /^https:\/\/(?:[a-z0-9-]+\.)*(?:livepix\.gg|apoia\.se)\/[A-Za-z0-9_./-]+$/i.test(u) && !/SEU_/.test(u) ? u : ''
 }
 
-function donate(names) {
-  const prov = PROVIDERS[W.PLACAR_PAY_PROVIDER || 'mock'] || PROVIDERS.mock
-  const wrap = document.createElement('div')
-  wrap.className = 'ix-gate soft'
-  wrap.innerHTML = `<div class="ix-modal" role="dialog" aria-modal="true" aria-labelledby="ixd-t">
-    <button type="button" class="ix-x" aria-label="Fechar">×</button>
-    <h2 id="ixd-t">Super chat</h2>
-    <p class="muted">${esc(prov.label)}. A mensagem passa por moderação automática antes de aparecer.</p>
-    <form novalidate>
-      <div class="ix-amts">${[500, 1000, 2000, 5000].map((v, i) => `<label><input type="radio" name="v" value="${v}" ${i === 1 ? 'checked' : ''}><span>${brl(v)}</span></label>`).join('')}</div>
-      <label>Nome<input name="nome" maxlength="40" required placeholder="Como aparecer na tela"></label>
-      <label>Mensagem<textarea name="msg" maxlength="140" rows="3" required placeholder="Até 140 caracteres"></textarea></label>
-      <small class="muted"><span data-c>0</span>/140</small>
-      <small class="ix-err" data-err="d"></small>
-      <button type="submit" class="ix-go">Pagar e enviar</button>
-    </form></div>`
-  document.body.appendChild(wrap)
-  const close = () => { wrap.classList.add('out'); setTimeout(() => wrap.remove(), 250) }
-  wrap.querySelector('.ix-x').addEventListener('click', close)
-  const form = wrap.querySelector('form')
-  form.msg.addEventListener('input', () => { wrap.querySelector('[data-c]').textContent = String(form.msg.value.length) })
-  form.addEventListener('submit', async (ev) => {
-    ev.preventDefault()
-    const err = wrap.querySelector('[data-err="d"]')
-    const nome = form.nome.value.trim()
-    const msg = form.msg.value.trim()
-    if (!nome || !msg || msg.length > 140 || nome.length > 40) { err.textContent = 'Preencha nome e mensagem (até 140 caracteres).'; return }
-    const btn = form.querySelector('.ix-go')
-    btn.disabled = true
-    btn.textContent = 'Processando…'
-    try {
-      const paid = await prov.pay({ valor: Number(form.v.value) })
-      if (!paid.ok) throw new Error('pagamento não aprovado')
-      const out = await rpc('create_superchat', { p_nome: nome, p_mensagem: msg, p_valor: Number(form.v.value), p_provider: W.PLACAR_PAY_PROVIDER || 'mock', p_client: clientId(), p_debate: W.PLACAR_DEBATE_KEY || 'ao-vivo' })
-      if (!out?.ok) throw new Error(out?.erro === 'devagar' ? 'Aguarde um minuto para enviar outro.' : 'Não deu para enviar.')
-      form.innerHTML = '<p class="ix-ok">Recebido! Sua mensagem aparece na tela assim que a moderação aprovar.</p>'
-      setTimeout(close, 2600)
-    } catch (e) {
-      btn.disabled = false
-      btn.textContent = 'Pagar e enviar'
-      err.textContent = e.message || 'Erro.'
-    }
-  })
+function linkBtn(cls, url, label) {
+  const ok = externalUrl(url)
+  return ok
+    ? `<a class="${cls}" href="${esc(ok)}" target="_blank" rel="noopener noreferrer">${label}</a>`
+    : `<button type="button" class="${cls}" data-act="nolink" aria-disabled="true">${label}</button>`
 }
 
 // ---------- Ao vivo ----------
@@ -262,7 +221,7 @@ async function live(names) {
       btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop')
       return
     }
-    if (ev.target.closest('[data-act="donate"]')) donate(names)
+    if (ev.target.closest('[data-act="nolink"]')) toast('Link ainda não configurado.')
   })
   setInterval(async () => {
     for (const side of ['1', '2']) {

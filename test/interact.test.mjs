@@ -23,3 +23,12 @@ test('replay de eventos: contadores e eventos entre segundos', () => {
   assert.equal(b.chats.length, 1)
   assert.match(brl(1000), /R\$\s?10,00/)
 })
+
+test('links de pagamento: só LivePix/Apoia.se https e sem placeholder', async () => {
+  const { externalUrl } = await import('../js/interact.mjs')
+  assert.equal(externalUrl('https://livepix.gg/placar'), 'https://livepix.gg/placar')
+  assert.equal(externalUrl('https://apoia.se/placar'), 'https://apoia.se/placar')
+  assert.equal(externalUrl('https://livepix.gg/SEU_USUARIO'), '')
+  assert.equal(externalUrl('javascript:alert(1)'), '')
+  assert.equal(externalUrl('https://evil.com/livepix.gg/x'), '')
+})

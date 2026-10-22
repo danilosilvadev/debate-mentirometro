@@ -323,10 +323,13 @@ button.tag { cursor: pointer; }
 .ix-vote.s2 i { background: linear-gradient(90deg, #2FBF71 50%, #F5D33B 50%); }
 .ix-vote.pop { animation: ixpop 260ms cubic-bezier(0.3, 1.6, 0.5, 1); }
 @keyframes ixpop { 50% { transform: scale(1.12); } }
-.ix-donate {
+.ix-donate, .ix-apoie {
+  display: inline-flex; align-items: center; text-decoration: none;
   height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.12);
   background: #f7f8f8; color: #08090a; font: 600 12px/1 Inter, system-ui, sans-serif; cursor: pointer;
 }
+.ix-apoie { background: transparent; color: #f7f8f8; }
+.ix-donate[aria-disabled="true"], .ix-apoie[aria-disabled="true"] { opacity: 0.55; }
 .ix-like { position: fixed; pointer-events: none; animation: ixfloat 1.5s cubic-bezier(0.2, 0.7, 0.3, 1) forwards; transform: translate(-50%, 0); }
 .ix-like svg { display: block; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45)); }
 .ix-like.s1 svg { fill: #E5484D; }
@@ -417,7 +420,7 @@ html.ix-dim .app { filter: brightness(0.55) saturate(0.8); transition: filter 30
   .fi { min-height: 44px; }
   .mfeed { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
   .ix-votes { right: calc(12px + env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); padding: 6px; }
-  .ix-vote, .ix-donate { height: 44px; min-width: 64px; font-size: 13px; }
+  .ix-vote, .ix-donate, .ix-apoie { height: 44px; min-width: 64px; font-size: 13px; }
   .ix-vote i { width: 20px; height: 20px; }
   .ix-chats { top: calc(8px + env(safe-area-inset-top)); }
   .ix-modal { padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); max-height: 92vh; overflow-y: auto; }
@@ -441,7 +444,7 @@ html.ix-dim .app { filter: brightness(0.55) saturate(0.8); transition: filter 30
   .capw { bottom: calc(8px + env(safe-area-inset-bottom)); left: calc(10px + env(safe-area-inset-left)); transform: none; width: min(520px, 56vw); }
   .capq { font-size: 15px; margin: 4px 0 2px; }
   .cape { font-size: 12px; }
-  .ix-vote, .ix-donate { height: 44px; }
+  .ix-vote, .ix-donate, .ix-apoie { height: 44px; }
   .ix-votes { right: calc(8px + env(safe-area-inset-right)); bottom: calc(8px + env(safe-area-inset-bottom)); }
   .simline { display: none; }
   .menu .k { min-width: 44px; min-height: 44px; }
