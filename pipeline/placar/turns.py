@@ -114,6 +114,8 @@ class TurnResult:
     verdicts: list[dict[str, Any]] = field(default_factory=list)
     items: int = 0
     error: str = ""
+    stale: bool = False
+    bank_shortcut: bool = False
 
 
 import os as _os
@@ -130,6 +132,44 @@ def claim_bank() -> ClaimBank:
     if _BANK is None:
         _BANK = ClaimBank.load() if _os.environ.get("PLACAR_BANK", "1") != "0" else ClaimBank([])
     return _BANK
+
+
+BANK_TURN_MIN = 0.75  # atalho sem classificar: exige sobreposição maior que o match normal
+
+
+def _bank_turn(board, turn, quem, text, t_ms, dur_s, llm, retriever, lock, res, can_call, on_change) -> bool:
+    """Frase já checada por profissional: abre a afirmação direto, sem gastar a chamada de classificação."""
+    import re as _re
+
+    bank = claim_bank()
+    speaker = board.nomes.get(quem, "")
+    sentences = [x.strip() for x in _re.split(r"(?<=[.!?])\s+", text) if len(x.split()) >= 4] or [text]
+    best = None
+    for i, sent in enumerate(sentences):
+        window = " ".join(sentences[max(0, i - 1): i + 2])  # a frase e as vizinhas
+        hit = bank.match(speaker, window)
+        if hit and hit["score"] >= (BANK_TURN_MIN - 0.15 if hit.get("numeros") else BANK_TURN_MIN):
+            if best is None or hit["score"] > best[0]["score"]:
+                best = (hit, sent)
+    if not best:
+        return False
+    hit, sent = best
+    with lock:
+        board.add_time(quem, "outro", dur_s)
+        claim = board.open_claim(quem=quem, tema=hit.get("tema") or "geral",
+                                 afirmacao=hit["frase"][:1].upper() + hit["frase"][1:], contexto="", literal=sent[:240], t_ms=t_ms)
+        claim["_job"] = turn
+        va = _now_v(turn)
+        if va is not None:
+            claim["va"] = va
+            if turn.get("end_v") is not None:
+                claim["lat"] = round(va - turn["end_v"], 1)
+    res.items = 1
+    res.bank_shortcut = True
+    on_change()
+    _judge(board, claim, {"titulo": hit["frase"], "citacao": sent}, llm, retriever, lock, res, can_call)
+    on_change()
+    return True
 
 
 def _fast_first(llm) -> list[str] | None:
@@ -169,10 +209,18 @@ def process_turn(
         with lock:
             board.add_time(quem, "outro", dur_s)
         return res
+    if turn.get("stale"):
+        with lock:
+            board.add_time(quem, "outro", dur_s)
+        res.error = "atrasado: passou do prazo da legenda, não gasta cota"
+        res.stale = True
+        return res
     if not can_call():
         with lock:
             board.add_time(quem, "outro", dur_s)
         res.error = "orçamento de chamadas esgotado"
+        return res
+    if _bank_turn(board, turn, quem, text, t_ms, dur_s, llm, retriever, lock, res, can_call, on_change):
         return res
     started = time.perf_counter()
     try:
@@ -181,7 +229,7 @@ def process_turn(
                 task="classify_turn",
                 system=SYSTEM_TURN,
                 user=(f"Candidato: {board.nomes[quem]}\n"
-                      + (f"Contexto imediatamente antes (outras falas, só para entender pronomes e tema):\n{turn['antes']}\n"
+                      + (f"Contexto imediatamente antes (outras falas, só para entender pronomes e tema):\n{str(turn['antes'])[-300:]}\n"
                          if turn.get("antes") else "")
                       + f"Turno:\n{text}"),
                 schema=TURN_SCHEMA,
@@ -213,7 +261,7 @@ def process_turn(
                     quem=quem, tema=item["categoria"], afirmacao=item["titulo"],
                     contexto=item.get("busca") or "", literal=quote, t_ms=t_ms,
                 )
-                claim["_turno"] = text[-700:]
+                claim["_turno"] = text[-450:]
                 claim["_job"] = turn
                 va = _now_v(turn)
                 if va is not None:
@@ -298,9 +346,9 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
             if e.url not in seen:
                 seen.add(e.url)
                 evidence.append(e)
-        if len(evidence) >= 6:
+        if len(evidence) >= 5:
             break
-    evidence = evidence[:6]
+    evidence = evidence[:5]
     res.retrieve_ms.append((time.perf_counter() - started) * 1000)
     if not evidence:
         with lock:
@@ -309,7 +357,7 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
         return
     if not can_call():
         return  # fica em revisão
-    sources = "\n".join(f"- {e.titulo} ({e.url}): {e.trecho}" for e in evidence)
+    sources = "\n".join(f"- {e.titulo[:90]} ({e.url}): {' '.join(e.trecho.split())[:320]}" for e in evidence)
     prompt = reference_facts() + f"\nCandidato: {board.nomes.get(claim['quem'], '')}.\n" + \
         (f"Contexto do turno: {claim.get('_turno', '')}\n" if claim.get('_turno') else "") + \
         f"Afirmação (literal): {claim['literal']}\nResumo: {claim['afirmacao']}\nFontes:\n{sources}"

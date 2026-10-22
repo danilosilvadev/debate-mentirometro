@@ -77,7 +77,7 @@ class Settings:
             claude_model=os.environ.get("CLAUDE_MODEL", "haiku").strip() or "haiku",
             claude_timeout_s=_float("CLAUDE_TIMEOUT_S", 12.0),
             session_chunks=_int("CLAUDE_SESSION_CHUNKS", 8),
-            openrouter_key=os.environ.get("OPENROUTER_API_KEY", "").strip(),
+            openrouter_key=(os.environ.get("OPENROUTER_API_KEY") or os.environ.get("AH_OPENROUTER_KEY") or "").strip(),
             openrouter_model=os.environ.get(
                 "OPENROUTER_MODEL", "nvidia/nemotron-3.5-super-vl:free"
             ).strip(),

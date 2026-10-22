@@ -224,6 +224,8 @@ def build_router(settings: Settings) -> ProviderRouter:
         providers.append(verifier)
     if not providers:
         raise RuntimeError("Nenhum provedor de LLM configurado.")
+    # OpenRouter (~30 s nos testes) só depois de todos os modelos Groq, cada um com sua cota/min.
+    providers.sort(key=lambda p: p.name == "openrouter")
     router = ProviderRouter(
         providers,
         retries=settings.retries,

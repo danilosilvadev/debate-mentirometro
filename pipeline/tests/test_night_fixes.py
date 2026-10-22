@@ -1,5 +1,6 @@
 """Busca SearXNG, Groq LLM, segundo modelo, texto de revisão neutro, prompts."""
 
+import pytest
 import json
 
 from placar.board import Board
@@ -347,3 +348,54 @@ def test_support_check_rules():
     ok, why = supports(veredito="verdadeiro", literal=lit, afirmacao="Arrecadou R$ 6 bi", motivo="",
                        url="https://jornal.com/debate", fetch=page("Lula disse: " + lit + " 6 bilhões"))
     assert not ok and "reproduz" in why
+
+
+def test_worker_lifo_and_stale():
+    import threading
+    from placar.worker import LlmWorker
+    gate = threading.Event()
+    seen = []
+    def fn(job):
+        gate.wait(2)
+        seen.append((job["n"], bool(job.get("stale"))))
+    t = {"t": 100.0}
+    w = LlmWorker(fn, workers=1, stale_s=15, clock=lambda: t["t"])
+    w.submit({"n": 0, "speech_end_wall": 100.0})  # ocupa o worker
+    import time as _t
+    _t.sleep(0.05)
+    w.submit({"n": 1, "speech_end_wall": 80.0})   # velho
+    w.submit({"n": 2, "speech_end_wall": 99.0})   # novo
+    gate.set()
+    w.drain(timeout_s=3)
+    assert seen[0] == (0, False)
+    assert seen[1] == (2, False) and seen[2] == (1, True)
+
+
+@pytest.mark.uses_bank
+def test_bank_shortcut_skips_classify(monkeypatch):
+    from placar import turns
+    from placar.claim_bank import ClaimBank
+    monkeypatch.setattr(turns, "_BANK", ClaimBank.load(), raising=False)
+    monkeypatch.setattr(turns, "claim_bank", lambda: ClaimBank.load())
+    from placar.board import Board
+    from placar.llm.router import ProviderRouter
+    calls = []
+    class P:
+        name = "x"
+        def generate(self, req, timeout_s):
+            calls.append(req.task); raise AssertionError("não deveria chamar")
+    b = Board(debate_id="t", candidatos={"1": "Lula", "2": "Flávio Bolsonaro"}, origin_ms=0, video={}, aviso="")
+    class R:
+        def search(self, q): return []
+    res = turns.process_turn(b, {"quem": "1", "text": "Eu fui o primeiro presidente da república a conseguir dois graus de investimento neste país.", "t_ms": 1, "dur_s": 6},
+                             ProviderRouter([P()]), R())
+    assert res.bank_shortcut and not calls
+    c = b.claims[0]
+    assert c["veredito"] == "verdadeiro" and c.get("banco")
+
+
+def test_openrouter_alias(monkeypatch):
+    from placar.config import Settings
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    monkeypatch.setenv("AH_OPENROUTER_KEY", "k")
+    assert Settings.from_env().openrouter_key == "k"
