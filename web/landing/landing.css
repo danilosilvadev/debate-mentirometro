@@ -129,8 +129,8 @@ h1, .h1like { font-size: clamp(30px, 7.5vw, 46px); }
 @media (min-width: 1024px) {
   body { overflow-x: clip; }
   .wrap { max-width: 1280px; overflow-x: visible; padding: 28px 40px 72px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px;
-    grid-template-areas: "top top" "count count" "watch watch" "subs subs" "brand brand" "poll form" "hero hero" "faq faq"; }
-  .top { grid-area: top; } .bigcount { grid-area: count; } #watch { grid-area: watch; } .subs { grid-area: subs; }
+    grid-template-areas: "top top" "lead lead" "count count" "watch watch" "subs subs" "brand brand" "poll form" "hero hero" "faq faq"; }
+  .top { grid-area: top; } .lead { grid-area: lead; } .bigcount { grid-area: count; } #watch { grid-area: watch; } .subs { grid-area: subs; }
   .brand-hero { grid-area: brand; } .poll { grid-area: poll; } #form, #done { grid-area: form; align-self: start; } .hero { grid-area: hero; } .faq { grid-area: faq; }
   .bigcount { width: auto; margin: 0 0 40px; padding: 0; min-height: calc(82svh - 90px); }
   .units { grid-template-columns: repeat(4, auto); gap: 0 3.2vw; }
@@ -175,4 +175,7 @@ h1, .h1like { font-size: clamp(30px, 7.5vw, 46px); }
 .bh-h1 { font-size: clamp(36px, 10.5vw, 60px); font-weight: 800; line-height: 1.02; letter-spacing: -.04em; margin: 0 0 14px; color: #fff; background: none; -webkit-background-clip: border-box; background-clip: border-box; overflow-wrap: anywhere; hyphens: manual; }
 .bh-h1 em { font-style: normal; display: inline-block; max-width: 100%; background: linear-gradient(180deg,#c3c9ff 10%,#7d88f0); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: .04em; }
 .bh-sub { color: #c9ccd1; font-size: clamp(17px, 4.6vw, 21px); line-height: 1.45; margin: 0 0 18px; }
-@media (min-width: 1024px) { .bh-h1 { font-size: 10.5cqi; } .bh-sub { font-size: clamp(20px, 1.6vw, 26px); max-width: 34em; } .bh-kicker { font-size: 18px !important; } }
+@media (min-width: 1024px) { .bh-h1 { font-size: clamp(64px, 6.2vw, 112px); } .bh-sub { font-size: clamp(20px, 1.7vw, 30px); max-width: 36em; margin-left: auto; margin-right: auto; } .lead { margin: 8px 0 0; } .bigcount { min-height: auto; padding: 24px 0 48px; } .bh-kicker { font-size: 18px !important; } }
+
+.lead { text-align: center; margin: 0 0 8px; }
+.lead + .bigcount { min-height: auto; margin-top: 0; padding-top: 18px; padding-bottom: 30px; }
