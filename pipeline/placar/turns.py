@@ -35,6 +35,10 @@ SYSTEM_TURN = (
     "consulta de 4 a 10 palavras como um jornalista digitaria no buscador, com o número, o ano e o "
     "assunto, sem o nome do candidato (ex. 'PIB Brasil 2010 crescimento IBGE').\n"
     "Não invente nada que não esteja no texto. Saudação, regra do debate e retórica vazia não viram item. "
+    "O que AINDA VAI acontecer ('vão ficar presos até 80 anos', 'vou acabar com') é proposta, nunca afirmacao_checavel. "
+    "titulo de afirmacao_checavel deve ser AUTOCONTIDO: troque pronomes ('ele', 'isso', 'lá') pelo sujeito real, "
+    "usando o contexto anterior (ex.: 'ele tem três inquéritos', dito sobre o filho → 'Lulinha é alvo de três inquéritos'; "
+    "'ele está preso' sobre Vorcaro → 'Vorcaro está preso'). busca também deve nomear o sujeito real.\n"
     "Lista vazia é válida. tom = tipo dominante do turno (proposta, ataque, defesa, balanco, outro); "
     "balanco = o candidato fala do que o próprio governo fez; defesa = responde a acusação."
 )
@@ -49,6 +53,14 @@ SYSTEM_JUDGE_TURN = (
     "para contradizer sem fonte.\n"
     "- Use também a lista de presidentes recebida (fato fixo) para contas de anos e mandatos; "
     "faça a conta explicitamente.\n"
+    "- Fonte que só REPRODUZ a fala do candidato (transcrição do debate, 'Lula disse que...') NÃO é prova; "
+    "ignore-a como evidência. Mas se a fonte for uma CHECAGEM dessa mesma frase (Aos Fatos, Lupa, Fato ou Fake, "
+    "Estadão Verifica, UOL Confere, Comprova), siga a classificação do checador: Verdadeiro/Fato=verdadeiro; "
+    "Exagerado/Não é bem assim/Distorcido=impreciso; Falso/Fake=falso.\n"
+    "- impreciso só quando o número, o período, o sujeito ou o sentido estão materialmente errados. "
+    "Diferença de palavra ('golpe' x 'fraude'), arredondamento e ressalvas que não mudam o núcleo = verdadeiro.\n"
+    "- Se a fonte traz o mesmo fato com data ou número diferente do dito, é impreciso (ou falso se muito longe), não sem_dados.\n"
+    "- Julgue o que o candidato quis dizer, com o sujeito real indicado no resumo e no contexto do turno.\n"
     "motivo: 1 ou 2 frases citando o dado da fonte, com números corretos. fonte_url deve ser uma das URLs recebidas."
 )
 
@@ -132,7 +144,10 @@ def process_turn(
             LlmRequest(
                 task="classify_turn",
                 system=SYSTEM_TURN,
-                user=f"Candidato: {board.nomes[quem]}\nTurno:\n{text}",
+                user=(f"Candidato: {board.nomes[quem]}\n"
+                      + (f"Contexto imediatamente antes (outras falas, só para entender pronomes e tema):\n{turn['antes']}\n"
+                         if turn.get("antes") else "")
+                      + f"Turno:\n{text}"),
                 schema=TURN_SCHEMA,
             )
         )
@@ -161,6 +176,8 @@ def process_turn(
                     quem=quem, tema=item["categoria"], afirmacao=item["titulo"],
                     contexto=item.get("busca") or "", literal=quote, t_ms=t_ms,
                 )
+                claim["_turno"] = text[-700:]
+                claim["_antes"] = (turn.get("antes") or "")[-400:]
                 claims.append((claim, item))
         board.note_score()
     on_change()
@@ -192,6 +209,7 @@ def _judge(board, claim, item, llm, retriever, lock, res, can_call) -> None:
         return  # fica em revisão
     sources = "\n".join(f"- {e.titulo} ({e.url}): {e.trecho}" for e in evidence)
     prompt = reference_facts() + f"\nCandidato: {board.nomes.get(claim['quem'], '')}.\n" + \
+        (f"Contexto do turno: {claim.get('_turno', '')}\n" if claim.get('_turno') else "") + \
         f"Afirmação (literal): {claim['literal']}\nResumo: {claim['afirmacao']}\nFontes:\n{sources}"
     started = time.perf_counter()
     try:
@@ -232,11 +250,34 @@ def _judge(board, claim, item, llm, retriever, lock, res, can_call) -> None:
     v2 = second.data["veredito"]
     entry.update(verify=second.provider, verify_veredito=v2)
     with lock:
-        if second.provider == judged.provider or v2 not in ("falso", "impreciso"):
-            claim["motivo"] = DIVERGE_TEXT
+        disagree = second.provider == judged.provider or v2 not in ("falso", "impreciso")
+    if disagree:
+        # Desempate: terceiro voto (o juiz principal de novo, com o prompt do confirmador).
+        third = None
+        if can_call():
+            try:
+                third = llm.complete(LlmRequest(task="judge", system=SYSTEM_VERIFY, user=prompt, schema=JUDGE_SCHEMA),
+                                     exclude={second.provider})
+            except ProviderError:
+                third = None
+        v3 = third.data["veredito"] if third else None
+        entry.update(tiebreak=third.provider if third else None, tiebreak_veredito=v3)
+        with lock:
+            if v3 is not None and v3 == v2 and v2 not in ("falso", "impreciso"):
+                # 2 de 3 dizem que não há erro: publica (verdadeiro ou sem_dados).
+                board.set_verdict(claim, veredito=v2, motivo=second.data.get("motivo") or "",
+                                  fonte_titulo=title, fonte_url=url)
+                entry["publicado"] = v2
+            elif v3 in ("falso", "impreciso") and v3 == verdict:
+                # 2 de 3 confirmam o erro, mas o confirmador independente não: fica em revisão (regra conservadora)
+                claim["motivo"] = DIVERGE_TEXT
+                entry["publicado"] = "em_revisao"
+            else:
+                claim["motivo"] = DIVERGE_TEXT
+                entry["publicado"] = "em_revisao"
             board.note_score()
-            entry["publicado"] = "em_revisao"
-            return
+        return
+    with lock:
         final = verdict if v2 == verdict else "impreciso"  # discordam no grau: o mais brando
         # O motivo publicado é o do confirmador, que refez as contas.
         motivo = second.data.get("motivo") or motivo
@@ -257,6 +298,8 @@ def claim_queries(item: dict[str, Any]) -> list[str]:
     busca = (item.get("busca") or "").strip()
     quote = " ".join((item.get("citacao") or "").split())[:160]
     queries = [q for q in (busca, quote) if q]
+    if busca:
+        queries.append(f"{busca} checagem fato")  # checadores costumam ter o dado exato
     folded = f"{busca} {quote}".lower()
     if any(w in folded for w in LEGAL_WORDS):
         base = busca or quote

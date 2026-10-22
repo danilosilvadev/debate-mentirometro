@@ -219,8 +219,8 @@ def test_claim_queries_legal_adds_official_queries():
     from placar.turns import claim_queries
 
     qs = claim_queries({"busca": "PEC segurança pública 2025", "citacao": "a emenda que eu mandei"})
-    assert qs[0] == "PEC segurança pública 2025" and len(qs) == 4 and "senado.leg.br" in qs[2]
-    assert claim_queries({"busca": "PIB 2010", "citacao": "PIB 2010"}) == ["PIB 2010"]
+    assert qs[0] == "PEC segurança pública 2025" and len(qs) == 4 and "senado.leg.br" in qs[3]
+    assert claim_queries({"busca": "PIB 2010", "citacao": "PIB 2010"}) == ["PIB 2010", "PIB 2010 checagem fato"]
 
 
 def test_verifier_motivo_is_published_and_prompt_has_facts():
@@ -229,3 +229,24 @@ def test_verifier_motivo_is_published_and_prompt_has_facts():
     c = _claim(board)
     assert c["veredito"] == "falso" and c["motivo"] == "Conta certa: 17 anos."
     assert "Presidentes desde 1995" in second.calls[-1].user
+
+
+def test_context_before_gives_pronoun_context():
+    from placar.audio_replay import _context_before
+    tr = [{"t_s": 1.0, "voz": "flavio", "text": "e o seu filho Lulinha?"},
+          {"t_s": 5.0, "voz": "lula", "text": "ele tem três inquéritos"}]
+    ctx = _context_before(tr, 5.0)
+    assert "Lulinha" in ctx and "três" not in ctx
+
+
+def test_claim_queries_include_factcheck_variant():
+    from placar.turns import claim_queries
+    qs = claim_queries({"busca": "PIB Brasil 2010", "trecho": "cresceu 7,5%"})
+    assert any("checagem" in q for q in qs)
+
+
+def test_prompts_carry_new_rules():
+    from placar import turns
+    assert "AUTOCONTIDO" in turns.SYSTEM_TURN
+    assert "só REPRODUZ" in turns.SYSTEM_JUDGE_TURN
+    assert "golpe" in turns.SYSTEM_JUDGE_TURN

@@ -115,6 +115,7 @@ def run(
         if turn["slot"] in board.nomes:
             worker.submit({"t_ms": origin + int(turn["t_s"] * 1000), "quem": turn["slot"],
                            "dur_s": turn["dur_s"], "text": turn["text"], "t_s": turn["t_s"],
+                           "antes": _context_before(transcript, offset_s + turn["t_s"]),
                            "speech_end_wall": turn.get("end_wall", wall0 + turn["end_audio_s"] / (speed or 1))})
         turn = None
         return (time.perf_counter() - t0) * 1000
@@ -291,3 +292,10 @@ def _drained(blocks, max_bytes: int = 32000 * 60 * 30):
         if isinstance(item, BaseException):
             raise item
         yield item
+
+
+def _context_before(transcript: list[dict[str, Any]], t_s: float, max_chars: int = 500) -> str:
+    """Falas logo antes do turno (de qualquer pessoa): resolve 'ele', 'isso' e o tema."""
+    lines = [x for x in transcript if x["t_s"] < t_s - 0.05][-8:]
+    text = " ".join(f"[{x.get('voz', '?')}] {x['text']}" for x in lines)
+    return text[-max_chars:]

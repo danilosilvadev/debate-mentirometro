@@ -354,7 +354,24 @@ export function sharePlacar(snapshot, mode, pageUrl) {
 }
 
 
-const COLORS = ['#7AA2F7', '#E0AF68']
+const COLORS = ['#E5484D', 'verde-amarelo']
+const GREEN = '#2FBF71'
+const YELLOW = '#F5D33B'
+const SPLIT = 'verde-amarelo'
+
+/** Fundo: cor sólida, ou metade verde / metade amarelo com corte seco (sem mistura). */
+export function paintBg(color, dir = '90deg') {
+  if (color === SPLIT) return `linear-gradient(${dir},${GREEN} 50%,${YELLOW} 50%)`
+  return esc(color)
+}
+
+/** Texto: cor sólida, ou degradê com corte seco recortado no texto. */
+export function paintText(color) {
+  if (color === SPLIT) {
+    return `background:linear-gradient(90deg,${GREEN} 50%,${YELLOW} 50%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent`
+  }
+  return `color:${esc(color)}`
+}
 const VERDICT_COLOR = {
   verdadeiro: '#4CC38A',
   impreciso: '#D9B44A',
@@ -438,7 +455,7 @@ export function resolveVideoId(snapshot, override = '') {
 
 function tag(label, color) {
   if (!color) return `<span class="tag t2">${esc(label)}</span>`
-  return `<span class="tag"><i style="background:${esc(color)}"></i>${esc(label)}</span>`
+  return `<span class="tag"><i style="background:${paintBg(color)}"></i>${esc(label)}</span>`
 }
 
 function itemTag(item) {
@@ -476,7 +493,7 @@ function stageSvg(colorA, colorB) {
     <defs>
       <radialGradient id="g1" cx=".5" cy=".35" r=".7"><stop offset="0" stop-color="#1a1d26"/><stop offset=".6" stop-color="#0c0d12"/><stop offset="1" stop-color="#050506"/></radialGradient>
       <radialGradient id="sp" cx=".5" cy="0" r="1"><stop offset="0" stop-color="#fff" stop-opacity=".09"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
-      <linearGradient id="fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14161d"/><stop offset="1" stop-color="#08090b"/></linearGradient>
+      <linearGradient id="gyv" x1="0" y1="0" x2="0" y2="1"><stop offset=".5" stop-color="#2FBF71"/><stop offset=".5" stop-color="#F5D33B"/></linearGradient><linearGradient id="fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14161d"/><stop offset="1" stop-color="#08090b"/></linearGradient>
     </defs>
     <rect width="1600" height="900" fill="url(#g1)"/>
     <rect y="620" width="1600" height="280" fill="url(#fl)"/>
@@ -485,9 +502,9 @@ function stageSvg(colorA, colorB) {
     <path d="M930 0L840 700H1160L1060 0Z" fill="url(#sp)"/>
     <g fill="#262a36" stroke="#ffffff1f">
       <circle cx="600" cy="430" r="34"/><path d="M540 520q60-60 120 0v40h-120z"/>
-      <path d="M510 540h180l-15 160h-150z" fill="#12141b" stroke="${esc(colorA)}" stroke-opacity=".5"/>
+      <path d="M510 540h180l-15 160h-150z" fill="#12141b" stroke="${colorA === SPLIT ? 'url(#gyv)' : esc(colorA)}" stroke-opacity=".5"/>
       <circle cx="1000" cy="430" r="34"/><path d="M940 520q60-60 120 0v40h-120z"/>
-      <path d="M910 540h180l-15 160h-150z" fill="#12141b" stroke="${esc(colorB)}" stroke-opacity=".5"/>
+      <path d="M910 540h180l-15 160h-150z" fill="#12141b" stroke="${colorB === SPLIT ? 'url(#gyv)' : esc(colorB)}" stroke-opacity=".5"/>
     </g>
     <rect x="770" y="360" width="60" height="120" rx="4" fill="#0f1117" stroke="#ffffff0d"/>
   </svg><span class="play" aria-hidden="true">▶</span>`
@@ -531,22 +548,22 @@ function scoreHtml(snapshot) {
     return index.total ? String(index.erroPct) : '–'
   }
   const who = pende.name
-    ? `${esc(pende.text)} <b style="color:${esc(pende.color)}">${esc(pende.name)}</b>`
+    ? `${esc(pende.text)} <b style="${paintText(pende.color)}">${esc(pende.name)}</b>`
     : esc(pende.text)
   const label = `Mentirômetro: ${left.nome} ${score(left)}% de erro, ${right.nome} ${score(right)}%. ${pende.reading.headline}. ${pende.reading.detail}`
   return `<header class="top">
     <div class="logo">Placar da Verdade</div>
-    <div class="cand"><span class="dot" style="background:${esc(colorA)}"></span>
+    <div class="cand"><span class="dot" style="background:${paintBg(colorA)}"></span>
       <div><div class="nm">${esc(left.nome)}</div><div class="sub">${left.propostas || 0} propostas · ${left.ataques || 0} ataques</div></div>
       <div class="sc">${score(left)}</div></div>
     <div class="meter" role="img" aria-label="${esc(label)}">
       <div class="lbl">Mentirômetro <span>${who}</span></div>
-      <div class="bar"><div style="width:${tug.leftPct}%;background:${esc(colorA)}"></div><div style="flex:1;background:${esc(colorB)}"></div></div>
+      <div class="bar"><div style="width:${tug.leftPct}%;background:${paintBg(colorA)}"></div><div style="flex:1;background:${paintBg(colorB)}"></div></div>
       <div class="lbl2"><span>${tug.leftFalsas} falsas/imprecisas</span><span>${tug.rightFalsas}</span></div>
     </div>
     <div class="cand r"><div class="sc">${score(right)}</div>
       <div style="text-align:right"><div class="nm">${esc(right.nome)}</div><div class="sub">${right.propostas || 0} propostas · ${right.ataques || 0} ataques</div></div>
-      <span class="dot" style="background:${esc(colorB)}"></span></div>
+      <span class="dot" style="background:${paintBg(colorB)}"></span></div>
     <nav class="menu" aria-label="Seções">
       ${typeof window !== 'undefined' && window.PLACAR_REPLAY && !/[?&]replay=/.test(window.location?.search || '') ? `<a class="word" href="${esc(window.PLACAR_REPLAY)}">Replay</a>` : ''}
       <button type="button" class="word" data-act="panel" data-arg="linha">Linha do tempo</button>
@@ -564,8 +581,8 @@ function listsHtml(items, people, fresh) {
   const colorB = candidateColor(right, 1)
   const leftHtml = sideItems(items, left.id, fresh, 'l')
   const rightHtml = sideItems(items, right.id, fresh, 'r')
-  return `<div class="lst a fade"><div class="lh"><span class="dot" style="background:${esc(colorA)}"></span>${esc(left.nome)}</div>${leftHtml}</div>
-    <div class="lst b fade"><div class="lh end">${esc(right.nome)}<span class="dot" style="background:${esc(colorB)}"></span></div>${rightHtml}</div>`
+  return `<div class="lst a fade"><div class="lh"><span class="dot" style="background:${paintBg(colorA)}"></span>${esc(left.nome)}</div>${leftHtml}</div>
+    <div class="lst b fade"><div class="lh end">${esc(right.nome)}<span class="dot" style="background:${paintBg(colorB)}"></span></div>${rightHtml}</div>`
 }
 
 function latestClaim(items) {
@@ -584,8 +601,8 @@ function captionHtml(item, people, vivo) {
   const fonte = href ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">Fonte ↗</a>` : ''
   const motivo = item.claim?.motivo ? esc(item.claim.motivo) : 'Ainda sem motivo publicado.'
   const stamp = vivo ? `${hhmm(item.t)} · agora` : hhmm(item.t)
-  return `<div class="capw"><div class="cap" style="--c:${esc(color)}">
-    <div class="capm"><span style="color:${esc(color)}">${esc(person?.nome || '')}</span><span class="muted">${stamp}</span>${itemTag(item)}</div>
+  return `<div class="capw"><div class="cap" style="--c:${paintBg(color, '180deg')}">
+    <div class="capm"><span style="${paintText(color)}">${esc(person?.nome || '')}</span><span class="muted">${stamp}</span>${itemTag(item)}</div>
     <div class="capq">“${esc(item.text)}”</div>
     <div class="cape">${motivo} ${fonte}</div>
   </div></div>`
@@ -598,8 +615,8 @@ function replayCaptionHtml(line, item, people) {
   const color = person ? candidateColor(person, index) : '#8B8D98'
   const who = person ? person.nome : 'Mediação'
   const last = item ? `<div class="cape">Última checagem: ${itemTag(item)} ${esc(item.text)}</div>` : ''
-  return `<div class="capw"><div class="cap" style="--c:${esc(color)}" data-line="${esc(String(line.s))}">
-    <div class="capm"><span style="color:${esc(color)}">${esc(who)}</span><span class="muted">${esc(mmss(line.s))}</span></div>
+  return `<div class="capw"><div class="cap" style="--c:${paintBg(color, '180deg')}" data-line="${esc(String(line.s))}">
+    <div class="capm"><span style="${paintText(color)}">${esc(who)}</span><span class="muted">${esc(mmss(line.s))}</span></div>
     <div class="capq">${esc(line.text)}</div>${last}
   </div></div>`
 }
@@ -614,7 +631,7 @@ function mobileFeed(items, people, filter, fresh, encerrado) {
     const right = index === 1
     const freshCls = fresh?.has(item.key) ? ' fresh' : ''
     return `<button type="button" class="fi${right ? ' r' : ''}${freshCls}" data-act="item" data-arg="${esc(item.key)}">
-      <span class="who" style="color:${esc(color)}">${esc(person?.nome || '')} · ${hhmm(item.t)}</span>
+      <span class="who" style="${paintText(color)}">${esc(person?.nome || '')} · ${hhmm(item.t)}</span>
       <span class="meta">${itemTag(item)}</span>
       <span class="q">${esc(item.text)}</span>
     </button>`
@@ -678,7 +695,7 @@ function panelHtml(state, items) {
       const cards = mine.length
         ? mine.map((proposal) => `<article class="prop"><h3>${esc(proposal.titulo)}</h3><p>${esc(proposal.explicacao || '')}</p>${proposal.vezes > 1 ? `<p class="muted">Citada ${proposal.vezes} vezes</p>` : ''}</article>`).join('')
         : '<p class="muted">Nenhuma proposta concreta até agora.</p>'
-      return `<section><h3 style="color:${candidateColor(candidate, index)}">${esc(candidate.nome)}</h3>${cards}</section>`
+      return `<section><h3 style="${paintText(candidateColor(candidate, index))}">${esc(candidate.nome)}</h3>${cards}</section>`
     }).join('')
     return sheet('Propostas', `<p class="muted">O que cada candidato propôs de concreto, da mais repetida para a mais recente.</p><div class="pair">${blocks}</div>`)
   }
@@ -725,8 +742,8 @@ function panelHtml(state, items) {
     } else if (item.kind === 'proposta') {
       extra = `<p>${esc(item.proposal.explicacao || '')}</p>${item.proposal.vezes > 1 ? `<p class="muted">Citada ${item.proposal.vezes} vezes</p>` : ''}`
     }
-    return sheet(person?.nome || 'Detalhe', `<div class="cap flat" style="--c:${esc(color)}">
-      <div class="capm"><span style="color:${esc(color)}">${esc(person?.nome || '')}</span><span class="muted">${hhmm(item.t)}</span>${itemTag(item)}</div>
+    return sheet(person?.nome || 'Detalhe', `<div class="cap flat" style="--c:${paintBg(color, '180deg')}">
+      <div class="capm"><span style="${paintText(color)}">${esc(person?.nome || '')}</span><span class="muted">${hhmm(item.t)}</span>${itemTag(item)}</div>
       <div class="capq">“${esc(item.text)}”</div>
       <div class="cape">${extra}</div>
     </div>`)
