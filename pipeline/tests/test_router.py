@@ -85,3 +85,15 @@ def test_todos_falham():
     router = ProviderRouter([primary], retries=0, breaker_threshold=5)
     with pytest.raises(Exception, match="falharam"):
         router.complete(REQUEST)
+
+
+def test_token_pacer_espera_e_pula():
+    from placar.llm.router import TokenPacer
+    t = {"t": 0.0}
+    def sleep(s):
+        t["t"] += s
+    p = TokenPacer(lambda: t["t"], sleep, max_wait_s=2.0)
+    assert p.take("g", 1000, 600)
+    assert not p.take("g", 1000, 600)  # esperou 2 s e desistiu
+    t["t"] = 61
+    assert p.take("g", 1000, 600)

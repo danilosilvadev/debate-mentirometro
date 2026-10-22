@@ -15,6 +15,9 @@ GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 class GroqLlmProvider(OpenRouterProvider):
     def __init__(self, *, api_key: str, model: str, name: str = "groq", transport=None) -> None:
+        import os
+        # Plano gratuito: 8000 tokens/min por modelo. O roteador espaça as chamadas abaixo disso.
+        self.tpm = int(os.environ.get("GROQ_TPM", "7000"))
         super().__init__(api_key=api_key, model=model, transport=transport, url=GROQ_CHAT_URL,
                          name=name, label=f"Groq {model}", key_env="GROQ_API_KEY")
         # Na Groq, strict exige todos os campos em required; nossos schemas têm opcionais.

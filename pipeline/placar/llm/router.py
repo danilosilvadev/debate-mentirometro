@@ -55,6 +55,35 @@ class CircuitBreaker:
         return not self.allow(name)
 
 
+class TokenPacer:
+    """Orçamento de tokens por minuto por provedor: espera um pouco ou pula, em vez de tomar 429."""
+
+    def __init__(self, clock: Callable[[], float], sleep: Callable[[float], None], max_wait_s: float = 4.0) -> None:
+        self._clock, self._sleep, self.max_wait_s = clock, sleep, max_wait_s
+        self._used: dict[str, list[tuple[float, int]]] = {}
+
+    @staticmethod
+    def estimate(request: LlmRequest) -> int:
+        return int(len(request.system or "") / 3.2 + len(request.user or "") / 3.2) + 900  # + saída e raciocínio
+
+    def _sum(self, name: str, now: float) -> int:
+        items = [x for x in self._used.get(name, []) if now - x[0] < 60]
+        self._used[name] = items
+        return sum(n for _, n in items)
+
+    def take(self, name: str, tpm: int, tokens: int) -> bool:
+        if tpm <= 0:
+            return True
+        waited = 0.0
+        while self._sum(name, self._clock()) + tokens > tpm:
+            if waited >= self.max_wait_s or tokens > tpm:
+                return False
+            self._sleep(0.5)
+            waited += 0.5
+        self._used.setdefault(name, []).append((self._clock(), tokens))
+        return True
+
+
 class ProviderRouter:
     def __init__(
         self,
@@ -80,6 +109,7 @@ class ProviderRouter:
             clock=self._clock,
         )
         self.history: list[CallRecord] = []
+        self.pacer = TokenPacer(self._clock, time.sleep)
         self.unavailable: set[str] = set()
         # Ordem preferida para a confirmação (segundo modelo). Vazia = ordem normal.
         self.verify_order: list[str] = []
@@ -117,6 +147,10 @@ class ProviderRouter:
                 records.append(record)
                 self.history.append(record)
                 errors.append(f"{provider.name}: circuit breaker aberto")
+                continue
+            tpm = getattr(provider, "tpm", 0)
+            if isinstance(tpm, int) and tpm > 0 and not self.pacer.take(provider.name, tpm, TokenPacer.estimate(request)):
+                errors.append(f"{provider.name}: orçamento por minuto esgotado")
                 continue
             attempts = self.retries + 1
             for attempt in range(1, attempts + 1):
