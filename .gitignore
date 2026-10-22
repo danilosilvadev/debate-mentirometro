@@ -55,3 +55,7 @@ __pycache__/
 *.egg-info/
 pipeline/.env
 pipeline/out/
+
+# PII local — nunca commitar
+*.sqlite
+.export_secret

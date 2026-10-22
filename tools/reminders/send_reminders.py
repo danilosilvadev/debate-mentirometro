@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Envia o lembrete do debate para os inscritos (e-mail e WhatsApp). Padrão: --dry-run (não envia nada).
+"""Fonte padrão: /workspace/data/subscribers.sqlite (tools/subscribers/sync_sqlite.py).
+Envia o lembrete do debate para os inscritos (e-mail e WhatsApp). Padrão: --dry-run (não envia nada).
 
 Fonte: Supabase (private.subscribers) via REST com SUPABASE_SERVICE_ROLE_KEY, ou --csv para testes.
 WhatsApp: WhatsApp Cloud API, mensagem de TEMPLATE aprovado (obrigatório fora da janela de 24 h).
@@ -21,6 +22,13 @@ def post(url, headers, body):
     with urllib.request.urlopen(req, timeout=20) as r: return r.status
 
 def load(args):
+    if args.csv: args.sqlite = None
+    if args.sqlite:
+        import sqlite3; con = sqlite3.connect(args.sqlite); con.row_factory = sqlite3.Row
+        return [{"email": r["email"], "whatsapp": r["whatsapp_e164"], "email_consent": bool(r["consent_email"]),
+                 "whatsapp_consent": bool(r["consent_whatsapp"]), "reminded_email_at": r["reminded_email_at"],
+                 "reminded_whatsapp_at": r["reminded_whatsapp_at"]}
+                for r in con.execute("SELECT * FROM subscribers WHERE debate = ?", (args.debate,))]
     if args.csv:
         with open(args.csv) as f: return list(csv.DictReader(f))
     url = os.environ["SUPABASE_URL"].rstrip("/"); key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
@@ -52,6 +60,7 @@ def mask(x): return x[:2] + "***" + x[-4:]
 
 def main(argv=None):
     ap = argparse.ArgumentParser(); ap.add_argument("--debate", default="globo-2026-10-23"); ap.add_argument("--csv")
+    ap.add_argument("--sqlite", default=None if os.environ.get("NO_SQLITE") else "/workspace/data/subscribers.sqlite", help="padrão: SQLite sincronizado")
     ap.add_argument("--send", action="store_true", help="envia de verdade (sem isto é dry-run)")
     a = ap.parse_args(argv); jobs = plan(load(a)); ok = fail = 0
     for ch, to in jobs:
