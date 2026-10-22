@@ -54,3 +54,38 @@ $("form").addEventListener("submit", async (ev) => {
   } catch (e) { $("err").textContent = e.message; } finally { $("go").disabled = false; }
 });
 tick(); setInterval(tick, 1000); loadCount(); setInterval(loadCount, 15000);
+
+// ── Troféu Pinóquio ──
+import { pollPcts, pollError, postDebate, NOME } from "./logic.mjs";
+const POLL_KEY = `lp_palpite_${DEBATE}`;
+let mine = localStorage.getItem(POLL_KEY); let editing = false;
+function renderPoll(t) {
+  const voted = !!mine && !editing;
+  $("poll-btns").classList.toggle("hidden", voted); $("poll-res").classList.toggle("hidden", !voted);
+  document.querySelectorAll("#poll-btns .pb").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.e === mine)));
+  if (t) {
+    const p = pollPcts(t);
+    document.querySelectorAll("#poll-res .bar").forEach((el) => { el.querySelector("em").style.width = p[el.dataset.e] + "%"; el.querySelector("b").textContent = p[el.dataset.e] + "%"; el.classList.toggle("mine", el.dataset.e === mine); });
+    $("poll-n").textContent = p.n.toLocaleString("pt-BR");
+    const post = postDebate(t.resultado, mine); $("poll-post").classList.toggle("hidden", !post); if (post) $("poll-post-t").textContent = post;
+    if (t.resultado) { $("poll-btns").classList.add("hidden"); $("poll-change").classList.add("hidden"); }
+  }
+  $("poll-mine").textContent = mine ? NOME[mine] : "";
+}
+async function loadPoll() {
+  try {
+    const r = await fetch(`${SB.url}/rest/v1/palpite_totais?debate=eq.${encodeURIComponent(DEBATE)}&select=lula,flavio,empate,resultado`, { headers: hdr });
+    const j = await r.json(); renderPoll(j[0] || { lula: 0, flavio: 0, empate: 0 });
+  } catch { renderPoll(); }
+}
+$("poll-btns").addEventListener("click", async (ev) => {
+  const b = ev.target.closest(".pb"); if (!b) return; $("poll-err").textContent = "";
+  const btns = document.querySelectorAll("#poll-btns .pb"); btns.forEach((x) => (x.disabled = true));
+  try {
+    const r = await fetch(`${SB.url}/rest/v1/rpc/palpitar`, { method: "POST", headers: hdr, body: JSON.stringify({ p_debate: DEBATE, p_escolha: b.dataset.e, p_client: cid }) });
+    const j = await r.json(); if (!r.ok || !j.ok) throw new Error(pollError(j.erro));
+    mine = j.escolha; localStorage.setItem(POLL_KEY, mine); editing = false; renderPoll(j);
+  } catch (e) { $("poll-err").textContent = e.message; } finally { btns.forEach((x) => (x.disabled = false)); }
+});
+$("poll-change").addEventListener("click", (ev) => { ev.preventDefault(); editing = true; renderPoll(); });
+renderPoll(); loadPoll(); setInterval(loadPoll, 20000);

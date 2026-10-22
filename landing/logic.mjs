@@ -21,3 +21,22 @@ export function validate({ email, wa, cEmail, cWa }) {
   if (wa) { const n = normBR(wa); if (!n) return { ...out, err: "WhatsApp inválido. Use DDD + número." }; if (!cWa) return { ...out, err: "Marque a autorização do WhatsApp." }; out.wa = n; }
   return out;
 }
+export const ESCOLHAS = ["lula", "flavio", "empate"];
+export const NOME = { lula: "Lula", flavio: "Flávio", empate: "Empate" };
+// Percentuais inteiros que somam 100 (maior resto); total 0 → tudo 0.
+export function pollPcts(t) {
+  const v = ESCOLHAS.map((k) => Math.max(0, Number(t?.[k]) || 0)); const n = v.reduce((a, b) => a + b, 0);
+  if (!n) return { n: 0, lula: 0, flavio: 0, empate: 0 };
+  const raw = v.map((x) => (x * 100) / n); const fl = raw.map(Math.floor); let left = 100 - fl.reduce((a, b) => a + b, 0);
+  raw.map((x, i) => [x - fl[i], i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => { if (left > 0) { fl[i]++; left--; } });
+  return { n, lula: fl[0], flavio: fl[1], empate: fl[2] };
+}
+export function pollError(code) {
+  return { devagar: "Muitos palpites daqui, tente em um minuto.", encerrado: "Os palpites já foram encerrados.", escolha: "Palpite inválido." }[code] || "Não deu certo. Tente de novo.";
+}
+// Bloco pós-debate: só aparece quando o resultado oficial existe.
+export function postDebate(resultado, mine) {
+  if (!ESCOLHAS.includes(resultado)) return null;
+  const quem = resultado === "empate" ? "Deu empate no Mentirômetro." : `O Troféu Pinóquio vai para ${NOME[resultado]}.`;
+  return mine ? `${quem} ${mine === resultado ? "Você acertou!" : "Não foi dessa vez."}` : quem;
+}

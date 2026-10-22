@@ -26,6 +26,44 @@
   </section>
   <a class="cta live hidden" id="watch" href="../?live=1">Assistir ao vivo agora</a>
   <div class="subs hidden" id="subs-row"><b id="subs" class="mono">—</b><span>pessoas já vão assistir</span></div>
+  <section class="brand-hero" aria-labelledby="bh-q">
+    <h2 class="bh-q" id="bh-q">Quem vai mentir mais?</h2>
+    <picture class="bh-art">
+      <source type="image/webp" srcset="./mics-640.webp 640w, ./mics-1280.webp 1280w" sizes="(min-width: 760px) 620px, 100vw">
+      <img src="./mics-960.jpg" width="960" height="540" decoding="async" fetchpriority="high"
+        alt="Ilustração de dois microfones bravos com luvas de boxe, um vermelho e outro metade verde e metade amarelo, brigando em púlpitos iguais enquanto o ponteiro do Mentirômetro enlouquece no meio">
+    </picture>
+    <p class="wordmark" aria-label="Mentirômetro">MENTIRÔMETRO</p>
+    <div class="score" aria-label="Placar do Mentirômetro">
+      <span class="sc-name a">Lula</span><b class="sc-n a" id="sc-1">0</b><span class="sc-x">×</span><b class="sc-n b" id="sc-2">0</b><span class="sc-name b"><span>Flávio</span></span>
+    </div>
+    <p class="sc-label" id="sc-label">começa sexta, 21h20</p>
+    <p class="bh-tag">Cada frase na balança. Ao vivo.</p>
+    <p class="bh-bold"><b>A gente checa. Você vê quem mente mais.</b></p>
+  </section>
+  <section class="card poll" id="poll" aria-labelledby="poll-h">
+    <picture class="poll-art">
+      <source type="image/webp" srcset="./trofeu-320.webp 320w, ./trofeu-640.webp 640w" sizes="160px">
+      <img src="./trofeu-480.jpg" width="480" height="480" loading="lazy" decoding="async"
+        alt="Troféu dourado com a cabeça de um boneco de madeira estilo Pinóquio, de nariz comprido e um passarinho pousado nele, e a placa Troféu Pinóquio 2026">
+    </picture>
+    <h2 id="poll-h">Quem leva o Troféu Pinóquio?</h2>
+    <p class="muted small">Faça seu palpite: quem vai mentir mais no debate? Na sexta, o Mentirômetro decide.</p>
+    <div class="poll-btns" id="poll-btns">
+      <button type="button" class="pb a" data-e="lula">Lula</button>
+      <button type="button" class="pb b" data-e="flavio"><span>Flávio</span></button>
+      <button type="button" class="pb c" data-e="empate">Os dois empatam</button>
+    </div>
+    <div class="poll-res hidden" id="poll-res" aria-live="polite">
+      <div class="bar a" data-e="lula"><span class="bl">Lula</span><i><em></em></i><b>0%</b></div>
+      <div class="bar b" data-e="flavio"><span class="bl">Flávio</span><i><em></em></i><b>0%</b></div>
+      <div class="bar c" data-e="empate"><span class="bl">Empate</span><i><em></em></i><b>0%</b></div>
+      <p class="muted small"><span id="poll-n">0</span> palpites · seu palpite: <b id="poll-mine"></b> · <a href="#" id="poll-change">mudar</a></p>
+    </div>
+    <p class="err" id="poll-err" role="alert"></p>
+    <div class="poll-post hidden" id="poll-post"><p><b id="poll-post-t"></b></p></div>
+    <p class="fine muted">É só palpite, de brincadeira: não tem aposta nem dinheiro. Um palpite por navegador.</p>
+  </section>
   <section class="hero">
     <div class="ticket" aria-hidden="true">
       <div class="side a"><span>Lula</span></div>

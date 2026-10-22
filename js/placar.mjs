@@ -778,7 +778,7 @@ function panelHtml(state, items) {
       extra = `${item.claim.literal ? `<p class="quote">“${esc(item.claim.literal)}”</p>` : ''}
         <p>${esc(item.claim.motivo || 'Ainda sem motivo publicado.')}</p>
         ${href ? `<p><a href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(item.claim.fonte.titulo)} ↗</a></p>` : '<p class="muted">Nenhuma fonte encontrada.</p>'}
-        ${item.claim.corrigido ? `<p class="muted">Revisado após o debate · ao vivo era ${esc(VERDICT_LABEL[item.claim.corrigido.antes] || '')}</p>` : ''}`
+        ${item.claim.corrigido ? `<p class="muted">${item.claim.corrigido.por === 'qa_manual' ? 'Corrigido na revisão humana (QA) após o debate' : 'Revisado após o debate'} · a checagem automática dizia ${esc(VERDICT_LABEL[item.claim.corrigido.antes] || '')}</p>` : ''}`
     } else if (item.kind === 'proposta') {
       extra = `<p>${esc(item.proposal.explicacao || '')}</p>${item.proposal.vezes > 1 ? `<p class="muted">Citada ${item.proposal.vezes} vezes</p>` : ''}`
     }

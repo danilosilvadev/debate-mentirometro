@@ -79,3 +79,41 @@ h1 { font-size: clamp(30px, 7.5vw, 46px); }
   .units { grid-template-columns: repeat(4, auto); gap: 0 3vw; }
   .u b { font-size: clamp(56px, 14vw, 240px); }
 }
+
+/* marca: pergunta, arte, MENTIRÔMETRO e placar */
+.brand-hero { text-align: center; margin: 0 0 36px; }
+.bh-q { font-size: clamp(30px, 8.5vw, 52px); font-weight: 800; letter-spacing: -.035em; line-height: 1.1; margin: 0 0 14px; }
+.bh-art { display: block; margin: 0 -18px; }
+.bh-art img { display: block; width: 100%; height: auto; transform-origin: 50% 80%;
+  -webkit-mask-image: radial-gradient(ellipse 72% 68% at 50% 50%, #000 58%, transparent 100%); mask-image: radial-gradient(ellipse 72% 68% at 50% 50%, #000 58%, transparent 100%);
+  animation: wobble 5s ease-in-out infinite; }
+@keyframes wobble { 0%,100% { transform: rotate(-.8deg) scale(1); } 50% { transform: rotate(.8deg) scale(1.015); } }
+@media (prefers-reduced-motion: reduce) { .bh-art img { animation: none; } }
+.wordmark { font-weight: 800; font-size: clamp(30px, 10.6vw, 64px); line-height: 1.15; letter-spacing: -.04em; margin: 6px 0 4px; padding-top: .08em; white-space: nowrap;
+  background: linear-gradient(180deg,#fff 35%,#9aa3c7); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.score { display: flex; justify-content: center; align-items: baseline; gap: clamp(8px, 3vw, 18px); font-weight: 800; }
+.sc-name { font-size: clamp(16px, 4.6vw, 24px); }
+.sc-n { font-size: clamp(56px, 18vw, 110px); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
+.sc-x { font-size: clamp(28px, 8vw, 48px); color: #8a8f98; }
+.sc-name.a, .sc-n.a { color: #E5484D; }
+.sc-n.b, .sc-name.b span { background: linear-gradient(90deg,#2FBF71 50%,#F5D33B 50%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sc-label { color: #8a8f98; text-transform: uppercase; letter-spacing: .1em; font-size: 12px; margin: 6px 0 18px; }
+.bh-tag { color: #b4bcd0; font-size: 18px; margin: 0 0 4px; } .bh-bold { font-size: 18px; margin: 0; }
+/* Troféu Pinóquio */
+.poll { margin: 0 0 36px; text-align: center; }
+.poll-art img { width: 160px; height: 160px; border-radius: 14px; display: block; margin: 0 auto; }
+.poll h2 { font-size: 22px; font-weight: 800; }
+.poll-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pb { font: inherit; font-weight: 700; font-size: 17px; color: #fff; border: 0; border-radius: 12px; padding: 16px 10px; cursor: pointer; }
+.pb.a { background: #E5484D; }
+.pb.b { background: linear-gradient(90deg,#2FBF71 50%,#F5D33B 50%); }
+.pb.b span { background: rgba(8,9,10,.82); padding: 4px 12px; border-radius: 99px; }
+.pb.c { grid-column: 1 / -1; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); }
+.pb:disabled { opacity: .6; } .pb[aria-pressed="true"] { outline: 2px solid #fff; outline-offset: 2px; }
+.poll-res { display: grid; gap: 10px; text-align: left; }
+.bar { display: grid; grid-template-columns: 64px 1fr 44px; align-items: center; gap: 8px; font-size: 14px; }
+.bar i { height: 12px; border-radius: 99px; background: rgba(255,255,255,.06); overflow: hidden; display: block; }
+.bar em { display: block; height: 100%; width: 0; transition: width .5s; }
+.bar.a em { background: #E5484D; } .bar.b em { background: linear-gradient(90deg,#2FBF71 50%,#F5D33B 50%); background-size: 100% 100%; } .bar.c em { background: #8a8f98; }
+.bar b { text-align: right; font-variant-numeric: tabular-nums; } .bar.mine .bl { font-weight: 700; color: #fff; }
+.poll-post { border-top: 1px solid rgba(255,255,255,.08); padding-top: 10px; }
