@@ -19,7 +19,7 @@ test("html: textos, ids e alt", () => {
   for (const s of ["Quem vai mentir mais?", "MENTIRÔMETRO", 'id="sc-1"', 'id="sc-2"', 'id="sc-label"', "começa sexta, 21h20",
     "Cada frase na balança. Ao vivo.", "A gente checa. Você vê quem mente mais.", "Quem leva o Troféu Pinóquio?",
     "Faça seu palpite: quem vai mentir mais no debate? Na sexta, o Mentirômetro decide.", "Os dois empatam",
-    "É só palpite, de brincadeira: não tem aposta nem dinheiro. Um palpite por navegador.", "mics-640.webp", "trofeu-320.webp", 'id="poll-post"'])
+    "É só palpite, de brincadeira: não tem aposta nem dinheiro. Um palpite por navegador.", "mics-640.webp", "mics-960.jpg", "trofeu-320.webp", "trofeu-480.jpg", 'id="poll-post"'])
     assert.ok(h.includes(s), s);
   assert.ok(/alt="Ilustração de dois microfones/.test(h));
 });
