@@ -1,0 +1,329 @@
+{
+  "atualizado": 1792633176567,
+  "video": {
+    "id": "RugVB17uRVM",
+    "ao_vivo": true,
+    "inicio": 0,
+    "t0": 1792631879165,
+    "comeco": 1792631879165
+  },
+  "candidatos": {
+    "1": {
+      "nome": "Lula",
+      "verdadeiro": 3,
+      "impreciso": 2,
+      "falso": 0,
+      "sem_dados": 4,
+      "propostas": 4,
+      "ataques": 1,
+      "tempo": {
+        "proposta": 101.26,
+        "ataque": 45.72,
+        "defesa": 0.0,
+        "balanco": 107.68,
+        "outro": 0.0
+      }
+    },
+    "2": {
+      "nome": "Flávio Bolsonaro",
+      "verdadeiro": 0,
+      "impreciso": 0,
+      "falso": 1,
+      "sem_dados": 0,
+      "propostas": 8,
+      "ataques": 1,
+      "tempo": {
+        "proposta": 114.6,
+        "ataque": 39.36,
+        "defesa": 0.0,
+        "balanco": 0.0,
+        "outro": 5.98
+      }
+    }
+  },
+  "fatos": [
+    {
+      "tema": "politica",
+      "atualizado": 1792632302905,
+      "declaracoes": [
+        {
+          "t": 1792632015165,
+          "quem": "1",
+          "afirmacao": "Emenda constitucional enviada 25/03",
+          "contexto": "emenda constitucional 25 março segurança pública",
+          "veredito": "sem_dados",
+          "motivo": "Nenhuma das fontes indica que a emenda constitucional foi enviada em 25 de março do ano passado; elas apenas descrevem o conteúdo da PEC 18/2025.",
+          "literal": "emenda constitucional que eu mandei dia 25 de março do ano passado",
+          "fonte": {
+            "titulo": "Proposta de Emenda à Constituição n° 18, de 2025 - Senado Federal",
+            "url": "https://www25.senado.leg.br/web/atividade/materias/-/materia/172997"
+          }
+        },
+        {
+          "t": 1792632015165,
+          "quem": "1",
+          "afirmacao": "Constituição 88 atribui segurança aos Estados",
+          "contexto": "",
+          "veredito": "sem_dados",
+          "motivo": "As fontes apresentadas não mencionam que a Constituição de 1988 atribui a responsabilidade pela segurança pública aos Estados, limitando‑se a citar outros artigos sem referência a essa atribuição.",
+          "literal": "Constituição de 88 garantiu que a segurança pública era uma das responsabilidades dos Estados",
+          "fonte": {
+            "titulo": "Constituição - Planalto",
+            "url": "https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm"
+          }
+        },
+        {
+          "t": 1792632183165,
+          "quem": "1",
+          "afirmacao": "Governou o país por 12 anos",
+          "contexto": "Lula governou Brasil 12 anos",
+          "veredito": "sem_dados",
+          "motivo": "Nenhuma das fontes indica que Lula já governou o país por 12 anos; elas apenas mencionam seus mandatos passados e a eleição de 2022, sem somar o tempo total.",
+          "literal": "eu já governo o país há 12 anos",
+          "fonte": {
+            "titulo": "Biografia do Presidente da República — Planalto - GOV.BR",
+            "url": "https://www.gov.br/planalto/pt-br/conheca-a-presidencia/biografia-do-presidente"
+          }
+        },
+        {
+          "t": 1792632302905,
+          "quem": "2",
+          "afirmacao": "PT governou 20 dos últimos 24 anos",
+          "contexto": "PT governou 20 anos dos últimos 24 Brasil",
+          "veredito": "falso",
+          "motivo": "A fonte indica que, se não houvesse impeachment, o PT teria governado 20 anos, mas na realidade o PT governou apenas de 2003 a 2016 (~13 anos), portanto a afirmação de que o PT governou 20 dos últimos 24 anos é incorreta.",
+          "literal": "O PT já governa esse país... há 20 anos dos últimos 24.",
+          "fonte": {
+            "titulo": "Sem impeachment, PT teria governado Brasil por 20 anos, diz Dirceu",
+            "url": "https://www.poder360.com.br/partidos-politicos/sem-impeachment-pt-teria-governado-brasil-por-20-anos-diz-dirceu/"
+          }
+        }
+      ]
+    },
+    {
+      "tema": "seguranca",
+      "atualizado": 1792632055165,
+      "declaracoes": [
+        {
+          "t": 1792632055165,
+          "quem": "1",
+          "afirmacao": "Lei antifacção aprovada",
+          "contexto": "lei antifacção aprovada Brasil",
+          "veredito": "em_revisao",
+          "motivo": "Em revisão: os checadores automáticos não chegaram a acordo; fica fora do Mentirômetro.",
+          "literal": "eu já fiz a lei antifacção, ela foi aprovada",
+          "fonte": {
+            "titulo": "Lei Antifacção, de combate ao crime organizado, entra em vigor ...",
+            "url": "https://www12.senado.leg.br/noticias/materias/2026/03/25/lei-antifaccao-de-combate-ao-crime-organizado-entra-em-vigor"
+          }
+        },
+        {
+          "t": 1792632055165,
+          "quem": "1",
+          "afirmacao": "Aumento do tempo de cadeia",
+          "contexto": "aumento tempo de cadeia facções Brasil",
+          "veredito": "verdadeiro",
+          "motivo": "A fonte indica que o texto final aumenta o período na cadeia, exigindo cumprimento de 70% a 85% da pena, sem direito a regime aberto ou semiaberto, confirmando o aumento do tempo de prisão.",
+          "literal": "já aumentamos o tempo de cadeia para aqueles que partimos da...",
+          "fonte": {
+            "titulo": "Combate às facções inclui aumento de penas e limita condicional ...",
+            "url": "https://www.camara.leg.br/radio/1225243-COMBATE-AS-FACCOES-INCLUI-AUMENTO-DE-PENAS-E-LIMITA-CONDICIONAL"
+          }
+        }
+      ]
+    },
+    {
+      "tema": "economia",
+      "atualizado": 1792632242165,
+      "declaracoes": [
+        {
+          "t": 1792632183165,
+          "quem": "1",
+          "afirmacao": "Primeiro presidente a conseguir dois graus de investimento",
+          "contexto": "primeiro presidente Brasil dois graus de investimento",
+          "veredito": "impreciso",
+          "motivo": "A fonte O Globo classifica a afirmação de Lula como 'Não é bem assim', indicando que a alegação de ser o primeiro presidente a conseguir dois graus de investimento não é totalmente correta ou precisa de contexto adicional.",
+          "literal": "primeiro presidente da República a conseguir dois graus de investimento",
+          "fonte": {
+            "titulo": "Veja o que é #FATO ou #FAKE nas falas de Flávio Bolsonaro e Lula ...",
+            "url": "https://oglobo.globo.com/google/amp/fato-ou-fake/noticia/2026/10/19/veja-o-que-e-fato-ou-fake-nas-falas-de-flavio-bolsonaro-e-lula-no-debate-da-band-no-2o-turno-das-eleicoes-2026.ghtml"
+          }
+        },
+        {
+          "t": 1792632199165,
+          "quem": "1",
+          "afirmacao": "Crescimento de 10% do país",
+          "contexto": "Brasil crescimento 10% período 2007 2010 PIB",
+          "veredito": "sem_dados",
+          "motivo": "As fontes citam crescimento de 5% no quarto trimestre de 2010 e crescimento anual de 2010 como o mais acentuado desde 1986, mas não fornecem nenhum dado de crescimento de 10% nem de retomada acima de 3%.",
+          "literal": "esse país cresceu 10%, voltou a crescer acima de 3% depois que eu votei na presidenta da República",
+          "fonte": {
+            "titulo": "I A Economia Brasileira 13 I A Economia Brasileira Nível de atividade",
+            "url": "https://www.bcb.gov.br/pec/boletim/banual2010/rel2010cap1p.pdf"
+          }
+        },
+        {
+          "t": 1792632199165,
+          "quem": "1",
+          "afirmacao": "Criação da Lei Geral da Pequena e Média Empresa",
+          "contexto": "Lei Geral da Pequena e Média Empresa criação data",
+          "veredito": "impreciso",
+          "motivo": "As fontes citam o Estatuto da Microempresa e Empresa de Pequeno Porte de 1999 e uma Lei Geral da Micro e Pequena Empresa ligada a 2006, mas não atribuem a criação a Lula nem tratam de \"média empresa\", apenas micro/pequeno porte.",
+          "literal": "foi no meu governo o governo que nós criamos a lei geral da pequena e média empresa",
+          "fonte": {
+            "titulo": "Dia da Micro e Pequena Empresa: 5 direitos que protegem o setor ...",
+            "url": "https://www.cnnbrasil.com.br/economia/money/negocios/dia-da-micro-e-pequena-empresa-5-direitos-que-protegem-o-setor/"
+          }
+        },
+        {
+          "t": 1792632242165,
+          "quem": "1",
+          "afirmacao": "MEI possui 17,5 milhões de participantes",
+          "contexto": "MEI 17,5 milhões participantes Brasil",
+          "veredito": "verdadeiro",
+          "motivo": "As fontes indicam que o Brasil tem 17,6 milhões de microempreendedores individuais cadastrados, número que arredonda para 17,5 milhões mencionado na afirmação.",
+          "literal": "nós criamos o MEI ... nós temos 17 milhões e 500 mil meios hoje",
+          "fonte": {
+            "titulo": "Sancionada lei que perdoa dívida e aumenta limite de MEI | Agência ...",
+            "url": "https://agenciabrasil.ebc.com.br/economia/noticia/2026-10/sancionada-lei-que-perdoa-divida-e-aumenta-limite-de-mei"
+          }
+        },
+        {
+          "t": 1792632242165,
+          "quem": "1",
+          "afirmacao": "Dívida ao FMI era 30 bilhões",
+          "contexto": "Brasil dívida FMI 30 bilhões 2003",
+          "veredito": "verdadeiro",
+          "motivo": "A fonte indica que o Brasil tinha um débito de aproximadamente US$ 30,4 bilhões com o FMI contraído em outubro de 2002, logo antes da posse de Lula em janeiro de 2003.",
+          "literal": "quando eu cheguei na presidência, esse país devia 30 bilhões para o FMI",
+          "fonte": {
+            "titulo": "Fatos Primeiro: Lula acerta ao dizer que emprestou dinheiro ao FMI, mas ...",
+            "url": "https://www.cnnbrasil.com.br/politica/fatos-primeiro-lula-acerta-ao-dizer-que-emprestou-dinheiro-ao-fmi-mas-exagera-no-valor/"
+          }
+        }
+      ]
+    }
+  ],
+  "propostas": [
+    {
+      "quem": "2",
+      "titulo": "Declarar guerra ao narcoterrorismo",
+      "explicacao": "eu vou... declarar guerra ao narcoterrorismo.",
+      "vezes": 1,
+      "t": 1792631907285
+    },
+    {
+      "quem": "2",
+      "titulo": "Classificar PCC e milícias como narcoterroristas",
+      "explicacao": "eu vou classificar a PCC, Comando Vermelho e Milícias, como organizações de narcotráfico. como organizações narcoterroristas.",
+      "vezes": 1,
+      "t": 1792631907285
+    },
+    {
+      "quem": "2",
+      "titulo": "Recuperar territórios tomados",
+      "explicacao": "eu vou recuperar cada metro, eu vou recuperar cada rua, eu vou recuperar cada bairro, eu vou recuperar cada cidade, eu vou recuperar cada território que foi tomado do povo brasileiro.",
+      "vezes": 1,
+      "t": 1792631907285
+    },
+    {
+      "quem": "2",
+      "titulo": "Retomar as cadeias controladas",
+      "explicacao": "eu vou retomar um local que onde eles estão mandando hoje ainda, que são as cadeias.",
+      "vezes": 1,
+      "t": 1792631907285
+    },
+    {
+      "quem": "2",
+      "titulo": "Leis mais duras contra marginais",
+      "explicacao": "Eu vou para dentro desses marginais com leis mais duras, com a lei antiga.",
+      "vezes": 1,
+      "t": 1792631950024
+    },
+    {
+      "quem": "2",
+      "titulo": "Impedir retorno de criminosos",
+      "explicacao": "eu vou cuidar de que eles nunca mais estejam na frente de vocês porque eles vão ser presos ou vão ser neutralizados pelas nossas polícias.",
+      "vezes": 1,
+      "t": 1792631950024
+    },
+    {
+      "quem": "2",
+      "titulo": "Construir meio milhão de vagas penitenciárias",
+      "explicacao": "Eu vou construir mais de meio milhão de vagas no sistema penitenciário",
+      "vezes": 1,
+      "t": 1792631987205
+    },
+    {
+      "quem": "2",
+      "titulo": "Dedicar mandato à segurança nas ruas",
+      "explicacao": "vou dedicar cada dia do meu mandato como presidente da República para devolver as ruas para vocês para que possam andar em segurança",
+      "vezes": 1,
+      "t": 1792631987205
+    },
+    {
+      "quem": "1",
+      "titulo": "Criar PEC da Segurança",
+      "explicacao": "se o Senado votar, a PEC da Segurança eu criarei imediatamente",
+      "vezes": 1,
+      "t": 1792632055165
+    },
+    {
+      "quem": "1",
+      "titulo": "Aprovar PEC da segurança",
+      "explicacao": "vai ser assim quando aprovar a PEC da segurança",
+      "vezes": 1,
+      "t": 1792632095165
+    },
+    {
+      "quem": "1",
+      "titulo": "Circular dinheiro na mão das pessoas",
+      "explicacao": "precisamos fazer primeiro o dinheiro circular na mão das pessoas, porque muito dinheiro na mão de pouco significa pobreza e miséria",
+      "vezes": 1,
+      "t": 1792632199165
+    },
+    {
+      "quem": "1",
+      "titulo": "Economia digital, verde e criativa",
+      "explicacao": "vamos tratar de uma economia nova, a economia digital, a economia verde e a economia criativa para que o Brasil tenha um salto de qualidade",
+      "vezes": 1,
+      "t": 1792632284165
+    }
+  ],
+  "ataques": [
+    {
+      "quem": "1",
+      "resumo": "Estados não resolvem segurança pública: “Nenhum Estado conseguiu resolver o problema da segurança pública”",
+      "t": 1792632015165
+    },
+    {
+      "quem": "2",
+      "resumo": "Ataque ao atual governo por desencarceramento: “como tem no atual governo, que faz uma política de desencarceramento, que coloca nas ruas marginais perigosas”",
+      "t": 1792631987205
+    }
+  ],
+  "linha": {
+    "0": {
+      "p2": 4
+    },
+    "1": {
+      "p2": 4,
+      "a2": 1
+    },
+    "2": {
+      "a1": 1,
+      "p1": 1
+    },
+    "3": {
+      "p1": 1
+    },
+    "5": {
+      "p1": 1
+    },
+    "6": {
+      "p1": 1
+    }
+  },
+  "pausado": false,
+  "aviso": "Teste em modo dev. Não é o placar publicado."
+}

@@ -115,7 +115,7 @@ def run(
         if turn["slot"] in board.nomes:
             worker.submit({"t_ms": origin + int(turn["t_s"] * 1000), "quem": turn["slot"],
                            "dur_s": turn["dur_s"], "text": turn["text"], "t_s": turn["t_s"],
-                           "speech_end_wall": wall0 + turn["end_audio_s"] / (speed or 1)})
+                           "speech_end_wall": turn.get("end_wall", wall0 + turn["end_audio_s"] / (speed or 1))})
         turn = None
         return (time.perf_counter() - t0) * 1000
 
@@ -165,6 +165,12 @@ def run(
             piece = audio[int(seg.start_s * 16000): int(seg.end_s * 16000)]
             if len(piece) >= 16000:
                 voice, scores = label(embed(piece), profiles, threshold)
+                # Trecho curto/ruidoso abaixo do limiar: se o mais parecido é quem
+                # já estava falando, continua com ele (no teste: 6 de 147, todos certos).
+                if voice == "unknown" and scores:
+                    best = max(scores, key=scores.get)
+                    if best == last_voice and scores[best] >= threshold - 0.15:
+                        voice = best
             else:
                 voice, scores = last_voice, {}
             last_voice = voice
@@ -179,6 +185,7 @@ def run(
                 turn = {"t_s": t_abs, "slot": slot, "dur_s": 0.0, "text": "", "chunk": index}
             turn["dur_s"] += seg.end_s - seg.start_s
             turn["end_audio_s"] = start + seg.end_s
+            turn["end_wall"] = t_ready  # chegada do bloco: mede atraso real mesmo se a captura atrasar
             turn["text"] = (turn["text"] + " " + text).strip()
         # turno que já passou de turn_max_s, ou cuja voz calou há mais de
         # `silence_flush_s` no fim do bloco, sai sem esperar a próxima fala
