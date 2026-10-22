@@ -58,7 +58,7 @@ def run(
     number_stt: Any = None,
     crosstalk_margin: float = 0.04,
     max_llm_calls: int = 0,
-    llm_workers: int = 2,
+    llm_workers: int = int(__import__("os").environ.get("PLACAR_LLM_WORKERS", "4")),
     max_claims_per_turn: int = 2,
     chunk_source: Any = None,
     silence_flush_s: float = 3.0,

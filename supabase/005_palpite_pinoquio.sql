@@ -1,9 +1,8 @@
--- Troféu Pinóquio: palpite do público (sem dinheiro) sobre quem vai mentir mais.
--- Sem PII: guarda só sha256(debate|client_id aleatório do navegador) para "1 palpite por navegador"
--- (pode trocar de opção), mais limite por IP. anon só chama palpitar() e lê public.palpite_totais.
+-- Troféu Pinóquio: palpite "quem vai mentir mais?". Um palpite por navegador (client id aleatório,
+-- guardado só como hash). anon só chama palpitar() e lê public.palpite_totais.
+-- Reconstruído das definições em produção (já aplicado); idempotente.
 create schema if not exists private;
 create extension if not exists pgcrypto with schema extensions;
-
 create table if not exists private.palpites (
   debate text not null,
   client_hash text not null,
@@ -20,17 +19,18 @@ create table if not exists public.palpite_totais (
   lula bigint not null default 0 check (lula >= 0),
   flavio bigint not null default 0 check (flavio >= 0),
   empate bigint not null default 0 check (empate >= 0),
-  -- gancho pós-debate: resultado oficial do Mentirômetro ('lula'|'flavio'|'empate'), preenchido pelo pipeline
   resultado text check (resultado is null or resultado in ('lula','flavio','empate')),
   updated_at timestamptz not null default now()
 );
 alter table public.palpite_totais enable row level security;
 drop policy if exists "palpites publicos" on public.palpite_totais;
 create policy "palpites publicos" on public.palpite_totais for select to anon, authenticated using (true);
-revoke insert, update, delete on public.palpite_totais from anon, authenticated;
+grant select on public.palpite_totais to anon, authenticated;
 
 create or replace function public.palpitar(p_debate text, p_escolha text, p_client text)
-returns json language plpgsql security definer set search_path = public, private, extensions as $$
+ returns json language plpgsql security definer
+ set search_path to 'public', 'private', 'extensions'
+as $function$
 declare
   v_hash text; v_ip text := private.client_ip(); v_iph text; v_old text; n_ip int;
 begin
@@ -60,6 +60,7 @@ begin
   end if;
   return (select json_build_object('ok', true, 'escolha', p_escolha, 'mudou', v_old is not null and v_old <> p_escolha,
     'lula', lula, 'flavio', flavio, 'empate', empate) from public.palpite_totais where debate = p_debate);
-end $$;
-revoke all on function public.palpitar(text,text,text) from public;
-grant execute on function public.palpitar(text,text,text) to anon, authenticated;
+end $function$;
+grant execute on function public.palpitar(text, text, text) to anon, authenticated;
+insert into public.palpite_totais(debate) values ('globo-2026-10-23') on conflict (debate) do nothing;
+-- Depois do debate: update public.palpite_totais set resultado = '<lula|flavio|empate>' where debate = '...';
