@@ -184,6 +184,15 @@ def build_router(settings: Settings) -> ProviderRouter:
                     session_chunks=settings.session_chunks,
                 )
             )
+        elif name == "grok_cli":
+            import os as _os
+
+            from placar.llm.grok_cli import GrokCliProvider
+
+            grok = GrokCliProvider(model=_os.environ.get("GROK_CLI_MODEL", ""),
+                                   parallel=int(_os.environ.get("GROK_CLI_PARALLEL", "3")))
+            grok.timeout_s = float(_os.environ.get("GROK_CLI_TIMEOUT_S", "20"))
+            providers.append(grok)
         elif name == "openrouter":
             openrouter = OpenRouterProvider(
                 api_key=settings.openrouter_key,

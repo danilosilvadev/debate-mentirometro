@@ -29,13 +29,13 @@ class Settings:
     openrouter_key: str = ""
     openrouter_model: str = "nvidia/nemotron-3.5-super-vl:free"
     openrouter_timeout_s: float = 20.0
-    providers: tuple[str, ...] = ("claude_cli", "groq", "openrouter")
+    providers: tuple[str, ...] = ("claude_cli", "grok_cli", "groq", "openrouter")
     groq_llm_model: str = "openai/gpt-oss-120b"
     groq_verify_model: str = "qwen/qwen3.8-27b"
     groq_fast_model: str = "openai/gpt-oss-20b"
     groq_llm_timeout_s: float = 10.0
     # Quem confirma falso/impreciso, em ordem; o provedor que julgou nunca confirma a si mesmo.
-    verify_providers: tuple[str, ...] = ("groq_verify", "openrouter", "claude_cli", "groq")
+    verify_providers: tuple[str, ...] = ("groq_verify", "grok_cli", "openrouter", "claude_cli", "groq")
     retries: int = 1
     breaker_threshold: int = 3
     breaker_cooldown_s: float = 60.0
@@ -69,8 +69,8 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> Settings:
-        raw = os.environ.get("LLM_PROVIDERS", "claude_cli,groq,openrouter")
-        vraw = os.environ.get("VERIFY_PROVIDERS", "groq_verify,openrouter,claude_cli,groq")
+        raw = os.environ.get("LLM_PROVIDERS", "claude_cli,grok_cli,groq,openrouter")
+        vraw = os.environ.get("VERIFY_PROVIDERS", "groq_verify,grok_cli,openrouter,claude_cli,groq")
         providers = tuple(part.strip() for part in raw.split(",") if part.strip())
         return cls(
             claude_bin=os.environ.get("CLAUDE_BIN", "claude").strip() or "claude",

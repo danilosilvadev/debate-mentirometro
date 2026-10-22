@@ -151,10 +151,10 @@ def test_settings_default_order_and_claude_skip(monkeypatch):
     from placar.replay import build_router
 
     s = Settings.from_env()
-    assert s.providers == ("claude_cli", "groq", "openrouter")
+    assert s.providers == ("claude_cli", "grok_cli", "groq", "openrouter")
     router = build_router(s)
     names = [p.name for p in router.providers]
-    assert names[0] == "claude-cli" and "groq" in names and names[-1] == "openrouter" and names[-2] == "groq_verify"
+    assert names[0] == "claude-cli" and names[1] == "grok_cli" and "groq" in names and names[-1] == "openrouter" and names[-2] == "groq_verify"
     first = Prov("x", {})
     del first
     # CLI ausente: o roteador pula sem erro e segue para a Groq (sem rede aqui: só checa a ordem)
@@ -399,3 +399,29 @@ def test_openrouter_alias(monkeypatch):
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     monkeypatch.setenv("AH_OPENROUTER_KEY", "k")
     assert Settings.from_env().openrouter_key == "k"
+
+
+def test_grok_cli_provider_text_only_and_errors():
+    import subprocess
+    from placar.llm.base import LlmRequest, RateLimitFailure, TimeoutFailure
+    from placar.llm.grok_cli import GrokCliProvider
+    seen = {}
+    class P:
+        def __init__(self, rc, out="", err=""):
+            self.returncode, self.stdout, self.stderr = rc, out, err
+    def ok(args, **kw):
+        seen["args"] = args
+        return P(0, json.dumps({"structuredOutput": {"veredito": "verdadeiro"}}))
+    g = GrokCliProvider(runner=ok)
+    out = g.generate(LlmRequest(task="judge", system="s", user="u", schema={"type": "object"}), 10)
+    assert json.loads(out)["veredito"] == "verdadeiro"
+    a = seen["args"]
+    assert "--always-approve" not in a and a[a.index("--tools") + 1] == "" and "--disable-web-search" in a
+    assert a[a.index("--permission-mode") + 1] == "dontAsk"
+    g2 = GrokCliProvider(runner=lambda *x, **k: P(1, err="Error: 429 Too Many Requests"))
+    with pytest.raises(RateLimitFailure):
+        g2.generate(LlmRequest(task="judge", system="s", user="u", schema=None), 10)
+    def slow(*x, **k):
+        raise subprocess.TimeoutExpired("grok", 1)
+    with pytest.raises(TimeoutFailure):
+        GrokCliProvider(runner=slow).generate(LlmRequest(task="judge", system="s", user="u", schema=None), 10)
