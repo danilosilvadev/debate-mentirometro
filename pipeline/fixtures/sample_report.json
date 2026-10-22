@@ -2,7 +2,7 @@
   "debate_id": "sintetico-2026",
   "utterances": 5,
   "audio_span_s": 16.0,
-  "wall_s": 0.013,
+  "wall_s": 0.017,
   "speed": 0,
   "failover_pct": 11.1,
   "provider_counts": {
@@ -11,23 +11,23 @@
   },
   "stage_ms": {
     "classify": {
-      "mean": 1.769,
-      "max": 1.968,
+      "mean": 2.148,
+      "max": 2.519,
       "n": 5
     },
     "retrieve": {
-      "mean": 0.047,
-      "max": 0.063,
+      "mean": 0.101,
+      "max": 0.137,
       "n": 2
     },
     "judge": {
-      "mean": 1.108,
-      "max": 1.191,
+      "mean": 1.501,
+      "max": 1.551,
       "n": 2
     },
     "verify": {
-      "mean": 1.026,
-      "max": 1.028,
+      "mean": 1.313,
+      "max": 1.373,
       "n": 2
     }
   },

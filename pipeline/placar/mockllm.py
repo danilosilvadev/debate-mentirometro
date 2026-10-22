@@ -9,6 +9,8 @@ from placar.llm.router import ProviderRouter
 
 
 def scripted(request: LlmRequest) -> str:
+    if request.task == "classify_turn":
+        return _turn(request.user)
     text = request.user.lower()
     if request.task == "classify":
         if "350" in text:
@@ -115,3 +117,21 @@ def mock_router() -> ProviderRouter:
         breaker_threshold=5,
         timeout_s=5,
     )
+
+
+def _turn(user: str) -> str:
+    """Turno fictício: acha frases com 'vou' (proposta) e com número (afirmação)."""
+    import re
+
+    text = user.split("Turno:", 1)[-1]
+    itens = []
+    for frase in re.split(r"(?<=[.!?])\s+", text):
+        f = frase.strip()
+        if not f:
+            continue
+        if re.search(r"\bvou\b|\bvamos\b", f):
+            itens.append({"tipo": "proposta", "titulo": f[:40], "citacao": f, "categoria": "outro"})
+        elif re.search(r"\d", f):
+            itens.append({"tipo": "afirmacao_checavel", "titulo": f[:40], "citacao": f,
+                          "categoria": "outro", "busca": f[:80]})
+    return json.dumps({"tom": "proposta" if itens else "outro", "itens": itens[:4]}, ensure_ascii=False)

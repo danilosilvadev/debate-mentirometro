@@ -99,3 +99,38 @@ PLACAR_SCHEMA = {
         "aviso": {"type": "string"},
     },
 }
+
+# Uma chamada por turno de fala: o modelo devolve a LISTA de itens do turno.
+TURN_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["tom", "itens"],
+    "properties": {
+        "tom": {
+            "type": "string",
+            "enum": ["proposta", "ataque", "defesa", "balanco", "outro"],
+        },
+        "itens": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["tipo", "titulo", "citacao", "categoria"],
+                "properties": {
+                    "tipo": {"type": "string", "enum": ["proposta", "ataque", "afirmacao_checavel"]},
+                    "titulo": {"type": "string", "maxLength": 80},
+                    "citacao": {"type": "string", "maxLength": 400},
+                    "categoria": {
+                        "type": "string",
+                        "enum": [
+                            "seguranca", "economia", "saude", "educacao", "social",
+                            "meio_ambiente", "corrupcao", "politica", "infraestrutura", "outro",
+                        ],
+                    },
+                    "busca": {"type": "string", "maxLength": 160},
+                },
+            },
+        },
+    },
+}

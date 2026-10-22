@@ -19,7 +19,9 @@ from placar.llm.base import (
     LlmRequest,
     LlmResult,
     ProviderError,
+    ProviderUnavailable,
     RateLimitFailure,
+    TimeoutFailure,
 )
 
 log = logging.getLogger("placar.llm")
@@ -78,6 +80,7 @@ class ProviderRouter:
             clock=self._clock,
         )
         self.history: list[CallRecord] = []
+        self.unavailable: set[str] = set()
 
     def complete(
         self, request: LlmRequest, *, exclude: set[str] | None = None
@@ -90,6 +93,8 @@ class ProviderRouter:
             raise ProviderError("Nenhum provedor sobrou para esta chamada.")
         primary = considered[0].name
         for provider in considered:
+            if provider.name in self.unavailable:
+                continue
             if not self.breaker.allow(provider.name):
                 record = CallRecord(
                     task=request.task,
@@ -107,7 +112,7 @@ class ProviderRouter:
             for attempt in range(1, attempts + 1):
                 started = self._perf()
                 try:
-                    raw = provider.generate(request, self.timeout_s)
+                    raw = self._generate(provider, request)
                     data = parse_model_json(raw, request.schema)
                 except InvalidJson as exc:
                     self._note(
@@ -123,6 +128,21 @@ class ProviderRouter:
                     self.breaker.fail(provider.name)
                     errors.append(f"{provider.name}: json inválido")
                     continue
+                except ProviderUnavailable as exc:
+                    self._note(
+                        records,
+                        request,
+                        provider.name,
+                        started,
+                        ok=False,
+                        failover=True,
+                        error=exc.message,
+                        attempt=attempt,
+                    )
+                    self.unavailable.add(provider.name)
+                    log.warning("llm provider=%s indisponível, pulando: %s", provider.name, exc.message)
+                    errors.append(f"{provider.name}: {exc.message}")
+                    break
                 except RateLimitFailure as exc:
                     self._note(
                         records,
@@ -179,6 +199,24 @@ class ProviderRouter:
                     records=records,
                 )
         raise ProviderError("Todos os provedores falharam: " + "; ".join(errors))
+
+    def _generate(self, provider: LlmProvider, request: LlmRequest) -> str:
+        """Chama o provedor com prazo de relógio de parede.
+
+        O timeout do urllib vale por leitura de socket, não pelo pedido todo:
+        um modelo grátis que pinga bytes devagar segurou 120 s no teste.
+        """
+        import concurrent.futures
+
+        timeout_s = float(getattr(provider, "timeout_s", 0) or self.timeout_s)
+        pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        future = pool.submit(provider.generate, request, timeout_s)
+        try:
+            return future.result(timeout=timeout_s + 1.0)
+        except concurrent.futures.TimeoutError as exc:
+            raise TimeoutFailure(f"{provider.name} passou de {timeout_s:.0f}s.") from exc
+        finally:
+            pool.shutdown(wait=False, cancel_futures=True)
 
     def _note(
         self,

@@ -51,6 +51,12 @@ class TransportFailure(ProviderError):
     pass
 
 
+class ProviderUnavailable(ProviderError):
+    """O provedor não existe nesta máquina (binário ausente). Não adianta tentar de novo."""
+
+    retryable = False
+
+
 @dataclass
 class LlmResult:
     data: dict[str, Any]

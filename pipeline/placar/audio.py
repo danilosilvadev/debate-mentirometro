@@ -85,3 +85,83 @@ def cut_chunk(
     if completed.returncode != 0:
         raise RuntimeError(completed.stderr.strip() or "ffmpeg falhou.")
     return dest
+
+
+# --- Captura sturdier: yt-dlp -> stdout -> ffmpeg -> PCM 16 kHz ---------------
+# O caminho antigo (yt-dlp -g + ffmpeg na URL do googlevideo) leva 403 do
+# YouTube com frequência. Aqui o próprio yt-dlp baixa (com os cabeçalhos e
+# desafios certos) e entrega os bytes num pipe; o ffmpeg só decodifica.
+# Alternativas sem YouTube: feed de TV/rádio (Rádio Bandeirantes, BandNews FM
+# têm stream HTTP/Icecast), placa de captura HDMI ou o áudio do sistema; todas
+# entram com `ffmpeg -i <fonte>` no lugar do yt-dlp (veja --source).
+
+SAMPLE_RATE = 16000
+BYTES_PER_S = SAMPLE_RATE * 2  # s16le mono
+
+
+def ytdlp_pipe_args(page_url: str, start_s: float = 0.0) -> list[str]:
+    args = ["yt-dlp", "-q", "--no-playlist", "-f", "ba/b", "-o", "-"]
+    if start_s > 0:
+        args += ["--download-sections", f"*{start_s:.0f}-inf"]
+    return args + [page_url]
+
+
+def ffmpeg_pcm_args(source: str = "pipe:0") -> list[str]:
+    return ["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", source,
+            "-ac", "1", "-ar", str(SAMPLE_RATE), "-f", "s16le", "pipe:1"]
+
+
+def stream_pcm(page_url: str = "", *, source: str = "", start_s: float = 0.0,
+               retries: int = 5, backoff_s: float = 2.0, popen=None, sleep=None):
+    """Gera blocos de bytes PCM. Reabre a captura até `retries` vezes se cair.
+
+    `source` (URL de rádio/TV, arquivo, dispositivo) pula o yt-dlp.
+    Em VOD a reconexão retoma do ponto já lido; em ao vivo, da borda ao vivo.
+    """
+    import time as _time
+
+    popen = popen or subprocess.Popen
+    sleep = sleep or _time.sleep
+    read_bytes = 0
+    failures = 0
+    while True:
+        offset = start_s + read_bytes / BYTES_PER_S
+        if source:
+            procs = [popen(ffmpeg_pcm_args(source), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)]
+        else:
+            yt = popen(ytdlp_pipe_args(page_url, offset), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            ff = popen(ffmpeg_pcm_args(), stdin=yt.stdout, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            procs = [yt, ff]
+        out = procs[-1].stdout
+        got = False
+        while True:
+            block = out.read(BYTES_PER_S)
+            if not block:
+                break
+            got = True
+            failures = 0
+            read_bytes += len(block)
+            yield block
+        codes = [p.wait() for p in procs]
+        if all(c == 0 for c in codes) and got:
+            return  # fim normal (VOD acabou)
+        failures += 1
+        if failures > retries:
+            raise RuntimeError(f"captura caiu {failures} vezes seguidas (códigos {codes}).")
+        sleep(backoff_s * failures)
+
+
+def windows_from_stream(blocks, *, chunk_s: float = 10.0, overlap_s: float = 2.0):
+    """Recorta o PCM contínuo em janelas (início_s, bytes) com sobreposição."""
+    size = int(chunk_s * BYTES_PER_S)
+    step = int((chunk_s - overlap_s) * BYTES_PER_S)
+    buf = b""
+    start = 0
+    for block in blocks:
+        buf += block
+        while len(buf) >= size:
+            yield start / BYTES_PER_S, buf[:size]
+            buf = buf[step:]
+            start += step
+    if len(buf) > int(overlap_s * BYTES_PER_S):
+        yield start / BYTES_PER_S, buf

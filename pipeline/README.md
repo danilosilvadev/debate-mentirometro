@@ -30,6 +30,38 @@ Interface única. A ordem padrão é `claude_cli`, depois `openrouter`.
 
 Failover automático quando o CLI erra, estoura o orçamento de latência (`CLAUDE_TIMEOUT_S`, padrão 12 s), devolve mensagem de limite de uso, ou o JSON não fecha o schema (há uma tentativa de reparo: cerca markdown, objeto interno, chaves extras). Erro transitório tenta de novo no mesmo provedor. Limite de uso abre o circuit breaker na hora; os outros erros abrem depois de 3 falhas, por 60 s. Cada chamada é logada com provedor, latência e se houve failover.
 
+## Transcrição (STT)
+
+`STT_PROVIDER=local` (padrão) usa faster-whisper na máquina (`WHISPER_MODEL`, `small`/`int8` no CPU).
+`STT_PROVIDER=groq` usa o Whisper hospedado da Groq e cai no local sozinho se der erro ou passar de `GROQ_TIMEOUT_S` (padrão 8 s).
+
+- Conferido em 21/10/2026 em `console.groq.com/docs/speech-to-text`: endpoint compatível com OpenAI `POST https://api.groq.com/openai/v1/audio/transcriptions`, modelo `whisper-large-v3-turbo`, **US$ 0,04 por hora de áudio**, cobrança mínima de 10 s por pedido, até 25 MB por arquivo no plano gratuito. `whisper-large-v3` custa US$ 0,111/h.
+- Blocos de 10 s com 2 s de sobreposição = 1,25 s de áudio cobrado por segundo de debate, cerca de US$ 0,13 por 2,5 h.
+- Chave em `GROQ_API_KEY`. O pedido manda um `User-Agent` próprio: o Cloudflare da Groq recusa o do urllib (erro 1010).
+
+## Captura do áudio
+
+`python -m placar live --url … --seconds N` roda `yt-dlp -o -` num pipe para o `ffmpeg`, que entrega PCM 16 kHz. Se o pipe cair, reabre até `--retries` vezes (em VOD retoma do ponto lido). O caminho antigo (`yt-dlp -g` + ffmpeg na URL do googlevideo) levava 403 do YouTube.
+
+Alternativas quando o YouTube bloquear (403, "confirm you're not a bot"):
+- `--source <url>`: stream de rádio/TV direto no ffmpeg (Rádio Bandeirantes, BandNews FM e afins têm stream HTTP/Icecast);
+- placa de captura HDMI ou o áudio do sistema (`--source` com `-f pulse`/`alsa` via ffmpeg);
+- rodar numa máquina com IP residencial em vez de nuvem.
+
+Cada bloco é dono do trecho `[início + 1 s, fim − 1 s]`; um segmento só sai no bloco que contém o seu meio, e `dedupe_overlap` tira palavras repetidas na emenda.
+
+## LLM assíncrono e classificação por turno
+
+O laço de áudio (captura → STT → voz) nunca espera o modelo: cada turno de fala de um candidato (segmentos seguidos da mesma voz, até 60 s) entra numa fila (`placar/worker.py`, pool de 2 threads). Uma chamada `classify_turn` por turno devolve a LISTA de itens (`TURN_SCHEMA`: proposta, ataque ou afirmação checável, cada um com título curto, citação exata, categoria e, para afirmações, palavras de busca). Cada afirmação (até 2 por turno) passa por busca e julgamento. O `placar.json` é reescrito a cada item que chega. Toda chamada tem prazo de relógio de parede (`CLAUDE_TIMEOUT_S`, `OPENROUTER_TIMEOUT_S`).
+
+## Busca de fontes sem chave
+
+Além de Google Fact Check, SearXNG e Brave (opcionais, com chave/URL), há DuckDuckGo HTML (`RETRIEVE_DDG=1`, padrão no `from_env`): busca restrita com `site:` a checadores, imprensa e `gov.br`, filtra por lista de domínios confiáveis, espera 2 s entre pedidos e guarda em cache (`~/.cache/placar/ddg.json`). O DuckDuckGo devolve 202 quando desconfia de robô; aí a afirmação fica `sem_dados`. Para um debate inteiro, prefira SearXNG próprio.
+
+## Vozes (speaker ID)
+
+`scripts/enroll_voice.py <nome> <url> [início fim]` baixa o trecho, gera embeddings ECAPA (speechbrain, CPU) e acumula em `voices/<nome>.npy` + `voices/<nome>.json` (fontes e checagens). Avisa quando um clipe novo não bate com os anteriores (outra voz). Cadastre também os mediadores; sem eles, uma voz masculina de mediador pode cair no candidato.
+
 ## Limites conhecidos (21/10/2026)
 
 - **Assinatura do Claude (Pro, Max, Team).** A Anthropic não publica um número fixo de pedidos por minuto para o Claude Code. O limite é uma janela móvel de uso, diferente por plano, e o CLI responde com uma mensagem do tipo "you've hit your limit". Quando isso aparece, o pipeline trata como limite e passa para o OpenRouter. Confira o plano em claude.ai. Não dá para prometer um debate inteiro só na assinatura.

@@ -28,9 +28,11 @@ def main(argv: list[str] | None = None) -> int:
     serve_cmd.add_argument("--port", type=int, default=0)
 
     live_cmd = sub.add_parser("live", help="Corta um ao vivo do YouTube em blocos de 10 s")
-    live_cmd.add_argument("--url", required=True)
+    live_cmd.add_argument("--url", default="")
     live_cmd.add_argument("--out", type=Path, default=Path("out/chunks"))
     live_cmd.add_argument("--seconds", type=float, default=30.0)
+    live_cmd.add_argument("--source", default="", help="ffmpeg direto (rádio/TV/arquivo) em vez do yt-dlp")
+    live_cmd.add_argument("--retries", type=int, default=5)
 
     args = parser.parse_args(argv)
     if args.cmd == "replay":
@@ -69,21 +71,28 @@ def _serve(args: argparse.Namespace) -> int:
 
 
 def _live(args: argparse.Namespace) -> int:
-    from placar.audio import chunk_windows, cut_chunk, resolve_audio_url
+    import wave
+
+    from placar.audio import stream_pcm, windows_from_stream
 
     settings = Settings.from_env()
-    print("Resolvendo áudio…", flush=True)
-    source = resolve_audio_url(args.url)
-    windows = chunk_windows(
-        args.seconds,
-        chunk_s=settings.chunk_seconds,
-        overlap_s=settings.chunk_overlap_seconds,
-    )
-    for index, (start, length) in enumerate(windows):
-        dest = args.out / f"chunk_{index:04d}.wav"
-        print(f"bloco {index} {start:.1f}s +{length:.1f}s", flush=True)
-        cut_chunk(source, dest, start_s=start, duration_s=length)
-    print(f"{len(windows)} blocos em {args.out}", flush=True)
+    args.out.mkdir(parents=True, exist_ok=True)
+    blocks = stream_pcm(args.url, source=args.source, retries=args.retries)
+    count = 0
+    for start, pcm in windows_from_stream(
+        blocks, chunk_s=settings.chunk_seconds, overlap_s=settings.chunk_overlap_seconds
+    ):
+        if start >= args.seconds:
+            break
+        dest = args.out / f"chunk_{count:04d}.wav"
+        with wave.open(str(dest), "wb") as handle:
+            handle.setnchannels(1)
+            handle.setsampwidth(2)
+            handle.setframerate(16000)
+            handle.writeframes(pcm)
+        print(f"bloco {count} {start:.1f}s +{len(pcm) / 32000:.1f}s", flush=True)
+        count += 1
+    print(f"{count} blocos em {args.out}", flush=True)
     return 0
 
 

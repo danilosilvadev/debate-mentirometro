@@ -27,7 +27,7 @@ class Settings:
     claude_timeout_s: float = 12.0
     session_chunks: int = 8
     openrouter_key: str = ""
-    openrouter_model: str = "meta-llama/llama-3.3-70b-instruct:free"
+    openrouter_model: str = "nvidia/nemotron-3.5-super-vl:free"
     openrouter_timeout_s: float = 20.0
     providers: tuple[str, ...] = ("claude_cli", "openrouter")
     retries: int = 1
@@ -40,11 +40,17 @@ class Settings:
     factcheck_key: str = ""
     searxng_url: str = ""
     brave_key: str = ""
+    # Desligado no Settings() puro (testes, replay de roteiro); from_env liga por padrão.
+    ddg_enabled: bool = False
     chunk_seconds: float = 10.0
     chunk_overlap_seconds: float = 2.0
     whisper_model: str = "small"
     whisper_device: str = "cpu"
     whisper_compute: str = "int8"
+    stt_provider: str = "local"
+    groq_key: str = ""
+    groq_stt_model: str = "whisper-large-v3-turbo"
+    groq_timeout_s: float = 8.0
     host: str = "127.0.0.1"
     port: int = 8787
     supabase_url: str = ""
@@ -66,7 +72,7 @@ class Settings:
             session_chunks=_int("CLAUDE_SESSION_CHUNKS", 8),
             openrouter_key=os.environ.get("OPENROUTER_API_KEY", "").strip(),
             openrouter_model=os.environ.get(
-                "OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free"
+                "OPENROUTER_MODEL", "nvidia/nemotron-3.5-super-vl:free"
             ).strip(),
             openrouter_timeout_s=_float("OPENROUTER_TIMEOUT_S", 20.0),
             providers=providers,
@@ -84,11 +90,17 @@ class Settings:
             factcheck_key=os.environ.get("FACTCHECK_API_KEY", "").strip(),
             searxng_url=os.environ.get("SEARXNG_URL", "").strip().rstrip("/"),
             brave_key=os.environ.get("BRAVE_API_KEY", "").strip(),
+            ddg_enabled=os.environ.get("RETRIEVE_DDG", "1").strip() != "0",
             chunk_seconds=_float("CHUNK_SECONDS", 10.0),
             chunk_overlap_seconds=_float("CHUNK_OVERLAP_SECONDS", 2.0),
             whisper_model=os.environ.get("WHISPER_MODEL", "small").strip() or "small",
             whisper_device=os.environ.get("WHISPER_DEVICE", "cpu").strip() or "cpu",
             whisper_compute=os.environ.get("WHISPER_COMPUTE", "int8").strip() or "int8",
+            stt_provider=(os.environ.get("STT_PROVIDER", "local").strip().lower() or "local"),
+            groq_key=os.environ.get("GROQ_API_KEY", "").strip(),
+            groq_stt_model=os.environ.get("GROQ_STT_MODEL", "whisper-large-v3-turbo").strip()
+            or "whisper-large-v3-turbo",
+            groq_timeout_s=_float("GROQ_TIMEOUT_S", 8.0),
             host=os.environ.get("PLACAR_HOST", "127.0.0.1").strip() or "127.0.0.1",
             port=_int("PLACAR_PORT", 8787),
             supabase_url=os.environ.get("SUPABASE_URL", "").strip().rstrip("/"),
