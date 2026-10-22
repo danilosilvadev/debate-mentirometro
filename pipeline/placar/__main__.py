@@ -49,6 +49,7 @@ def main(argv: list[str] | None = None) -> int:
     run_cmd.add_argument("--threshold", type=float, default=0.45)
     run_cmd.add_argument("--debate-id", default="debate")
     run_cmd.add_argument("--video-id", default="")
+    run_cmd.add_argument("--speed", type=float, default=1.0, help="Só com --wav: 1 = tempo real, 2 = dobro")
     run_cmd.add_argument("--mock", action="store_true", help="LLM fictício (sem rede)")
     run_cmd.add_argument("--retries", type=int, default=5)
 
@@ -151,7 +152,11 @@ def _run(args: argparse.Namespace) -> int:
                  whisper_model=settings.whisper_model, threshold=args.threshold,
                  chunk_s=settings.chunk_seconds, overlap_s=settings.chunk_overlap_seconds,
                  debate_id=args.debate_id, video_id=args.video_id,
-                 transcriber=build_transcriber(settings), offset_s=args.start, chunk_source=source)
+                 transcriber=build_transcriber(settings), offset_s=args.start, chunk_source=source,
+                 speed=args.speed)
+    from placar.replay_data import write as write_replay
+
+    write_replay(args.out, offset_s=args.start)  # itens: t relativo ao início do áudio; transcript já em s do vídeo
     print(json.dumps({"turns": len(report["llm_turns"]), "chunks": len(report["chunks"])}), flush=True)
     return 0
 
