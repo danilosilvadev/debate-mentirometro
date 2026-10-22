@@ -503,7 +503,9 @@ function videoHtml(state, colorA, colorB) {
   else if (status.vivo) pill = 'AO VIVO'
   const live = status.vivo && !demo && !state.snapshot.encerrado
   if (state.replay) {
-    return `<div class="video"><div class="stage" id="ytreplay" data-vid="${esc(id)}"></div><span class="live">REPLAY</span>
+    // O player mora fora do #app (#rhost) e nunca é recriado nem movido: mover um
+    // iframe no DOM recarrega o vídeo (era o que quebrava ao arrastar a barra do YouTube).
+    return `<div class="video rvideo"><span class="live">REPLAY</span>
     <div class="rbar" role="group" aria-label="Controle do replay"><button type="button" data-act="rseek" data-arg="-30">−30s</button><span class="rtime">${esc(mmss(state.replaySec || 0))}</span><button type="button" data-act="rseek" data-arg="30">+30s</button></div>
     <button type="button" class="eye" data-act="overlays" aria-pressed="${state.quiet ? 'true' : 'false'}">${state.quiet ? 'Mostrar' : 'Ocultar'}</button></div>`
   }
@@ -784,9 +786,9 @@ function boot() {
     const previous = app.querySelector('.stage')
     const nextId = resolveVideoId(state.snapshot, state.videoOverride || '')
     const sameStage = previous && (previous.getAttribute('data-vid') || '') === nextId
-    app.className = `app${state.quiet ? ' quiet' : ''}`
+    app.className = `app${state.quiet ? ' quiet' : ''}${state.replay ? ' replay' : ''}`
     app.innerHTML = renderBoard(state)
-    if (sameStage) {
+    if (sameStage && !state.replay) {
       const slot = app.querySelector('.stage')
       if (slot) slot.replaceWith(previous)
     }
@@ -979,11 +981,12 @@ function boot() {
       let hold = startAt // posição enquanto o player não começou a tocar
       const current = () => {
         if (simulated || failed) return sim.get()
-        if (!ready || !player?.getPlayerState) return hold
-        const st = player.getPlayerState()
-        // -1 não iniciado, 5 carregado: o vídeo ainda não andou; mostra a posição pedida
-        if (st === -1 || st === 5) return hold
-        return player.getCurrentTime()
+        if (!ready || !player?.getCurrentTime) return hold
+        // Só lê o player. Buffering (3), pausa (2) e fim (0) não são falha.
+        const t = Number(player.getCurrentTime()) || 0
+        const st = player.getPlayerState?.()
+        if ((st === -1 || st === 5) && t === 0) return hold // ainda não carregou o início pedido
+        return t
       }
       let sig = ''
       const tick = () => {
@@ -1007,11 +1010,20 @@ function boot() {
         mode: () => (simulated || failed ? 'clock' : (ready ? 'player' : 'loading')),
         now: current,
         player: () => player,
+        frame: () => document.getElementById('ytreplay'),
         data,
       }
       setInterval(tick, 250)
       if (!simulated) {
         const make = () => {
+          if (player) return
+          let wrap = document.getElementById('rhost')
+          if (!wrap) {
+            wrap = document.createElement('div')
+            wrap.id = 'rhost'
+            wrap.innerHTML = '<div id="ytreplay"></div>'
+            app.parentNode.insertBefore(wrap, app)
+          }
           const host = document.getElementById('ytreplay')
           if (!host) return
           player = new window.YT.Player(host, {
@@ -1019,7 +1031,9 @@ function boot() {
             playerVars: { start: Math.floor(startAt), rel: 0, playsinline: 1 },
             events: {
               onReady: () => { ready = true },
-              onError: () => {
+              onError: (event) => {
+                // Só erro real de vídeo indisponível/proibido no embed; nada de recriar o player.
+                if (![2, 5, 100, 101, 150, 153].includes(Number(event?.data))) return
                 // vídeo bloqueado/indisponível neste navegador: segue no relógio simulado
                 failed = true
                 sim.seek(current() || hold)
@@ -1028,8 +1042,6 @@ function boot() {
               },
             },
           })
-          const frame = document.getElementById('ytreplay')
-          if (frame) { frame.classList.add('stage'); frame.setAttribute('data-vid', vid) }
         }
         if (window.YT?.Player) make()
         else {
