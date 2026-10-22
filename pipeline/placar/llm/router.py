@@ -81,14 +81,24 @@ class ProviderRouter:
         )
         self.history: list[CallRecord] = []
         self.unavailable: set[str] = set()
+        # Ordem preferida para a confirmação (segundo modelo). Vazia = ordem normal.
+        self.verify_order: list[str] = []
 
     def complete(
-        self, request: LlmRequest, *, exclude: set[str] | None = None
+        self,
+        request: LlmRequest,
+        *,
+        exclude: set[str] | None = None,
+        prefer: list[str] | None = None,
     ) -> LlmResult:
         skipped = exclude or set()
         records: list[CallRecord] = []
         errors: list[str] = []
         considered = [item for item in self.providers if item.name not in skipped]
+        if prefer:
+            rank = {name.replace("-", "_"): i for i, name in enumerate(prefer)}
+            considered = [p for p in considered if p.name.replace("-", "_") in rank]
+            considered.sort(key=lambda p: rank[p.name.replace("-", "_")])
         if not considered:
             raise ProviderError("Nenhum provedor sobrou para esta chamada.")
         primary = considered[0].name

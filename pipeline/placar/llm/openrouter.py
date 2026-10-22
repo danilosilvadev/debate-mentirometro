@@ -43,7 +43,16 @@ class OpenRouterProvider:
         model: str = "nvidia/nemotron-3.5-super-vl:free",
         transport: Transport | None = None,
         app_url: str = "http://127.0.0.1:8787",
+        url: str = OPENROUTER_URL,
+        name: str = "openrouter",
+        label: str = "OpenRouter",
+        key_env: str = "OPENROUTER_API_KEY",
     ) -> None:
+        self.url = url
+        self.strict_schema = True
+        self.name = name
+        self.label = label
+        self.key_env = key_env
         self.api_key = api_key
         self.model = model
         self._transport = transport or urllib_transport
@@ -51,7 +60,7 @@ class OpenRouterProvider:
 
     def generate(self, request: LlmRequest, timeout_s: float) -> str:
         if not self.api_key:
-            raise TransportFailure("OPENROUTER_API_KEY não está definida.")
+            raise TransportFailure(f"{self.key_env} não está definida.")
         try:
             return self._post(request, timeout_s, schema=True)
         except TransportFailure as exc:
@@ -67,18 +76,23 @@ class OpenRouterProvider:
                 {
                     "role": "user",
                     "content": (
-                        "Responda apenas com o objeto JSON pedido.\n" + request.user
+                        "Responda apenas com o objeto JSON pedido"
+                        + ("" if schema else ", neste JSON Schema:\n"
+                           + json.dumps(request.schema, ensure_ascii=False))
+                        + "\n\n" + request.user
                     ),
                 },
             ],
             "temperature": 0,
         }
+        if "gpt-oss" in self.model:
+            body["reasoning_effort"] = "low"  # menos tokens de raciocínio, menos cota por minuto
         if schema:
             body["response_format"] = {
                 "type": "json_schema",
                 "json_schema": {
                     "name": request.task.replace(".", "_"),
-                    "strict": True,
+                    "strict": self.strict_schema,
                     "schema": request.schema,
                 },
             }
@@ -86,30 +100,50 @@ class OpenRouterProvider:
             body["response_format"] = {"type": "json_object"}
         raw = json.dumps(body).encode("utf-8")
         http_request = Request(
-            OPENROUTER_URL,
+            self.url,
             data=raw,
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
                 "HTTP-Referer": self.app_url,
                 "X-Title": "Placar da Verdade",
+                # O Cloudflare da Groq recusa o User-Agent do urllib (erro 1010).
+                "User-Agent": "placar-pipeline/0.2",
             },
             method="POST",
         )
+        import time as _time
+
+        started = _time.monotonic()
         status, text = self._transport(http_request, timeout_s)
-        if status == 429 or _rate_limited(text):
-            raise RateLimitFailure(f"OpenRouter limitou ({status}).")
+        wait = _retry_after(text) if status == 429 else None
+        # Limite de tokens por minuto (Groq): costuma liberar em poucos segundos; espera uma vez.
+        if wait is not None and wait + (_time.monotonic() - started) < timeout_s - 1:
+            _time.sleep(wait + 0.2)
+            status, text = self._transport(http_request, timeout_s)
+        if status == 429 or (status >= 400 and _rate_limited(text)):
+            raise RateLimitFailure(f"{self.label} limitou ({status}).")
         if status == 402:
-            raise RateLimitFailure("OpenRouter recusou por crédito ou cota (402).")
+            raise RateLimitFailure(f"{self.label} recusou por crédito ou cota (402).")
         if status >= 400:
-            raise TransportFailure(f"OpenRouter HTTP {status}: {text[:300]}")
+            raise TransportFailure(f"{self.label} HTTP {status}: {text[:300]}")
         try:
             payload = json.loads(text)
             return payload["choices"][0]["message"]["content"]
         except (KeyError, IndexError, json.JSONDecodeError, TypeError) as exc:
-            raise TransportFailure("OpenRouter devolveu um corpo inesperado.") from exc
+            raise TransportFailure(f"{self.label} devolveu um corpo inesperado.") from exc
 
 
 def _rate_limited(text: str) -> bool:
     folded = text.lower()
     return "rate limit" in folded or "rate_limit" in folded or "429" in folded
+
+
+def _retry_after(text: str) -> float | None:
+    import re
+
+    match = re.search(r"try again in (?:(\d+)m)?([\d.]+)(ms|s)", text)
+    if not match:
+        return None
+    value = float(match.group(2)) / (1000 if match.group(3) == "ms" else 1)
+    return value + 60 * int(match.group(1) or 0)

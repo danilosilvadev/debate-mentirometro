@@ -56,6 +56,8 @@ def run(
     max_llm_calls: int = 0,
     llm_workers: int = 2,
     max_claims_per_turn: int = 2,
+    chunk_source: Any = None,
+    silence_flush_s: float = 3.0,
 ) -> dict[str, Any]:
     """turn_max_s: junta segmentos seguidos do mesmo candidato num turno
     (uma chamada de classificação por turno, não por frase). max_llm_calls:
@@ -63,7 +65,7 @@ def run(
     import soundfile as sf
     from placar.speaker_ecapa import embed  # noqa: carregamento preguiçoso do torch
 
-    duration = sf.info(str(wav)).duration
+    duration = sf.info(str(wav)).duration if chunk_source is None else 0.0
     profiles = load_profiles(voices, list(slot_of_voice))
     stt = transcriber or FasterWhisperTranscriber(model_name=whisper_model)
     if isinstance(stt, FasterWhisperTranscriber):
@@ -113,20 +115,32 @@ def run(
         if turn["slot"] in board.nomes:
             worker.submit({"t_ms": origin + int(turn["t_s"] * 1000), "quem": turn["slot"],
                            "dur_s": turn["dur_s"], "text": turn["text"], "t_s": turn["t_s"],
-                           "speech_end_wall": wall0 + turn["end_audio_s"] / (speed or 1)})
+                           "speech_end_wall": turn.get("end_wall", wall0 + turn["end_audio_s"] / (speed or 1))})
         turn = None
         return (time.perf_counter() - t0) * 1000
 
-    windows = chunk_windows(duration, chunk_s=chunk_s, overlap_s=overlap_s)
-    for index, (start, length) in enumerate(windows):
-        ready_at = (start + length) / speed if speed > 0 else 0
-        wait = ready_at - (time.perf_counter() - wall0)
-        if wait > 0:
-            time.sleep(wait)
+    if chunk_source is None:
+        windows = chunk_windows(duration, chunk_s=chunk_s, overlap_s=overlap_s)
+        last_index = len(windows) - 1
+
+        def _file_chunks():
+            for index, (start, length) in enumerate(windows):
+                ready_at = (start + length) / speed if speed > 0 else 0
+                wait = ready_at - (time.perf_counter() - wall0)
+                if wait > 0:
+                    time.sleep(wait)
+                c0 = time.perf_counter()
+                dest = cut_chunk(str(wav), out / "chunks" / f"chunk_{index:04d}.wav", start_s=start, duration_s=length)
+                yield index, start, length, dest, ready_at, (time.perf_counter() - c0) * 1000
+
+        source = _file_chunks()
+    else:
+        last_index = -1  # ao vivo: não se sabe qual é o último bloco
+        source = chunk_source
+    for index, start, length, dest, ready_at, capture_ms in source:
         t_ready = time.perf_counter()
-        c0 = time.perf_counter()
-        dest = cut_chunk(str(wav), out / "chunks" / f"chunk_{index:04d}.wav", start_s=start, duration_s=length)
-        capture_ms = (time.perf_counter() - c0) * 1000
+        if ready_at is None:  # ao vivo: o bloco acabou de chegar
+            ready_at = t_ready - wall0
         c0 = time.perf_counter()
         segments = stt.transcribe(dest)
         stt_ms = (time.perf_counter() - c0) * 1000
@@ -139,7 +153,7 @@ def run(
             # na sobreposição de 2 s não aparece duas vezes.
             mid = (seg.start_s + seg.end_s) / 2
             own_from = overlap_s / 2 if index > 0 else -1.0
-            own_to = length - overlap_s / 2 if index < len(windows) - 1 else length + 1.0
+            own_to = length - overlap_s / 2 if index != last_index else length + 1.0
             if not (own_from <= mid < own_to):
                 continue
             text = dedupe_overlap(prev_tail, seg.text) if index > 0 and seg.start_s < overlap_s + 0.5 else seg.text
@@ -151,6 +165,12 @@ def run(
             piece = audio[int(seg.start_s * 16000): int(seg.end_s * 16000)]
             if len(piece) >= 16000:
                 voice, scores = label(embed(piece), profiles, threshold)
+                # Trecho curto/ruidoso abaixo do limiar: se o mais parecido é quem
+                # já estava falando, continua com ele (no teste: 6 de 147, todos certos).
+                if voice == "unknown" and scores:
+                    best = max(scores, key=scores.get)
+                    if best == last_voice and scores[best] >= threshold - 0.15:
+                        voice = best
             else:
                 voice, scores = last_voice, {}
             last_voice = voice
@@ -165,9 +185,12 @@ def run(
                 turn = {"t_s": t_abs, "slot": slot, "dur_s": 0.0, "text": "", "chunk": index}
             turn["dur_s"] += seg.end_s - seg.start_s
             turn["end_audio_s"] = start + seg.end_s
+            turn["end_wall"] = t_ready  # chegada do bloco: mede atraso real mesmo se a captura atrasar
             turn["text"] = (turn["text"] + " " + text).strip()
-        # turno que já passou de turn_max_s sai sem esperar a próxima fala
-        if turn and turn["dur_s"] >= turn_max_s:
+        # turno que já passou de turn_max_s, ou cuja voz calou há mais de
+        # `silence_flush_s` no fim do bloco, sai sem esperar a próxima fala
+        if turn and (turn["dur_s"] >= turn_max_s
+                     or (start + length) - turn["end_audio_s"] >= silence_flush_s):
             llm_ms += flush()
         write_board()
         done = time.perf_counter()
@@ -188,11 +211,15 @@ def run(
                           "classify_ms": round(res.classify_ms) if res else None,
                           "retrieve_ms": [round(x) for x in res.retrieve_ms] if res else [],
                           "judge_ms": [round(x) for x in res.judge_ms] if res else [],
+                          "verify_ms": [round(x) for x in res.verify_ms] if res else [],
+                          "verdicts": res.verdicts if res else [],
                           "items": res.items if res else 0, "error": (res.error if res else item["error"]),
                           "text": job["text"]})
     (out / "events.jsonl").write_text("".join(json.dumps(e, ensure_ascii=False) + "\n" for e in board.events), encoding="utf-8")
     report = {"llm_turns": llm_turns, "llm_budget_hit": budget_hit, "audio_s": duration, "whisper_model": whisper_model, "speed": speed, "chunks": chunks,
               "retrieval_requests": getattr(getattr(retriever, "_ddg", None), "requests", 0),
+              "searx_requests": getattr(retriever, "searx_requests", 0),
+              "searx_failures": getattr(retriever, "searx_failures", 0),
         "llm_calls": [vars(r) if hasattr(r, "__dict__") else str(r) for r in router.history]}
     (out / "transcript.json").write_text(json.dumps(transcript, ensure_ascii=False, indent=2), encoding="utf-8")
     (out / "latency_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
@@ -205,3 +232,62 @@ def _silence(out: Path) -> Path:
     p = out / "_warm.wav"
     sf.write(str(p), np.zeros(16000, dtype="float32"), 16000)
     return p
+
+
+def live_chunks(url: str, out: Path, *, source: str | None = None, retries: int = 3,
+                chunk_s: float = 10.0, overlap_s: float = 2.0, max_seconds: float = 0.0,
+                start_s: float = 0.0, realtime: bool = False):
+    """Captura ao vivo (yt-dlp | ffmpeg ou --source) -> blocos wav, no formato de run(chunk_source=...)."""
+    import wave
+
+    from placar.audio import stream_pcm, windows_from_stream
+
+    folder = out / "chunks"
+    folder.mkdir(parents=True, exist_ok=True)
+    blocks = _drained(stream_pcm(url, source=source or "", retries=retries, start_s=start_s))
+    wall0 = time.perf_counter()
+    for index, (start, pcm) in enumerate(windows_from_stream(blocks, chunk_s=chunk_s, overlap_s=overlap_s)):
+        if max_seconds and start >= max_seconds:
+            break
+        if realtime:  # VOD baixa mais rápido que o ao vivo: segura até a hora real do bloco
+            wait = start + len(pcm) / 32000 - (time.perf_counter() - wall0)
+            if wait > 0:
+                time.sleep(wait)
+        c0 = time.perf_counter()
+        dest = folder / f"chunk_{index:04d}.wav"
+        with wave.open(str(dest), "wb") as handle:
+            handle.setnchannels(1)
+            handle.setsampwidth(2)
+            handle.setframerate(16000)
+            handle.writeframes(pcm)
+        yield index, start, len(pcm) / 32000, dest, None, (time.perf_counter() - c0) * 1000
+
+
+def _drained(blocks, max_bytes: int = 32000 * 60 * 30):
+    """Lê a captura numa thread e guarda numa fila.
+
+    Sem isto, quando o processamento (ou o --realtime) segura o consumo, o pipe
+    enche, o yt-dlp/ffmpeg para de ler o googlevideo, a conexão cai e o VOD
+    "acaba" no meio (visto no teste: parou em 128 s de 460 s).
+    """
+    import queue
+
+    q: "queue.Queue[Any]" = queue.Queue(maxsize=max(1, max_bytes // 32000))
+    done = object()
+
+    def pump():
+        try:
+            for block in blocks:
+                q.put(block)
+        except BaseException as exc:  # noqa: BLE001 - repassa ao consumidor
+            q.put(exc)
+        q.put(done)
+
+    threading.Thread(target=pump, daemon=True, name="captura").start()
+    while True:
+        item = q.get()
+        if item is done:
+            return
+        if isinstance(item, BaseException):
+            raise item
+        yield item

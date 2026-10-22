@@ -122,6 +122,10 @@ Para uma fonte nova (WebSocket, arquivo, outro host):
 
 O contador de "pessoas assistindo" do site não está no JSON. Ele vem de um WebSocket em `wss://placar.zenithonacademy.com.br/ao-vivo`. A simulação mostra um número ilustrativo. O modo ao vivo não inventa audiência.
 
+## Noite do debate
+
+Passo a passo (comandos, variáveis, fontes de áudio): [pipeline/README.md → Runbook da noite do debate](pipeline/README.md#runbook-da-noite-do-debate).
+
 ## Mentirômetro
 
 A conta está em `lib/src/domain/mentiromentro.dart` e é a mesma do site:

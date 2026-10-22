@@ -143,8 +143,16 @@ def stream_pcm(page_url: str = "", *, source: str = "", start_s: float = 0.0,
             read_bytes += len(block)
             yield block
         codes = [p.wait() for p in procs]
-        if all(c == 0 for c in codes) and got:
-            return  # fim normal (VOD acabou)
+        if all(c == 0 for c in codes):
+            if source and got:
+                return  # arquivo/rádio terminou
+            if not source:
+                # O yt-dlp sai com 0 mesmo quando o googlevideo corta a conexão
+                # no meio do VOD (visto: parou em ~2 min de 7,7). Só é fim de verdade
+                # quando a reabertura no ponto lido não traz mais nada.
+                if got:
+                    continue
+                return
         failures += 1
         if failures > retries:
             raise RuntimeError(f"captura caiu {failures} vezes seguidas (códigos {codes}).")
