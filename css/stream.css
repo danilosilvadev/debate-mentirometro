@@ -52,3 +52,24 @@
   .mfeed .colbody, .mfeed .csec { flex-direction: column; overflow: visible; -webkit-mask-image: none; mask-image: none; }
   .mfeed .colh { align-self: stretch; padding: 4px 0; margin: 4px 0 8px; }
 }
+
+/* legenda central: última checagem comprovada */
+.capv .capm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.capv .capm > span:nth-child(2) { font-weight: 800; filter: drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000); }
+.capv .cape .fbtn { margin-top: 4px; }
+
+/* tela cheia própria (o botão do YouTube perde a sobreposição) */
+.fsb { position: absolute; top: 96px; right: 104px; z-index: 4; background: rgba(0,0,0,.4); color: #c9ccd1;
+  border: 1px solid rgba(255,255,255,.1); border-radius: 99px; padding: 4px 10px; font-size: 11px; font-weight: 600; backdrop-filter: blur(8px); cursor: pointer; }
+.fsb:hover { color: #fff; }
+@media (max-width: 700px) { .fsb { top: 10px; right: 84px; } }
+html:fullscreen, html:fullscreen body { background: #000; }
+html.pseudo-fs, html.pseudo-fs body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: auto; background: #000; -webkit-overflow-scrolling: touch; }
+html.pseudo-fs .app { z-index: 2147483000; }
+@media (max-width: 700px) {
+  /* replay no celular: o vídeo é o #rhost acima do .app; o botão de tela cheia fica sobre ele */
+  .app.replay { z-index: 3; }
+  .app.replay > .video { display: block; position: absolute; left: 0; right: 0; top: -56.25vw; height: 0; overflow: visible; z-index: 5; pointer-events: none; background: transparent; aspect-ratio: auto; }
+  .app.replay > .video > * { display: none; }
+  .app.replay > .video > .fsb { display: inline-block; position: absolute; white-space: nowrap; pointer-events: auto; top: 8px; right: 8px; background: rgba(0,0,0,.6); }
+}
