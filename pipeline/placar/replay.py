@@ -168,6 +168,12 @@ def write_outputs(
     )
 
 
+def _os_env(name: str, default: str) -> str:
+    import os
+
+    return os.environ.get(name, default).strip() or default
+
+
 def build_router(settings: Settings) -> ProviderRouter:
     from placar.llm.anthropic_api import AnthropicApiProvider
     from placar.llm.claude_cli import ClaudeCliProvider
@@ -175,8 +181,21 @@ def build_router(settings: Settings) -> ProviderRouter:
     from placar.llm.openrouter import OpenRouterProvider
 
     providers = []
+    verify_only_names: set[str] = set()
     for name in settings.providers:
-        if name == "claude_cli":
+        if name == "claude_cli" and _os_env("CLAUDE_PERSISTENT", "1") != "0":
+            # Sessões quentes: juiz/classificador num pool, confirmador cego noutro (sem sessão em comum).
+            from placar.llm.claude_cli import ClaudeSessionPool
+
+            size = int(_os_env("CLAUDE_POOL_SIZE", "3"))
+            for pool_name in ("claude-cli", "claude-verify"):
+                pool = ClaudeSessionPool(name=pool_name, binary=settings.claude_bin, model=settings.claude_model,
+                                         size=size, session_chunks=settings.session_chunks)
+                # Sem isto valia o prazo padrão do roteador (12 s) e cortava ~5% das chamadas (p90 do classificador 12-14 s).
+                pool.timeout_s = max(settings.claude_timeout_s, float(_os_env("CLAUDE_POOL_TIMEOUT_S", "30")))
+                providers.append(pool)
+            verify_only_names.add("claude-verify")
+        elif name == "claude_cli":
             providers.append(
                 ClaudeCliProvider(
                     binary=settings.claude_bin,
@@ -245,4 +264,5 @@ def build_router(settings: Settings) -> ProviderRouter:
         timeout_s=settings.claude_timeout_s,
     )
     router.verify_order = list(settings.verify_providers)
+    router.verify_only = verify_only_names
     return router

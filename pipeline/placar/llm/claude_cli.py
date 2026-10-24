@@ -20,8 +20,10 @@ Documentação consultada em 2026-10-21 (code.claude.com/docs/en/headless):
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import threading
+import time
 from typing import Any
 
 from placar.llm.base import (
@@ -123,7 +125,9 @@ class ClaudeCliProvider:
             "--permission-mode",
             "dontAsk",
             "--max-turns",
-            "1",
+            # Saída estruturada gasta 2 turnos internos (chamada da ferramenta + fim). Com 1, ~40% das
+            # chamadas terminavam em error_max_turns (exit 1). Com 3 foram 16/16 ok.
+            "3",
         ]
         try:
             proc = self._popen(
@@ -143,10 +147,11 @@ class ClaudeCliProvider:
             raise TimeoutFailure(
                 f"Claude CLI passou de {timeout_s:.0f}s."
             ) from exc
-        blob = f"{stdout}\n{stderr}"
-        if _limited(blob):
-            raise RateLimitFailure("Claude CLI sinalizou limite de uso da assinatura.")
+        # Só procura marcador de limite quando o CLI falhou: o JSON de sucesso traz durações, custos e
+        # ids onde "429" aparece por acaso (cerca de 3% das respostas), e isso abria o circuit breaker.
         if proc.returncode not in (0, None):
+            if _limited(f"{stdout}\n{stderr}"):
+                raise RateLimitFailure("Claude CLI sinalizou limite de uso da assinatura.")
             raise CliFailure(stderr.strip() or f"claude saiu com código {proc.returncode}.")
         return _payload_text(stdout)
 
@@ -286,3 +291,111 @@ def _readline_until_result(proc: Any, timeout_s: float) -> str:
     if "line" not in holder:
         raise CliFailure("Sessão do Claude CLI não devolveu result.")
     return holder["line"]
+
+
+def effort_popen(effort: str | None = None, base: Any = None):
+    """Popen que acrescenta --effort (menos tokens de raciocínio) e não grava sessão em disco."""
+    level = effort if effort is not None else os.environ.get("CLAUDE_EFFORT", "low")
+    popen = base or subprocess.Popen
+
+    def make(args, **kwargs):
+        extra = ["--no-session-persistence"]
+        if level:
+            extra = ["--effort", level] + extra
+        return popen(list(args) + extra, **kwargs)
+
+    return make
+
+
+class ClaudeSessionPool:
+    """Sessões persistentes do Claude CLI, mantidas quentes (sem os 4-7 s de partida a cada chamada).
+
+    O prompt de sistema fica fixo na sessão, então cada tarefa (classificar, julgar, confirmar) tem a sua
+    lista de sessões. Uma sessão atende uma chamada por vez; chamadas simultâneas usam outras sessões do
+    mesmo papel, até `size`. Sessão que falha é descartada e recriada. Cada papel (`name`) é um provedor
+    separado no roteador: o confirmador cego nunca divide sessão com o juiz.
+    """
+
+    def __init__(self, *, name: str = "claude-cli", binary: str = "claude", model: str = "haiku", size: int = 2,
+                 session_chunks: int = 8, effort: str | None = None, popen: Any = None) -> None:
+        self.name = name
+        self.binary = binary
+        self.model = model
+        self.size = max(1, size)
+        self.session_chunks = session_chunks
+        self._popen = popen or effort_popen(effort)
+        self._free: dict[str, list[ClaudeCliProvider]] = {}
+        self._made: dict[str, int] = {}
+        self._cv = threading.Condition()
+        self.unavailable = False
+
+    @staticmethod
+    def _key(request: LlmRequest) -> str:
+        return f"{request.task}|{hash(request.system)}"
+
+    def _acquire(self, key: str, timeout_s: float) -> "ClaudeCliProvider":
+        deadline = time.monotonic() + timeout_s
+        with self._cv:
+            while True:
+                free = self._free.setdefault(key, [])
+                if free:
+                    return free.pop()
+                if self._made.get(key, 0) < self.size:
+                    self._made[key] = self._made.get(key, 0) + 1
+                    return ClaudeCliProvider(binary=self.binary, model=self.model, session_chunks=self.session_chunks,
+                                             persistent=True, popen=self._popen)
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutFailure("Nenhuma sessão do Claude CLI ficou livre a tempo.")
+                self._cv.wait(remaining)
+
+    def _release(self, key: str, session: "ClaudeCliProvider", broken: bool) -> None:
+        with self._cv:
+            if broken:
+                session.close()
+                self._made[key] = max(0, self._made.get(key, 1) - 1)
+            else:
+                self._free.setdefault(key, []).append(session)
+            self._cv.notify()
+
+    def generate(self, request: LlmRequest, timeout_s: float) -> str:
+        if self.unavailable:
+            raise ProviderUnavailable(f"Claude CLI não encontrado ({self.binary}).")
+        key = self._key(request)
+        session = self._acquire(key, timeout_s)
+        broken = True
+        try:
+            out = session.generate(request, timeout_s)
+            broken = False
+            return out
+        except ProviderUnavailable:
+            self.unavailable = True
+            raise
+        finally:
+            self._release(key, session, broken)
+
+    def warm(self, requests: list[LlmRequest], timeout_s: float = 90.0) -> int:
+        """Abre as sessões antes do debate (a primeira chamada de uma sessão leva ~13 s). Devolve quantas abriram."""
+        done: list[int] = []
+
+        def one(req: LlmRequest) -> None:
+            try:
+                self.generate(req, timeout_s)
+                done.append(1)
+            except ProviderError:
+                pass
+
+        threads = [threading.Thread(target=one, args=(r,), daemon=True) for r in requests for _ in range(self.size)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout_s + 5)
+        return len(done)
+
+    def close(self) -> None:
+        with self._cv:
+            for sessions in self._free.values():
+                for session in sessions:
+                    session.close()
+            self._free.clear()
+            self._made.clear()

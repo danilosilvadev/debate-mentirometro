@@ -84,13 +84,18 @@ class Retriever:
         self._ddg = ddg
         self.searx_requests = 0
         self.searx_failures = 0
+        # Os motores do SearXNG (DuckDuckGo, Brave, Google) são suspensos por captcha/limite quando há muita
+        # busca; com todos suspensos a resposta vem vazia. Cache por consulta e uma segunda tentativa curta.
+        self._searx_cache: dict[str, list[Evidence]] = {}
+        self.searx_retry_s = float(__import__("os").environ.get("PLACAR_SEARX_RETRY_S", "1.5"))
+        self.searx_empty = 0
 
     def search(self, query: str, *, timeout_s: float = 8.0) -> list[Evidence]:
         found: list[Evidence] = []
         if self.settings.factcheck_key:
             found.extend(self._factcheck(query, timeout_s))
         if self.settings.searxng_url:
-            found.extend(self._searx(query, timeout_s))
+            found.extend(self._searx_cached(query, timeout_s))
         if self.settings.brave_key:
             found.extend(self._brave(query, timeout_s))
         trusted = sum(1 for item in found if _whitelisted(item.url))
@@ -141,6 +146,23 @@ class Retriever:
                     )
                 )
         return [item for item in items if item.url]
+
+    def _searx_cached(self, query: str, timeout_s: float) -> list[Evidence]:
+        key = " ".join(query.lower().split())
+        hit = self._searx_cache.get(key)
+        if hit is not None:
+            return hit
+        failures_before = self.searx_failures
+        out = self._searx(query, timeout_s)
+        if not out and self.searx_failures == failures_before:  # respondeu 200 mas vazio (não é servidor fora do ar)
+            self.searx_empty += 1
+            import time as _time
+
+            _time.sleep(self.searx_retry_s)  # dá tempo de um motor sair da suspensão e tenta uma vez mais
+            out = self._searx(query, timeout_s)
+        if out:
+            self._searx_cache[key] = out
+        return out
 
     def _searx(self, query: str, timeout_s: float) -> list[Evidence]:
         qs = urlencode({"q": query, "format": "json", "language": "pt-BR"})

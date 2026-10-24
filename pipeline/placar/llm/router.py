@@ -113,6 +113,9 @@ class ProviderRouter:
         self.unavailable: set[str] = set()
         # Ordem preferida para a confirmação (segundo modelo). Vazia = ordem normal.
         self.verify_order: list[str] = []
+        # Provedores reservados ao confirmador cego (ex.: pool "claude_verify"). Quando existem, juiz e
+        # confirmador rodam ao mesmo tempo, cada um no seu pool, e nunca dividem sessão.
+        self.verify_only: set[str] = set()
 
     def complete(
         self,
@@ -125,6 +128,11 @@ class ProviderRouter:
         records: list[CallRecord] = []
         errors: list[str] = []
         considered = [item for item in self.providers if item.name not in skipped]
+        if self.verify_only:
+            reserved = {n.replace("-", "_") for n in self.verify_only}
+            is_reserved = lambda item: item.name.replace("-", "_") in reserved
+            considered = [item for item in considered if is_reserved(item)] if request.task == "verify" \
+                else [item for item in considered if not is_reserved(item)]
         if prefer:
             rank = {name.replace("-", "_"): i for i, name in enumerate(prefer)}
             considered = [p for p in considered if p.name.replace("-", "_") in rank]

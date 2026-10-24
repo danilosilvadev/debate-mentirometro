@@ -153,7 +153,8 @@ def test_settings_default_order_and_claude_skip(monkeypatch):
     s = Settings.from_env()
     assert s.providers == ("claude_cli", "grok_cli", "groq", "openrouter")
     router = build_router(s)
-    names = [p.name for p in router.providers]
+    names = [p.name for p in router.providers if p.name != "claude-verify"]  # pool reservado ao confirmador cego
+    assert "claude-verify" in router.verify_only
     assert names[0] == "claude-cli" and names[1] == "grok_cli" and "groq" in names and names[-1] == "openrouter" and names[-2] == "groq_verify"
     first = Prov("x", {})
     del first

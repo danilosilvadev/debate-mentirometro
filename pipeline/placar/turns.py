@@ -98,6 +98,23 @@ MANDATOS = (
 )
 
 
+def warm_router(llm) -> int:
+    """Abre as sessões persistentes antes do debate (a 1ª chamada de cada sessão leva ~13 s). Devolve quantas abriram."""
+    ping = "Aquecimento da sessão: responda só com um objeto JSON válido para o schema."
+    reserved = {n.replace("-", "_") for n in getattr(llm, "verify_only", set())}
+    opened = 0
+    for provider in getattr(llm, "providers", []):
+        if not hasattr(provider, "warm"):
+            continue
+        if provider.name.replace("-", "_") in reserved:
+            reqs = [LlmRequest(task="verify", system=SYSTEM_VERIFY, user=ping, schema=JUDGE_SCHEMA)]
+        else:
+            reqs = [LlmRequest(task="classify_turn", system=SYSTEM_TURN, user=ping, schema=TURN_SCHEMA),
+                    LlmRequest(task="judge", system=SYSTEM_JUDGE_TURN, user=ping, schema=JUDGE_SCHEMA)]
+        opened += provider.warm(reqs)
+    return opened
+
+
 def reference_facts(today=None) -> str:
     import datetime as _dt
 
@@ -473,11 +490,27 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
         (f"Contexto do turno: {claim.get('_turno', '')}\n" if claim.get('_turno') else "") + \
         f"Afirmação (literal): {claim['literal']}\nResumo: {claim['afirmacao']}\nFontes:\n{sources}"
     started = time.perf_counter()
+    # Confirmador cego em paralelo: com um pool reservado (router.verify_only) ele não depende da resposta do
+    # juiz, então os dois rodam juntos e a latência cai de juiz+confirmador para o maior dos dois.
+    parallel = bool(getattr(llm, "verify_only", None))
+    second_future = None
+    if parallel:
+        import concurrent.futures as _cf
+        _pool = _cf.ThreadPoolExecutor(max_workers=1, thread_name_prefix="verify")
+        second_future = _pool.submit(llm.complete, LlmRequest(task="verify", system=SYSTEM_VERIFY, user=prompt, schema=JUDGE_SCHEMA))
+        _pool.shutdown(wait=False)
     try:
         judged = llm.complete(LlmRequest(task="judge", system=SYSTEM_JUDGE_TURN, user=prompt, schema=JUDGE_SCHEMA))
     except ProviderError:
         res.judge_ms.append((time.perf_counter() - started) * 1000)
         return
+
+    def second_opinion(exclude_provider: str):
+        """2ª opinião: já em andamento (paralelo) ou chamada nova (modo antigo, sequencial)."""
+        if second_future is not None:
+            return second_future.result()
+        return llm.complete(LlmRequest(task="verify", system=SYSTEM_VERIFY, user=prompt, schema=JUDGE_SCHEMA),
+                            exclude={exclude_provider}, prefer=getattr(llm, "verify_order", None) or None)
     res.judge_ms.append((time.perf_counter() - started) * 1000)
     verdict = judged.data["veredito"]
     title, url = _pick_source(judged.data, evidence)
@@ -485,12 +518,11 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
     entry = {"titulo": claim["afirmacao"], "veredito": verdict, "fontes": len(evidence),
              "judge": judged.provider, "url": url}
     res.verdicts.append(entry)
-    if verdict == "verdadeiro" and _numeric(claim) and can_call() and not _late(claim):
-        # Verdadeiro numérico também passa por um 2º checador cego: falso publicado como
-        # verdadeiro é o pior erro. Se ele não confirmar, sem_dados.
+    if verdict == "verdadeiro" and (parallel or _numeric(claim)) and can_call() and not _late(claim):
+        # Verdadeiro também passa por um 2º checador cego (no modo paralelo, todo verdadeiro; no antigo, só
+        # numérico): afirmação falsa publicada como verdadeira é o pior erro. Se ele não confirmar, sem_dados.
         try:
-            chk = llm.complete(LlmRequest(task="verify", system=SYSTEM_VERIFY, user=prompt, schema=JUDGE_SCHEMA),
-                               exclude={judged.provider}, prefer=getattr(llm, "verify_order", None) or None)
+            chk = second_opinion(judged.provider)
             entry.update(verify=chk.provider, verify_veredito=chk.data["veredito"])
             if chk.data["veredito"] != "verdadeiro":
                 verdict = "sem_dados"
@@ -514,8 +546,7 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
     order = getattr(llm, "verify_order", None) or None
     started = time.perf_counter()
     try:
-        second = llm.complete(LlmRequest(task="verify", system=SYSTEM_VERIFY, user=prompt, schema=JUDGE_SCHEMA),
-                              exclude={judged.provider}, prefer=order)
+        second = second_opinion(judged.provider)
     except ProviderError as exc:
         res.verify_ms.append((time.perf_counter() - started) * 1000)
         entry["verify"] = f"erro: {exc.message[:80]}"
