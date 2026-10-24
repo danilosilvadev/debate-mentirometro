@@ -172,7 +172,12 @@ function gate() {
     btn.disabled = true
     btn.textContent = 'Enviando…'
     try {
-      if (sb()) await rpc('subscribe_email', { p_email: email, p_consent: true, p_consent_text: form.querySelector('.ix-check span').textContent, p_social: socialClicked, p_client: clientId() })
+      if (sb()) {
+        const consentText = form.querySelector('.ix-check span').textContent
+        await rpc('subscribe_email', { p_email: email, p_consent: true, p_consent_text: consentText, p_social: socialClicked, p_client: clientId() })
+        // Mesma lista da landing (private.subscribers): é a única que o envio de lembretes lê.
+        try { await rpc('subscribe', { p_debate: W.PLACAR_DEBATE_KEY || 'globo-2026-10-23', p_email: email, p_whatsapp: null, p_email_consent: true, p_whatsapp_consent: false, p_consent_text: consentText, p_client: clientId() }) } catch { /* a lista principal já gravou; não trava a entrada */ }
+      }
       try { localStorage.setItem(GATE_KEY, JSON.stringify({ at: Date.now() })) } catch { /* ok */ }
       wrap.classList.add('out')
       document.documentElement.classList.remove('ix-dim')

@@ -19,9 +19,9 @@ window.PLACAR_SUPABASE = {
 window.PLACAR_DEBATE_KEY = "globo-2026-10-23";
 // Redes no portão de e-mail (troque pelos perfis reais).
 window.PLACAR_SOCIAL = {
-  instagram: "https://instagram.com/SEU_PERFIL",
-  x: "https://x.com/SEU_PERFIL",
-  youtube: "https://youtube.com/@SEU_CANAL",
+  instagram: "https://instagram.com/danjindev",
+  x: "https://x.com/danjindev",
+  youtube: "https://youtube.com/@danjindev",
 };
 // true = exige clicar em ao menos uma rede para entrar. Padrão: opcional.
 window.REQUIRE_SOCIAL_CLICK = false;

@@ -2,14 +2,15 @@
 """Copia private.subscribers (Supabase) para um SQLite local, com upsert idempotente.
 
 Lê via RPC public.export_subscribers protegida por segredo (só o hash fica no banco).
-Segredo: arquivo SUBSCRIBERS_EXPORT_SECRET_FILE (padrão /workspace/data/.export_secret, chmod 600).
-Saída: SUBSCRIBERS_DB (padrão /workspace/data/subscribers.sqlite, chmod 600). Nunca vai para o git.
+Segredo: arquivo SUBSCRIBERS_EXPORT_SECRET_FILE (padrão $PLACAR_DATA_DIR/.export_secret, chmod 600).
+Saída: SUBSCRIBERS_DB (padrão $PLACAR_DATA_DIR/subscribers.sqlite, chmod 600; $PLACAR_DATA_DIR padrão ~/.local/share/placar). Nunca vai para o git.
 """
 import hashlib, json, os, sqlite3, sys, urllib.request, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-DB = os.environ.get("SUBSCRIBERS_DB", "/workspace/data/subscribers.sqlite")
-SECRET_FILE = os.environ.get("SUBSCRIBERS_EXPORT_SECRET_FILE", "/workspace/data/.export_secret")
+DATA_DIR = pathlib.Path(os.environ.get("PLACAR_DATA_DIR", pathlib.Path.home() / ".local/share/placar"))
+DB = os.environ.get("SUBSCRIBERS_DB", str(DATA_DIR / "subscribers.sqlite"))
+SECRET_FILE = os.environ.get("SUBSCRIBERS_EXPORT_SECRET_FILE", str(DATA_DIR / ".export_secret"))
 URL = os.environ.get("SUPABASE_URL", "https://igpkunwxmtopdqtbsuso.supabase.co")
 KEY = os.environ.get("SUPABASE_ANON_KEY", "sb_publishable_KdJP5K5oLFPEZfkaYv81pw_OjdZ_5aR")  # publicável
 SCHEMA = (ROOT / "cloudflare/d1/0001_subscribers.sql").read_text()
