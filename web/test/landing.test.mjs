@@ -17,3 +17,22 @@ test("validate consent", () => {
   assert.equal(validate({ wa: "11912345678", cWa: true }).wa, "+5511912345678");
   assert.match(validate({}).err, /Informe/);
 });
+import { pollPct, pollLabel, validPick } from "../landing/logic.mjs";
+test("pollPct soma 100 e trata vazio", () => {
+  assert.deepEqual(pollPct({}), { total: 0, lula: 0, flavio: 0, empate: 0 });
+  const p = pollPct({ lula: 1, flavio: 1, empate: 1 }); assert.equal(p.lula + p.flavio + p.empate, 100); assert.equal(p.total, 3);
+  assert.deepEqual(pollPct({ lula: 3, flavio: 1, empate: 0 }), { total: 4, lula: 75, flavio: 25, empate: 0 });
+  assert.equal(pollPct({ lula: -5, flavio: "2" }).flavio, 100);
+});
+test("pollLabel / validPick", () => {
+  assert.equal(pollLabel(1), "1 palpite"); assert.equal(pollLabel(1234), "1.234 palpites");
+  assert.ok(validPick("empate")); assert.ok(!validPick("bolsonaro")); assert.ok(!validPick(undefined));
+});
+test("landing tem a enquete do Troféu Pinóquio com resultados escondidos", async () => {
+  const { readFileSync } = await import("node:fs");
+  const html = readFileSync(new URL("../landing/index.html", import.meta.url), "utf8");
+  for (const k of ['data-pick="lula"', 'data-pick="flavio"', 'data-pick="empate"', 'id="pres" ', "trofeu-640.webp", 'data-hook="resultado-vs-palpite"']) assert.ok(html.includes(k), k);
+  assert.match(html, /class="pres hidden"/);
+  const css = readFileSync(new URL("../landing/landing.css", import.meta.url), "utf8");
+  assert.match(css, /#2FBF71 50%,#F5D33B 50%/);
+});

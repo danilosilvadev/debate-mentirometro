@@ -111,15 +111,12 @@ class Retriever:
         qs = urlencode(
             {
                 "query": query,
-                "languageCode": "pt",
+                "languageCode": "pt-BR",
                 "key": self.settings.factcheck_key,
             }
         )
         url = f"https://factchecktools.googleapis.com/v1alpha1/claims:search?{qs}"
-        try:
-            status, body = self._http(url, timeout_s)
-        except Exception:  # noqa: BLE001 - chave inválida/rede: segue sem
-            return []
+        status, body = self._http(url, timeout_s)
         if status >= 400:
             return []
         try:
@@ -134,9 +131,7 @@ class Retriever:
                     Evidence(
                         titulo=review.get("title") or review.get("publisher", {}).get("name", ""),
                         url=review.get("url") or "",
-                        trecho=(f"Checagem de {review.get('publisher', {}).get('name', '')}: "
-                                f"\"{text}\" ({claim.get('claimant', '')}) — classificação: "
-                                f"{review.get('textualRating', '')}"),
+                        trecho=text,
                         origem="factcheck",
                     )
                 )

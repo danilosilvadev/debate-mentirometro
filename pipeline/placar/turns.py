@@ -27,12 +27,7 @@ SYSTEM_TURN = (
     "- afirmacao_checavel: fato do PASSADO ou PRESENTE com número, data, lei ou ato de governo "
     "que um checador confere em fonte pública ('o PIB cresceu 7,5% em 2010', 'o PT governou 20 dos "
     "últimos 24 anos'). Opinião, adjetivo e comparação vaga ('fizemos mais que todos') NÃO são.\n"
-    "Um ataque com número verificável vira afirmacao_checavel. Também é afirmacao_checavel um FATO concreto "
-    "sobre pessoa, órgão ou governo, mesmo sem número: quem votou contra/a favor de quê, quem foi preso, "
-    "investigado ou condenado, quem fez parte de qual governo, quem criou qual programa ou lei, recorde de algo "
-    "('Flávio votou contra a licença-maternidade', 'a PF não investiga o filho do Lula', 'fomos nós que criamos o MEI').\n"
-    "Se a citação estiver truncada, sem sentido ou com nomes ininteligíveis por erro de transcrição, NÃO crie "
-    "afirmacao_checavel (melhor omitir do que checar frase que o candidato pode não ter dito).\n"
+    "Um ataque com número verificável vira afirmacao_checavel.\n"
     "Campos: titulo = frase curta e clara em português (até 8 palavras) que diga o conteúdo, "
     "ex. 'PIB cresceu 10,5% em 2010'; citacao = trecho EXATO copiado do texto, a menor frase "
     "que sustenta o item; categoria = tema real (seguranca, economia, saude, educacao, social, "
@@ -56,9 +51,6 @@ SYSTEM_JUDGE_TURN = (
     "- falso: as fontes contradizem claramente.\n"
     "- sem_dados: as fontes não tratam do ponto. Na dúvida, sem_dados. Não use conhecimento próprio "
     "para contradizer sem fonte.\n"
-    "- Fonte marcada '(dado oficial)' é a série do IBGE/Banco Central: é a prova primária para números "
-    "(prefira-a a notícias); confira o ano/mês certo e a unidade (US$ x R$, milhões x bilhões) antes de decidir. "
-    "Se a série não traz o período exato do que foi dito, não conclua só por ela.\n"
     "- Use também a lista de presidentes recebida (fato fixo) para contas de anos e mandatos; "
     "faça a conta explicitamente.\n"
     "- Fonte que só REPRODUZ a fala do candidato (transcrição do debate, 'Lula disse que...') NÃO é prova; "
@@ -110,8 +102,6 @@ def reference_facts(today=None) -> str:
 
 
 REVIEW_TEXT = "Em revisão: aguardando um segundo modelo confirmar com as fontes."
-TIMEOUT_TEXT = "Sem dados: a checagem não terminou a tempo; preferimos não cravar veredito."
-CLAIM_DEADLINE_S = float(__import__("os").environ.get("PLACAR_CLAIM_DEADLINE_S", "120"))
 DIVERGE_TEXT = "Sem confirmação: as checagens automáticas discordaram; preferimos não cravar veredito."
 
 
@@ -129,7 +119,6 @@ class TurnResult:
 
 
 import os as _os
-import re
 
 from placar.claim_bank import ClaimBank
 
@@ -165,11 +154,6 @@ def _bank_turn(board, turn, quem, text, t_ms, dur_s, llm, retriever, lock, res, 
     if not best:
         return False
     hit, sent = best
-    if is_duplicate(board, quem, t_ms, hit["frase"], sent, banco=hit["frase"]):
-        with lock:
-            board.add_time(quem, "outro", dur_s)
-        res.error = "repetida"
-        return True
     # Literal: a frase da janela que mais se parece com a frase checada.
     from placar.claim_bank import numbers as _nums, stems as _stems
     want = _stems(hit["frase"])
@@ -181,7 +165,6 @@ def _bank_turn(board, turn, quem, text, t_ms, dur_s, llm, retriever, lock, res, 
         claim = board.open_claim(quem=quem, tema=hit.get("tema") or "geral",
                                  afirmacao=hit["frase"][:1].upper() + hit["frase"][1:], contexto="", literal=sent[:240], t_ms=t_ms)
         claim["_job"] = turn
-        claim["_banco_frase"] = hit["frase"]
         va = _now_v(turn)
         if va is not None:
             claim["va"] = va
@@ -193,44 +176,6 @@ def _bank_turn(board, turn, quem, text, t_ms, dur_s, llm, retriever, lock, res, 
     _judge(board, claim, {"titulo": hit["frase"], "citacao": sent}, llm, retriever, lock, res, can_call)
     on_change()
     return True
-
-
-DEDUPE_WINDOW_MS = 15 * 60 * 1000
-
-
-def is_duplicate(board, quem: str, t_ms: int, *texts: str, banco: str = "") -> bool:
-    """Mesma pessoa repetindo a mesma afirmação (ou o mesmo item do banco) há pouco."""
-    from placar.claim_bank import numbers as _nums, stems as _stems
-    want = set().union(*(_stems(x) for x in texts if x))
-    nums = set().union(*(_nums(x) for x in texts if x))
-    for c in board.claims:
-        if c["quem"] != quem or abs(t_ms - c["t"]) > DEDUPE_WINDOW_MS:
-            continue
-        if banco and c.get("_banco_frase") == banco:
-            return True
-        have = _stems(c["afirmacao"]) | _stems(c["literal"])
-        if not want or not have:
-            continue
-        ov = len(want & have) / min(len(want), len(have))
-        cnums = _nums(c["afirmacao"]) | _nums(c["literal"])
-        if ov >= 0.6 and nums == cnums and (nums or ov >= 0.75):
-            return True
-    return False
-
-
-def is_garbled(item: dict[str, Any], turn_text: str) -> bool:
-    """Citação que não está no turno, número do título que não está na fala, ou citação curta demais."""
-    from placar.claim_bank import _fold, numbers as _nums
-    quote = _fold(item.get("citacao") or "")
-    words = re.findall(r"[a-z0-9]+", quote)
-    if len(words) < 4:
-        return True
-    turn_words = set(re.findall(r"[a-z0-9]+", _fold(turn_text)))
-    if sum(w in turn_words for w in words) / len(words) < 0.7:
-        return True  # o modelo "consertou" a fala: não checa o que não foi dito
-    if not _nums(item.get("titulo") or "") <= (_nums(item.get("citacao") or "") | _nums(turn_text)):
-        return True
-    return False
 
 
 def _fast_first(llm) -> list[str] | None:
@@ -257,7 +202,7 @@ def process_turn(
     *,
     lock: threading.Lock | None = None,
     on_change: Callable[[], None] = lambda: None,
-    max_claims: int = 3,
+    max_claims: int = 2,
     can_call: Callable[[], bool] = lambda: True,
 ) -> TurnResult:
     lock = lock or threading.Lock()
@@ -318,9 +263,6 @@ def process_turn(
             elif item["tipo"] == "ataque":
                 board.add_attack(quem=quem, resumo=f"{item['titulo']}: “{quote}”", t_ms=t_ms)
             elif len(claims) < max_claims:
-                if is_garbled(item, text) or is_duplicate(board, quem, t_ms, item["titulo"], quote):
-                    res.verdicts.append({"titulo": item["titulo"], "descartada": True})
-                    continue
                 claim = board.open_claim(
                     quem=quem, tema=item["categoria"], afirmacao=item["titulo"],
                     contexto=item.get("busca") or "", literal=quote, t_ms=t_ms,
@@ -381,25 +323,12 @@ def _publish(board, claim, veredito, motivo, title, url, evidence, entry) -> Non
 
 
 def _judge(board, claim, item, llm, retriever, lock, res, can_call) -> None:
-    claim["_deadline"] = time.perf_counter() + CLAIM_DEADLINE_S
     try:
         _judge_inner(board, claim, item, llm, retriever, lock, res, can_call)
-    except Exception as exc:  # noqa: BLE001 - nunca deixa a afirmação presa
-        res.error = f"juiz: {str(exc)[:120]}"
     finally:
-        # Garantia: nenhuma afirmação fica "em revisão" depois que o juiz termina
-        # (erro de provedor, cota, prazo ou exceção) -> sem_dados.
-        with lock:
-            if claim["veredito"] == "em_revisao":
-                board.set_verdict(claim, veredito="sem_dados", motivo=TIMEOUT_TEXT)
-                board.note_score()
         vv = _now_v(claim.get("_job") or {})
         if vv is not None and claim.get("vv") is None:
             claim["vv"] = vv
-
-
-def _late(claim) -> bool:
-    return time.perf_counter() > claim.get("_deadline", float("inf"))
 
 
 def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> None:
@@ -409,7 +338,6 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
             board.set_verdict(claim, veredito=hit["veredito"], motivo=hit["motivo"],
                               fonte_titulo=hit["fonte"], fonte_url=hit["url"])
             claim["banco"] = hit["fonte"]
-            claim["_banco_frase"] = hit["frase"]
             # O título mostrado é a frase checada pelo profissional, para o veredito bater com o que se lê.
             claim["afirmacao"] = hit["frase"][:1].upper() + hit["frase"][1:]
             board.note_score()
@@ -426,13 +354,7 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
                 evidence.append(e)
         if len(evidence) >= 5:
             break
-    if _os.environ.get("PLACAR_OFFICIAL", "1") != "0":
-        from placar.official import official_evidence
-        try:
-            evidence = official_evidence(f"{claim['literal']} {claim['afirmacao']}") + evidence
-        except Exception:  # noqa: BLE001 - dado oficial é opcional
-            pass
-    evidence = evidence[:6]
+    evidence = evidence[:5]
     res.retrieve_ms.append((time.perf_counter() - started) * 1000)
     if not evidence:
         with lock:
@@ -469,8 +391,8 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
         claim["fonte"] = {"titulo": title, "url": url}
         claim["_primeiro"] = {"veredito": verdict, "provider": judged.provider}
         board.note_score()
-    if not can_call() or _late(claim):
-        return  # o finally publica sem_dados
+    if not can_call():
+        return
     order = getattr(llm, "verify_order", None) or None
     started = time.perf_counter()
     try:
@@ -488,7 +410,7 @@ def _judge_inner(board, claim, item, llm, retriever, lock, res, can_call) -> Non
     if disagree:
         # Desempate: terceiro voto (o juiz principal de novo, com o prompt do confirmador).
         third = None
-        if can_call() and not _late(claim):
+        if can_call():
             try:
                 third = llm.complete(LlmRequest(task="judge", system=SYSTEM_VERIFY, user=prompt, schema=JUDGE_SCHEMA),
                                      exclude={second.provider})

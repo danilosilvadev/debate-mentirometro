@@ -57,7 +57,7 @@ def test_process_turn_one_classify_call_and_judges_with_sources():
     ev = [Evidence("Agência Brasil", "https://agenciabrasil.ebc.com.br/x", "22 milhões", "duckduckgo")]
     prov = Scripted({"classify_turn": TURN, "judge": {"veredito": "verdadeiro", "motivo": "confere", "fonte_url": "https://agenciabrasil.ebc.com.br/x", "fonte_titulo": "AB"}})
     b = board()
-    res = process_turn(b, {"quem": "1", "text": "eu criarei o Ministério da Segurança Pública, os estados fracassaram e bancarizamos 22 milhões de brasileiros", "t_ms": 1, "dur_s": 30}, ProviderRouter([prov]), FakeRetriever(ev))
+    res = process_turn(b, {"quem": "1", "text": "texto", "t_ms": 1, "dur_s": 30}, ProviderRouter([prov]), FakeRetriever(ev))
     assert prov.tasks == ["classify_turn", "judge"]
     assert res.items == 3
     assert b.propostas[0]["titulo"] == "Ministério da Segurança"
@@ -71,22 +71,22 @@ def test_falso_without_second_provider_stays_em_revisao():
     ev = [Evidence("g1", "https://g1.globo.com/a", "x", "duckduckgo")]
     prov = Scripted({"classify_turn": TURN, "judge": {"veredito": "falso", "motivo": "não", "fonte_url": "https://inventada.com"}})
     b = board()
-    process_turn(b, {"quem": "1", "text": "eu criarei o Ministério da Segurança Pública, os estados fracassaram e bancarizamos 22 milhões de brasileiros", "t_ms": 1}, ProviderRouter([prov]), FakeRetriever(ev))
-    assert b.claims[0]["veredito"] == "sem_dados"  # nunca preso em revisão
+    process_turn(b, {"quem": "1", "text": "t", "t_ms": 1}, ProviderRouter([prov]), FakeRetriever(ev))
+    assert b.claims[0]["veredito"] == "em_revisao"
     assert b.claims[0]["fonte"]["url"] == "https://g1.globo.com/a"  # URL fora da lista é trocada
 
 
 def test_no_sources_means_sem_dados_without_judge_call():
     prov = Scripted({"classify_turn": TURN})
     b = board()
-    process_turn(b, {"quem": "1", "text": "eu criarei o Ministério da Segurança Pública, os estados fracassaram e bancarizamos 22 milhões de brasileiros", "t_ms": 1}, ProviderRouter([prov]), FakeRetriever([]))
+    process_turn(b, {"quem": "1", "text": "t", "t_ms": 1}, ProviderRouter([prov]), FakeRetriever([]))
     assert prov.tasks == ["classify_turn"] and b.claims[0]["veredito"] == "sem_dados"
 
 
 def test_budget_blocks_calls():
     prov = Scripted({"classify_turn": TURN})
     b = board()
-    res = process_turn(b, {"quem": "1", "text": "eu criarei o Ministério da Segurança Pública, os estados fracassaram e bancarizamos 22 milhões de brasileiros", "t_ms": 1, "dur_s": 5}, ProviderRouter([prov]), FakeRetriever([]), can_call=lambda: False)
+    res = process_turn(b, {"quem": "1", "text": "t", "t_ms": 1, "dur_s": 5}, ProviderRouter([prov]), FakeRetriever([]), can_call=lambda: False)
     assert prov.tasks == [] and res.error
 
 
